@@ -1,0 +1,9 @@
+{
+  "comment": "Public configuration data for the UMA Reference Implementation",
+  "icons_comment": "Available icons, reference shared image (png) files",
+  "icons": {},
+  "scopes_comment": "All scopes will be available to all types",
+  "scopes": {},
+  "types_comment": "defined UMA types, reference application sample content, associated icon, content mimetype",
+  "types": {}
+}
