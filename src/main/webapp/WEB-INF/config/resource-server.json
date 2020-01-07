@@ -20,7 +20,7 @@
          "port": "27017",
          "authen": {
             "database": "resource-server",
-            "user": "rsadmin",
+            "user": "resourceadmin",
             "password": "UMA-2.0"
          },
          "database": "resource-server",
@@ -145,7 +145,7 @@
          "protocol": "https",
          "host": "uma.example.com",
          "port": "443",
-         "path": "services/json/rest/content-server/data"
+         "path": "content-server/rest/content-server/data"
       }
    }
 }

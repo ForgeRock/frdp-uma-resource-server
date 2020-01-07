@@ -18,7 +18,7 @@ The following items must be installed:
 
 ## Prerequisite:
 
-The following items must be completed, in order:
+The following items must be completed, in the following order:
 
 1. [frdp-framework](https://github.com/ForgeRock/frdp-framework) ... clone / download then install using *Maven* (`mvn`)
 1. [frdp-dao-mongo](https://github.com/ForgeRock/frdp-dao-mongo) ... clone / download then install using *Maven* (`mvn`)
@@ -47,6 +47,24 @@ drwxr-xr-x   3 scott.fehrman  staff        96 Jan  6 20:15 maven-archiver
 drwxr-xr-x   5 scott.fehrman  staff       160 Jan  6 20:15 resource-server
 -rw-r--r--   1 scott.fehrman  staff  12340457 Jan  6 20:15 resource-server.war
 ```
+
+# Settings
+
+The procedures in this document will use the folowing settings:
+
+## MongoDB
+
+- Default Password: `password`
+
+## OAuth and UMA
+
+- Default Password: `password`
+- Resource Server (RS): \
+OAuth client id: `UMA-Resource-Server` \
+OAuth client secret: `password`
+- Requesting Party (RqP): \
+OAuth client id: `UMA-Rqp-Client`
+OAuth client secret: `password`
 
 # Configure MongoDB
 
@@ -94,5 +112,128 @@ The MongoDB object database needs to be configured for the **resources** and **c
 
 # Configure Access Manager
 
-The ForgeRock Access Manager needs to be configured to support UMA 2.0 (and OAuth 2.0)
+The ForgeRock Access Manager (6.0.x, 6.5.x) needs to be configured to support UMA 2.0 Authorization Server (AS) functionality. The ForgeRock Access Manager Policy APIs and OAuth 2.0 functionality will also configured. See the Access Manager 6.5 [User Managed Access (UMA) 2.0 Guide](https://backstage.forgerock.com/docs/am/6.5/uma-guide/) for installation details.
 
+These procedures will create and configure:
+- **OAuth2 Provider** 
+- **UMA Provider**
+- **OAuth 2.0 Client Agent**, application used by the Requesting Party (RqP)
+- **OAuth 2.0 Resource Server (RS)**
+- **Resource Owner (RS)**, the user, `dcrane`, that owns the resources
+- **Requesting Party (RqP)**, the user, `bjensen`, that requests and gets access to the resources
+
+See the Access Manager 6.5 [UMA Setup Procedures](https://backstage.forgerock.com/docs/am/6.5/uma-guide/#uma-set-up-procedures) documentation for details
+
+Log into the Access Manager admin console as ``amadmin``
+
+## Create Services
+
+This procedure will create two **Services**:
+- OAuth2 Provider
+- UMA Provider
+
+**NOTICE:** *If you are using an existing Access Manager installation and these Providers exist, they will be replaced.*
+
+1. From **Top Menu Bar**, select `Realms` > `Top Level Realm` 
+1. From panel, select `Configure OAuth Provider` 
+1. From panel, select `Configure User Managed Access` 
+1. Check (enable) `Issue Refresh Tokens` 
+1. Check (enable) `ISsue Refresh Tokens on Refreshing Access Tokens` 
+1. Click `Create` 
+1. From the dialog window, click `OK`
+
+## Create *UMA Client / Requesting Party (RqP)* Agent
+
+This procedure creates / configures an OAuth 2.0 client for the Requesting Party (RqP) application which will access resources.
+
+1. From **Top Menu Bar**, select `Realms` > `Top Level Realm` 
+1. From the Left Menu, select **Applications** > **OAuth 2.0** 
+1. Select **Clients** Tab 
+1. Click **+ Add Client** 
+1. Set **Client ID** to `UMA-RqP-Client` 
+1. Set **Client Secret** `password` 
+1. Set **Scopes** `read` and `openid` *(press Enter after each item)*
+1. Click **Create** 
+1. Select **Advanced** Tab 
+1. Set **Display Name** to `UMA RqP` 
+1. Set **Display Description** to `User Managed Access (UMA) Requesting Party Client` 
+1. Set **Grant Type** to include: `Authorization Code` and `UMA` *(press Enter after each item)*
+1. Click **Save Changes**
+
+## Create *UMA Resource Server (RS)* Agent
+
+This procedure creates / configures an OAuth 2.0 client for the Resource Server (RS) application.
+
+1. From **Top Menu Bar**, select `Realms` > `Top Level Realm` 
+1. From the Left Menu, select **Applications**, Select **OAuth 2.0** 
+1. Select **Clients** Tab 
+1. Click **+ Add Client** 
+1. Set **Client ID** to `UMA-Resource-Server` 
+1. Set **Client Secret** `password` 
+1. Set **Scopes** `uma_protection` *(press Enter after each item)*
+1. Click **Create** 
+1. Select **Core** Tab 
+1. Set **Refresh Token Lifetime (seconds)** to `-1` 
+1. Click **Save Changes** 
+1. Select **Advanced** Tab 
+1. Set **Display Name** to `UMA RS` 
+1. Set **Display Description** to `User Managed Access (UMA) Resource Server` 
+1. Set **Grant Type** to include: `Authorization Code` and `Refresh Token` 
+1. Click **Save Changes**
+
+## Create *Resource Owner (RO)* User
+
+1. From **Top Menu Bar**, select `Realms` > `Top Level Realm` 
+1. From the Left Menu, select **Identities**
+1. Select **Identities** Tab
+1. Click **+ Add Identity**
+1. Set **User ID** to `dcrane`
+1. Set **Password** to `password`
+1. Click **Create**
+1. Set **First Name** to `Danny`
+1. Set **Last Name** to `Crane`
+1. Set **Full Name** to `Danny Crane - Resource Owner`
+1. Set **User Status** to `Active`
+1. Click **Save Changes**
+
+## Create *Requesting Party (RqP)* User
+
+1. From **Top Menu Bar**, select `Realms` > `Top Level Realm` 
+1. From the Left Menu, select **Identities**
+1. Select **Identities** Tab
+1. Click **+ Add Identity**
+1. Set **User ID** to `bjensen`
+1. Set **Password** to `password`
+1. Click **Create**
+1. Set **First Name** to `Barb`
+1. Set **Last Name** to `Jensen`
+1. Set **Full Name** to `Barb Jensen - Requesting Party`
+1. Set **User Status** to `Active`
+1. Click **Save Changes**
+
+# Install Resource Server
+
+This example deploys the `resource-server.war` file to an Apache Tomcat 8.x environment.
+
+## Deploy war file
+
+Copy the `resource-server.war` file to the `webapps` folder in the Tomcat server installation.  The running Tomcat server will automatically unpack the war file.
+
+```
+cp ./target/resource-server.war TOMCAT_INSTALLATION/webapps
+```
+
+## Configure
+
+The deployed application needs to be configured.  Edit the `resource-server.json` file and change /check the values.
+
+```
+cd TOMCAT_INSTALLATION/webapps/resource-server/WEB-INF/config
+vi resource-server.json
+```
+
+The default values:
+
+```
+
+```
