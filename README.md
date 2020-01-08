@@ -50,21 +50,25 @@ drwxr-xr-x   5 scott.fehrman  staff       160 Jan  6 20:15 resource-server
 
 # Settings
 
-The procedures in this document will use the folowing settings:
+The procedures in this document will use the folowing settings.  You will need to change some of these settings to match your test environment.
 
 ## MongoDB
 
 - Default Password: `password`
+- Port: `27017`
 
-## OAuth and UMA
+## Tomcat instances
 
-- Default Password: `password`
-- Resource Server (RS): \
-OAuth client id: `UMA-Resource-Server` \
-OAuth client secret: `password`
-- Requesting Party (RqP): \
-OAuth client id: `UMA-Rqp-Client`
-OAuth client secret: `password`
+- Access Manager: port: `18080`
+- Applications (Content Server and Resoure Server): port: `38080`
+
+## Access Manager
+
+- Admin User: user id: `amadmin`, password: `password`
+- Resource Server (RS): client id: `UMA-Resource-Server`, client secret: `password`
+- Requesting Party (RqP): client id: `UMA-Rqp-Client`, client secret: `password`
+- Resource Owner (RO): user id: `dcrane`, password: `password`
+- Requesting Party (RqP): user id: `bjensen`, password: `password`
 
 # Configure MongoDB
 
@@ -231,9 +235,100 @@ The deployed application needs to be configured.  Edit the `resource-server.json
 cd TOMCAT_INSTALLATION/webapps/resource-server/WEB-INF/config
 vi resource-server.json
 ```
+Edti the following sections of the JSON file:
 
-The default values:
+### Resource Server (RS) Connection: `rs.connet`
 
 ```
+      "connect": {
+         "protocol": "_PROTOCOL_",
+         "host": "_HOSTNAME_",
+         "port": "_APP_PORT_",
+         "deploy": "resource-server",
+         "endpoint": "rest"
+      },
+```
+- Set **protocol**: `http` or `https`
+- Set **host**: Fully Qualified Domain Name (FQDN) of installation
+- Set **port**: Port for Tomcat instance that has the Resource Server installed: `38080`
+
+### Resource Server (RS): No SQL Database (MongoDB): `rs.nosql`
 
 ```
+      "nosql": {
+         "comment": "No SQL Database (MongoDB)",
+         "host": "_HOSTNAME_",
+         "port": "27017",
+         "authen": {
+            "database": "resource-server",
+            "user": "resourceadmin",
+            "password": "_PASSWORD_"
+         },
+         ...
+      },
+```
+
+- Set **host**: Fully Qualified Domain Name (FQDN) of installation
+- Set **password**: Password for the MongoDB resource-server database: `password`
+
+### Resource Server (RS): OAuth 2.0 Client: `rs.nosql`
+
+```
+      "oauth2": {
+         "scopes": "uma_protection",
+         "client": {
+            "id": "UMA-Resource-Server",
+            "secret": "_PASSWORD_",
+            "redirect": "_PROTOCOL_://_HOSTNAME_:_APP_PORT_/resource-server/callbacks/oauth2.html"
+         }
+      },
+```
+
+- Set **secret**: Password for the OAuth 2.0 Client: `password`
+- Set **redirect PROTOCOL**: `http` or `https`
+- Set **redirect HOSTNAME**: Fully Qualified Domain Name (FQDN) of installation
+- Set **redirect APP_PORT**: Port for Tomcat instance that has the Resource Server installed: `38080`
+
+### Authorization Server (AS) Connection: `as.connect`
+
+```
+      "connect": {
+         "protocol": "_PROTOCOL_",
+         "host": "_HOSTNAME_",
+         "port": "_AM_PORT_",
+         "path": "openam"
+      },
+```
+
+- Set **protocol**: `http` or `https`
+- Set **host**: Fully Qualified Domain Name (FQDN) of installation
+- Set **port**: Port for Tomcat instance that has the Access Manager installed: `18080`
+
+### Authorization Server (AS) admin credentials: `as.admin`
+
+```
+      "admin": {
+         "user": "amadmin",
+         "password": "_PASSWORD_"
+      },
+```
+
+- Set **password**: Password for the Access Manager adminstrator account: `password`
+
+### Content Server (CS) Connection: `cs.connect`
+
+```
+      "connect": {
+         "protocol": "_PROTOCOL_",
+         "host": "_HOSTNAME_",
+         "port": "_APP_PORT_",
+         "path": "content-server/rest/content-server/content"
+      }
+```
+
+- Set **protocol**: `http` or `https`
+- Set **host**: Fully Qualified Domain Name (FQDN) of installation
+- Set **port**: Port for Tomcat instance that has the Content Server installed: `38080`
+
+Restart the Tomcat server running the **Resource Server** (`resource-server`)
+
