@@ -2,6 +2,8 @@
 
 ForgeRock Demonstration Platform : **UMA Resource Server** : A deployable web service that provides REST / JSON operations for the [User Managed Access (UMA) 2.0](https://kantarainitiative.org/confluence/display/uma/Home)  Resource Server (RS) functionality.  This service is implemented using the JAX-RS/Jersey REST API and MongoDB for document persistance. This service also leverages the [ForgeRock Access Manager](https://www.forgerock.com/platform/access-management) for the UMA 2.0 Authorization Server (AS) functionality.
 
+![overview image](images/overview.png)
+
 `git clone https://github.com/ForgeRock/frdp-uma-resource-server.git`
 
 # Requirements
@@ -146,7 +148,7 @@ This procedure will create two **Services**:
 1. Click `Create` 
 1. From the dialog window, click `OK`
 
-## Create *UMA Client / Requesting Party (RqP)* Agent
+## Create *UMA Client / Requesting Party (RqP)* Client
 
 This procedure creates / configures an OAuth 2.0 client for the Requesting Party (RqP) application which will access resources.
 
@@ -164,7 +166,7 @@ This procedure creates / configures an OAuth 2.0 client for the Requesting Party
 1. Set **Grant Type** to include: `Authorization Code` and `UMA` *(press Enter after each item)*
 1. Click **Save Changes**
 
-## Create *UMA Resource Server (RS)* Agent
+## Create *UMA Resource Server (RS)* Client
 
 This procedure creates / configures an OAuth 2.0 client for the Resource Server (RS) application.
 
@@ -237,7 +239,7 @@ vi resource-server.json
 ```
 Edti the following sections of the JSON file:
 
-### Resource Server (RS) Connection: `rs.connet`
+### Resource Server (RS) Connection: `rs.connect`
 
 ```
       "connect": {
