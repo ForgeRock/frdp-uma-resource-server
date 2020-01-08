@@ -148,7 +148,7 @@ This procedure will create two **Services**:
 1. Click `Create` 
 1. From the dialog window, click `OK`
 
-## Create *UMA Client / Requesting Party (RqP)* Client
+## Create OAuth 2.0 *UMA Requesting Party (RqP)* Client
 
 This procedure creates / configures an OAuth 2.0 client for the Requesting Party (RqP) application which will access resources.
 
@@ -166,7 +166,7 @@ This procedure creates / configures an OAuth 2.0 client for the Requesting Party
 1. Set **Grant Type** to include: `Authorization Code` and `UMA` *(press Enter after each item)*
 1. Click **Save Changes**
 
-## Create *UMA Resource Server (RS)* Client
+## Create OAuth 2.0 *UMA Resource Server (RS)* Client
 
 This procedure creates / configures an OAuth 2.0 client for the Resource Server (RS) application.
 
@@ -237,11 +237,13 @@ The deployed application needs to be configured.  Edit the `resource-server.json
 cd TOMCAT_INSTALLATION/webapps/resource-server/WEB-INF/config
 vi resource-server.json
 ```
-Edti the following sections of the JSON file:
+Edit the following sections of the JSON file:
 
 ### Resource Server (RS) Connection: `rs.connect`
 
 ```
+   "rs": {
+      ...
       "connect": {
          "protocol": "_PROTOCOL_",
          "host": "_HOSTNAME_",
@@ -249,6 +251,8 @@ Edti the following sections of the JSON file:
          "deploy": "resource-server",
          "endpoint": "rest"
       },
+      ...
+   }
 ```
 - Set **protocol**: `http` or `https`
 - Set **host**: Fully Qualified Domain Name (FQDN) of installation
@@ -257,6 +261,8 @@ Edti the following sections of the JSON file:
 ### Resource Server (RS): No SQL Database (MongoDB): `rs.nosql`
 
 ```
+   "rs": {
+      ...
       "nosql": {
          "comment": "No SQL Database (MongoDB)",
          "host": "_HOSTNAME_",
@@ -268,14 +274,18 @@ Edti the following sections of the JSON file:
          },
          ...
       },
+      ...
+   }
 ```
 
 - Set **host**: Fully Qualified Domain Name (FQDN) of installation
 - Set **password**: Password for the MongoDB resource-server database: `password`
 
-### Resource Server (RS): OAuth 2.0 Client: `rs.nosql`
+### Resource Server (RS): OAuth 2.0 Client: `rs.oauth2.client`
 
 ```
+   "rs": {
+      ...
       "oauth2": {
          "scopes": "uma_protection",
          "client": {
@@ -284,6 +294,8 @@ Edti the following sections of the JSON file:
             "redirect": "_PROTOCOL_://_HOSTNAME_:_APP_PORT_/resource-server/callbacks/oauth2.html"
          }
       },
+      ...
+   }
 ```
 
 - Set **secret**: Password for the OAuth 2.0 Client: `password`
@@ -294,12 +306,16 @@ Edti the following sections of the JSON file:
 ### Authorization Server (AS) Connection: `as.connect`
 
 ```
+   "as": {
+      ...
       "connect": {
          "protocol": "_PROTOCOL_",
          "host": "_HOSTNAME_",
          "port": "_AM_PORT_",
          "path": "openam"
       },
+      ...
+   }
 ```
 
 - Set **protocol**: `http` or `https`
@@ -309,10 +325,14 @@ Edti the following sections of the JSON file:
 ### Authorization Server (AS) admin credentials: `as.admin`
 
 ```
+   "as": {
+      ...
       "admin": {
          "user": "amadmin",
          "password": "_PASSWORD_"
       },
+      ...
+   }
 ```
 
 - Set **password**: Password for the Access Manager adminstrator account: `password`
@@ -320,12 +340,15 @@ Edti the following sections of the JSON file:
 ### Content Server (CS) Connection: `cs.connect`
 
 ```
+   "cs": {
+      ...
       "connect": {
          "protocol": "_PROTOCOL_",
          "host": "_HOSTNAME_",
          "port": "_APP_PORT_",
          "path": "content-server/rest/content-server/content"
       }
+   }
 ```
 
 - Set **protocol**: `http` or `https`
