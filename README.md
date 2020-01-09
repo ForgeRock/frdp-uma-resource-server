@@ -6,6 +6,14 @@ ForgeRock Demonstration Platform : **UMA Resource Server** : A deployable web se
 
 `git clone https://github.com/ForgeRock/frdp-uma-resource-server.git`
 
+# Disclaimer
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+# License
+
+[MIT](/LICENSE)
+
 # Requirements
 
 The following items must be installed:
@@ -54,67 +62,79 @@ drwxr-xr-x   5 scott.fehrman  staff       160 Jan  6 20:15 resource-server
 
 The procedures in this document will use the folowing settings.  You will need to change some of these settings to match your test environment.
 
-## MongoDB
-
-- Default Password: `password`
-- Port: `27017`
-
-## Tomcat instances
-
-- Access Manager: port: `18080`
-- Applications (Content Server and Resoure Server): port: `38080`
-
-## Access Manager
-
-- Admin User: user id: `amadmin`, password: `password`
-- Resource Server (RS): client id: `UMA-Resource-Server`, client secret: `password`
-- Requesting Party (RqP): client id: `UMA-Rqp-Client`, client secret: `password`
-- Resource Owner (RO): user id: `dcrane`, password: `password`
-- Requesting Party (RqP): user id: `bjensen`, password: `password`
+| Technology   | Category | Name      | Value      |
+| ------------ | -------- | --------- | ---------- |
+| **MongoDB**   |
+|              | Default 
+|              |          | Password:  | `password` |
+|              |          | Port:      | `27017`    |
+| **Tomcat** |
+|              | Access Manager |
+|              |               | HTTP Port:  | `18080` |
+|              |               | HTTPS Port: | `18443`
+|              | Applications  |
+|              |               | HTTP Port: | `38080` |
+|              |               | HTTPS Port: | `38443` |
+| **Access Manager** |
+|                | Admin User 
+|                |            | User Id: | `amadmin` |
+|                |            | Password: | `password` |
+|                | OAuth Client: Resource Server |
+|                |                 | Client Id: | `UMA-Resource-Server` |
+|                |                 | Client Secret: | `password` |
+|                | OAuth Client: Requesting Party |
+|                |                 | Client Id: | `UMA-RqP-Client` |
+|                |                 | Client Secret: | `password` |
+|                | User: Resource Owner |
+|                |                 | User Id: | `dcrane` |
+|                |                 | Password: | `password` |
+|                | User: Requesting Party |
+|                |                 | User Id: | `bjensen` |
+|                |                 | Password: | `password` |
 
 # Configure MongoDB
 
 The MongoDB object database needs to be configured for the **resources** and **credentials** collections in the **resource-server** database.
 
 1. Access MongoDB system \
+\
 `ssh root@hostname`
-1. Connect as "root" user to create database and collection \
+1. Connect as "root" MongoDB user to create database and collection \
+\
 `mongo --username "root" --password "<ROOT_PASSWORD>" --authenticationDatabase "admin" admin`
-1. Specify the database name \
-`> use resource-server;`
-1. Drop existing database \
-`> db.dropDatabase();`
-1. Drop existing admin user \
-`> db.dropUser("resourceadmin");`
-1. Create admin user \
-`> db.createUser({user:"resourceadmin",pwd:"password",roles:["readWrite","dbAdmin"]});`
-1. Create *credentials* collection \
-`> db.createCollection("credentials");`
-1. Create *resources* collection \
-`> db.createCollection("resources");`
-1. Logout as the "root" user \
-`> quit();`
-1. Connect as the "resourceadmin" user \
+1. We need to do some database initialization ... 
+Specify the database name: `resource-server`.
+Drop database if it already exists. 
+Create an admin user, remove first, for the database: `resourceadmin`. 
+Create two collections: `credentials` and `resources`. Quit MongoDB. \
+\
+`use resource-server;` \
+`db.dropDatabase();` \
+`db.dropUser("resourceadmin");` \
+`db.createUser({user:"resourceadmin",pwd:"password",roles:["readWrite","dbAdmin"]});` \
+`db.createCollection("credentials");` \
+`db.createCollection("resources");` \
+`quit();`
+
+1. Connect as the "resourceadmin" user for the `resource-server` database.\
+\
 `mongo --username "resourceadmin" --password "password" --authenticationDatabase "resource-server" resource-server`
-1. Create index in the *credentials* collection \
-`> db.credentials.createIndex({"uid":1});` \
-`> db.credentials.createIndex({"data.owner":1}, {unique: true});`
-1. Insert sample record into the *credentials* collection \
-`> db.credentials.insert({"comment": "This is a test document"});`
-1. Display the sample record \
-`> db.credentials.find();` \
-`> db.credentials.find().pretty();`
-1. Create index in the *resources* collection \
-`> db.resources.createIndex({"uid":1});` \
-`> db.resources.createIndex({"data.owner":1});` \
-`> db.resources.createIndex({"data.register":1});`
-1. Insert sample record into the *resources* collection \
-`> db.resources.insert({"comment": "This is a test document"});`
-1. Display the sample record \
-`> db.resources.find();` \
-`> db.resources.find().pretty();`
-1. Logout \
-`> quit();`
+1. Create indexes for both the `resources` and `credentials` collections. 
+Insert test documents into both collections. 
+Read the documents from both collections. Quit MongoDB. \
+\
+`db.resources.createIndex({"uid":1});` \
+`db.resources.createIndex({"data.owner":1});` \
+`db.resources.createIndex({"data.register":1});` \
+`db.credentials.createIndex({"uid":1});` \
+`db.credentials.createIndex({"data.owner":1}, {unique: true});` \
+`db.resources.insert({"comment": "This is a test document"});` \
+`db.credentials.insert({"comment": "This is a test document"});` \
+`db.resources.find();` \
+`db.resources.find().pretty();` \
+`db.credentials.find();` \
+`db.credentials.find().pretty();` \
+`quit();`
 
 # Configure Access Manager
 
@@ -225,7 +245,7 @@ This example deploys the `resource-server.war` file to an Apache Tomcat 8.x envi
 
 Copy the `resource-server.war` file to the `webapps` folder in the Tomcat server installation.  The running Tomcat server will automatically unpack the war file.
 
-```
+```bash
 cp ./target/resource-server.war TOMCAT_INSTALLATION/webapps
 ```
 
@@ -233,7 +253,7 @@ cp ./target/resource-server.war TOMCAT_INSTALLATION/webapps
 
 The deployed application needs to be configured.  Edit the `resource-server.json` file and change /check the values.
 
-```
+```bash
 cd TOMCAT_INSTALLATION/webapps/resource-server/WEB-INF/config
 vi resource-server.json
 ```
@@ -241,7 +261,7 @@ Edit the following sections of the JSON file:
 
 ### Resource Server (RS) Connection: `rs.connect`
 
-```
+```json
    "rs": {
       ...
       "connect": {
@@ -260,7 +280,7 @@ Edit the following sections of the JSON file:
 
 ### Resource Server (RS): No SQL Database (MongoDB): `rs.nosql`
 
-```
+```json
    "rs": {
       ...
       "nosql": {
@@ -283,7 +303,7 @@ Edit the following sections of the JSON file:
 
 ### Resource Server (RS): OAuth 2.0 Client: `rs.oauth2.client`
 
-```
+```json
    "rs": {
       ...
       "oauth2": {
@@ -305,7 +325,7 @@ Edit the following sections of the JSON file:
 
 ### Authorization Server (AS) Connection: `as.connect`
 
-```
+```json
    "as": {
       ...
       "connect": {
@@ -324,7 +344,7 @@ Edit the following sections of the JSON file:
 
 ### Authorization Server (AS) admin credentials: `as.admin`
 
-```
+```json
    "as": {
       ...
       "admin": {
@@ -339,7 +359,7 @@ Edit the following sections of the JSON file:
 
 ### Content Server (CS) Connection: `cs.connect`
 
-```
+```json
    "cs": {
       ...
       "connect": {
