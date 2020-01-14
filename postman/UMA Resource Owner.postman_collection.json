@@ -1,0 +1,811 @@
+{
+	"info": {
+		"_postman_id": "433095d3-342b-4292-af98-7d5c4f43cc59",
+		"name": "UMA Resource Owner",
+		"description": "UMA Resource Owner",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "AuthN AuthZ",
+			"item": [
+				{
+					"name": "Authenticate",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "7a3b76f7-bd1e-496b-b84b-f63131135cdf",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"postman.setEnvironmentVariable(\"tokenId\", jsonData.tokenId);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "accept-api-version",
+								"value": "resource=2.0,protocol=1.0"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-OpenAM-Username",
+								"value": "{{userName}}"
+							},
+							{
+								"key": "X-OpenAM-Password",
+								"value": "{{userPassword}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{FQDN-openam}}/openam/json/realms/root/authenticate",
+							"host": [
+								"{{FQDN-openam}}"
+							],
+							"path": [
+								"openam",
+								"json",
+								"realms",
+								"root",
+								"authenticate"
+							]
+						},
+						"description": "Login with username and password, get the sso token"
+					},
+					"response": []
+				},
+				{
+					"name": "Validate SSO",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept-API-Version",
+								"value": "resource=2.1,protocol=1.0"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \n  \"tokenId\": \"{{tokenId}}\" \n}"
+						},
+						"url": {
+							"raw": "{{FQDN-openam}}/openam/json/realms/root/sessions?_action=validate",
+							"host": [
+								"{{FQDN-openam}}"
+							],
+							"path": [
+								"openam",
+								"json",
+								"realms",
+								"root",
+								"sessions"
+							],
+							"query": [
+								{
+									"key": "_action",
+									"value": "validate"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Resource",
+			"item": [
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"meta\": {\n\t\t\"discoverable\": false,\n    \t\"name\": \"IRA-456\",\n\t\t\"type\": \"finance-investment\",\n\t\t\"label\": \"Spouse IRA\",\n\t\t\"description\": \"Self managed IRS for Tom\"\n\t},\n\t\"content\": {\n\t\t\"foo\": \"bar\",\n\t\t\"givenName\": \"James\",\n\t\t\"sirName\": \"Bond\"\n\t},\n\t\"register\": {\n\t\t\"resource_scopes\": [ \"content\", \"meta\", \"print\", \"download\"],\n\t\t\"icon_uri\": \"https://idp.frdpcloud.com/shared/icons/money.png\",\n\t\t\"policy\": {\n\t\t\t\"permissions\": [\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"aadams\",\n\t\t\t\t\t\"scopes\": [\"content\", \"meta\"]\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"myoshida\",\n\t\t\t\t\t\"scopes\": [\"content\"]\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t}\n}"
+						},
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "02a0da64-59f2-479b-be21-c9e66f66a02d",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"postman.setEnvironmentVariable(\"resourceId\", jsonData.results[0]);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Read",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Meta",
+			"item": [
+				{
+					"name": "Meta Read",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/meta",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"meta"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Meta Replace",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"discoverable\": true,\n    \"name\": \"Savings001\",\n    \"description\": \"Savings account with spouse\",\n    \"label\": \"Joint Savings\",\n    \"type\": \"finance-savings\"\n}"
+						},
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/meta",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"meta"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Meta Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/meta",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"meta"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Content",
+			"item": [
+				{
+					"name": "Content Read",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"content"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Content Replace",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n   \"type\": \"test\",\n   \"results\": \"negative\",\n   \"active\": false\n}"
+						},
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"content"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Content Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"content"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Register",
+			"item": [
+				{
+					"name": "Register Read",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"register"
+							],
+							"query": [
+								{
+									"key": "expand",
+									"value": "policy",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register Replace",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"resource_scopes\": [\n        \"content\",\n        \"meta\"\n    ],\n    \"icon_uri\": \"https://idp.frdpcloud.com/shared/icons/money-bag.png\"\n}"
+						},
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"register"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Policy",
+			"item": [
+				{
+					"name": "Policy Read",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register/policy",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"register",
+								"policy"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Policy Replace",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n   \"permissions\": [\n      {\n         \"subject\": \"aadams\",\n         \"scopes\": [ \"content\", \"meta\" ]\n      },\n      {\n         \"subject\": \"myoshida\",\n         \"scopes\": [ \"content\" ]\n      },\n            {\n         \"subject\": \"dcrane\",\n         \"scopes\": [ \"content\" ]\n      }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register/policy",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"register",
+								"policy"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Policy Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register/policy",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"register",
+								"policy"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Pending Requests",
+			"item": [
+				{
+					"name": "Search",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ca05cf5d-d34c-4341-a319-a534a439a91c",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"postman.setEnvironmentVariable(\"requestId\", jsonData.results[0]);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/requests",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"requests"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Read",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{otkenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/requests/{{requestId}}",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"requests",
+								"{{requestId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Replace",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"disabled": true
+							},
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"action\": \"approve\"\n}"
+						},
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/requests/{{requestId}}",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"requests",
+								"{{requestId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Subjects",
+			"item": [
+				{
+					"name": "Subject Search",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/subjects",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"subjects"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "well-known",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{FQDN-openam}}/openam/uma/.well-known/uma2-configuration",
+					"host": [
+						"{{FQDN-openam}}"
+					],
+					"path": [
+						"openam",
+						"uma",
+						".well-known",
+						"uma2-configuration"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "35c7f04d-ac7d-4e09-8329-58478a9c2113",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "4378343f-b3d2-4de7-8a91-97fb450ff9db",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"protocolProfileBehavior": {}
+}

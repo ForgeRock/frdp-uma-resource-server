@@ -195,7 +195,8 @@ This procedure creates / configures an OAuth 2.0 client for the Resource Server 
 1. Select **Clients** Tab 
 1. Click **+ Add Client** 
 1. Set **Client ID** to `UMA-Resource-Server` 
-1. Set **Client Secret** `password` 
+1. Set **Client Secret** `password`
+1. Set **Redirection URIs** `_PROTOCOL_://_HOSTNAME_:_APP_PORT_/resource-server/callbacks/oauth2.html`
 1. Set **Scopes** `uma_protection` *(press Enter after each item)*
 1. Click **Create** 
 1. Select **Core** Tab 
@@ -322,6 +323,13 @@ Edit the following sections of the JSON file:
 - Set **redirect PROTOCOL**: `http` or `https`
 - Set **redirect HOSTNAME**: Fully Qualified Domain Name (FQDN) of installation
 - Set **redirect APP_PORT**: Port for Tomcat instance that has the Resource Server installed: `38080`
+
+#### NOTICE:  
+
+The `client` attributes MUST match the values used when the Access Manager OAuth 2.0 Client `UMA-Resource-Server` configuration:
+- `id`
+- `secret`
+- `redriect`
 
 ### Authorization Server (AS) Connection: `as.connect`
 
