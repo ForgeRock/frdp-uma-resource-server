@@ -61,7 +61,7 @@
 								"authenticate"
 							]
 						},
-						"description": "Login with username and password, get the sso token"
+						"description": "Login with username and password, get the sso token.\n\nThe sso token is saved as the \"tokenId\" environment variable."
 					},
 					"response": []
 				},
@@ -101,7 +101,8 @@
 									"value": "validate"
 								}
 							]
-						}
+						},
+						"description": "Verify the AM sso token is still good.  The username is returned in a verified response."
 					},
 					"response": []
 				}
@@ -127,7 +128,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\t\"meta\": {\n\t\t\"discoverable\": false,\n    \t\"name\": \"IRA-456\",\n\t\t\"type\": \"finance-investment\",\n\t\t\"label\": \"Spouse IRA\",\n\t\t\"description\": \"Self managed IRS for Tom\"\n\t},\n\t\"content\": {\n\t\t\"foo\": \"bar\",\n\t\t\"givenName\": \"James\",\n\t\t\"sirName\": \"Bond\"\n\t},\n\t\"register\": {\n\t\t\"resource_scopes\": [ \"content\", \"meta\", \"print\", \"download\"],\n\t\t\"icon_uri\": \"https://idp.frdpcloud.com/shared/icons/money.png\",\n\t\t\"policy\": {\n\t\t\t\"permissions\": [\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"aadams\",\n\t\t\t\t\t\"scopes\": [\"content\", \"meta\"]\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"myoshida\",\n\t\t\t\t\t\"scopes\": [\"content\"]\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t}\n}"
+							"raw": "{\n\t\"meta\": {\n\t\t\"discoverable\": false,\n    \t\"name\": \"IRA-456\",\n\t\t\"type\": \"finance-investment\",\n\t\t\"label\": \"Spouse IRA\",\n\t\t\"description\": \"Self managed IRS for Tom\"\n\t},\n\t\"content\": {\n\t\t\"foo\": \"bar\",\n\t\t\"aString\": \"some string value\",\n\t\t\"aNumber\": 007,\n\t\t\"aBoolean\": true\n\t},\n\t\"register\": {\n\t\t\"resource_scopes\": [ \"content\", \"meta\", \"print\", \"download\"],\n\t\t\"icon_uri\": \"https://img.icons8.com/doodle/48/000000/money.png\",\n\t\t\"policy\": {\n\t\t\t\"permissions\": [\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"aadams\",\n\t\t\t\t\t\"scopes\": [\"content\", \"meta\"]\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"myoshida\",\n\t\t\t\t\t\"scopes\": [\"content\"]\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t}\n}"
 						},
 						"url": {
 							"raw": "{{FQDN-rs}}/rest/manage/resources",
@@ -139,7 +140,8 @@
 								"manage",
 								"resources"
 							]
-						}
+						},
+						"description": "Create a new resource using the JSON payload.  The payload can include some or all of the following sections:  \n\n- meta: required\n- content: optional\n- registration (UMA): optional\n    - policy: optional\n\n```json\n{\n\t\"meta\": {\n\t\t\n\t},\n\t\"content\": {\n\t\t\n\t},\n\t\"register\": {\n\t\t\"policy\": {\n\t\t\t\n\t\t}\n\t}\n}\n```\n"
 					},
 					"response": []
 				},
@@ -180,7 +182,8 @@
 								"manage",
 								"resources"
 							]
-						}
+						},
+						"description": "Get list of resources that belong to the Resource Owner.\n\nThe first resource Id in the response will be saved in the \"resourceId\" environemnt variable."
 					},
 					"response": []
 				},
@@ -205,7 +208,8 @@
 								"resources",
 								"{{resourceId}}"
 							]
-						}
+						},
+						"description": "Get the details for a specific resources. A resource may include some or all of the following: \n\n- meta\n- content\n- registration (UMA)\n    - policy"
 					},
 					"response": []
 				},
@@ -230,7 +234,8 @@
 								"resources",
 								"{{resourceId}}"
 							]
-						}
+						},
+						"description": "Delete a specific resource that belongs to a Resource Owner.\n\nIf the resource has been registered, it will be de-registered.  If the resource has associated content, the content will be deleted from the Content Server.\n\n"
 					},
 					"response": []
 				}
@@ -262,7 +267,8 @@
 								"{{resourceId}}",
 								"meta"
 							]
-						}
+						},
+						"description": "Get only the \"meta data\" associated with a resource."
 					},
 					"response": []
 				},
@@ -296,33 +302,8 @@
 								"{{resourceId}}",
 								"meta"
 							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Meta Delete",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
-							}
-						],
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/meta",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"meta"
-							]
-						}
+						},
+						"description": "Replace only the \"meta data\" associated with the reosurce."
 					},
 					"response": []
 				}
@@ -354,7 +335,8 @@
 								"{{resourceId}}",
 								"content"
 							]
-						}
+						},
+						"description": "Read the content (JSON) from the Content Server"
 					},
 					"response": []
 				},
@@ -374,7 +356,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n   \"type\": \"test\",\n   \"results\": \"negative\",\n   \"active\": false\n}"
+							"raw": "{\n   \"type\": \"test\",\n   \"results\": \"negative\",\n   \"quantity\": 123,\n   \"active\": false\n}"
 						},
 						"url": {
 							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",
@@ -388,7 +370,8 @@
 								"{{resourceId}}",
 								"content"
 							]
-						}
+						},
+						"description": "Replace the content (JSON) in the Content Server"
 					},
 					"response": []
 				},
@@ -414,7 +397,8 @@
 								"{{resourceId}}",
 								"content"
 							]
-						}
+						},
+						"description": "Delete the content (JSON) from the Content Server"
 					},
 					"response": []
 				}
@@ -453,7 +437,8 @@
 									"disabled": true
 								}
 							]
-						}
+						},
+						"description": "Read the UMA registration attributes"
 					},
 					"response": []
 				},
@@ -473,7 +458,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"resource_scopes\": [\n        \"content\",\n        \"meta\"\n    ],\n    \"icon_uri\": \"https://idp.frdpcloud.com/shared/icons/money-bag.png\"\n}"
+							"raw": "{\n    \"resource_scopes\": [\n        \"content\",\n        \"meta\",\n        \"print\",\n        \"download\"\n    ],\n    \"icon_uri\": \"https://img.icons8.com/doodle/48/000000/money-bag--v1.png\"\n}"
 						},
 						"url": {
 							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register",
@@ -487,7 +472,8 @@
 								"{{resourceId}}",
 								"register"
 							]
-						}
+						},
+						"description": "Replace the UMA registration attributes."
 					},
 					"response": []
 				},
@@ -513,7 +499,8 @@
 								"{{resourceId}}",
 								"register"
 							]
-						}
+						},
+						"description": "Delete the UMA registration attributes.  Actaully de-registers the resource from the Authorization Server."
 					},
 					"response": []
 				}
@@ -546,7 +533,8 @@
 								"register",
 								"policy"
 							]
-						}
+						},
+						"description": "Read the policies / permissions associated with the registered resource."
 					},
 					"response": []
 				},
@@ -566,7 +554,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n   \"permissions\": [\n      {\n         \"subject\": \"aadams\",\n         \"scopes\": [ \"content\", \"meta\" ]\n      },\n      {\n         \"subject\": \"myoshida\",\n         \"scopes\": [ \"content\" ]\n      },\n            {\n         \"subject\": \"dcrane\",\n         \"scopes\": [ \"content\" ]\n      }\n    ]\n}"
+							"raw": "{\n   \"permissions\": [\n      {\n         \"subject\": \"aadams\",\n         \"scopes\": [ \"content\", \"meta\" ]\n      },\n      {\n         \"subject\": \"myoshida\",\n         \"scopes\": [ \"content\", \"meta\" ]\n      },\n            {\n         \"subject\": \"bjensen\",\n         \"scopes\": [ \"content\", \"meta\", \"print\" ]\n      }\n    ]\n}"
 						},
 						"url": {
 							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register/policy",
@@ -581,7 +569,8 @@
 								"register",
 								"policy"
 							]
-						}
+						},
+						"description": "Replace the policies / permissions associated with the registered resource."
 					},
 					"response": []
 				},
@@ -608,7 +597,8 @@
 								"register",
 								"policy"
 							]
-						}
+						},
+						"description": "Delete all the policies / permissions associated with a registered resource."
 					},
 					"response": []
 				}
@@ -619,7 +609,7 @@
 			"name": "Pending Requests",
 			"item": [
 				{
-					"name": "Search",
+					"name": "Request Search",
 					"event": [
 						{
 							"listen": "test",
@@ -655,12 +645,13 @@
 								"manage",
 								"requests"
 							]
-						}
+						},
+						"description": "List all the pending requests for access to resources."
 					},
 					"response": []
 				},
 				{
-					"name": "Read",
+					"name": "Request Read",
 					"request": {
 						"method": "GET",
 						"header": [
@@ -684,28 +675,24 @@
 								"requests",
 								"{{requestId}}"
 							]
-						}
+						},
+						"description": "Read the details of a specific access request"
 					},
 					"response": []
 				},
 				{
-					"name": "Replace",
+					"name": "Request Approve Deny",
 					"request": {
 						"method": "PUT",
 						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json",
-								"disabled": true
-							},
 							{
 								"key": "x-frdp-ssotoken",
 								"value": "{{tokenId}}"
 							},
 							{
 								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
+								"type": "text",
+								"value": "application/json"
 							}
 						],
 						"body": {
@@ -723,7 +710,8 @@
 								"requests",
 								"{{requestId}}"
 							]
-						}
+						},
+						"description": "Either approve or deny the request for access.  Can change the scopes."
 					},
 					"response": []
 				}
@@ -731,10 +719,10 @@
 			"protocolProfileBehavior": {}
 		},
 		{
-			"name": "Subjects",
+			"name": "Extra",
 			"item": [
 				{
-					"name": "Subject Search",
+					"name": "Subjects Search",
 					"request": {
 						"method": "GET",
 						"header": [
@@ -757,9 +745,32 @@
 								"manage",
 								"subjects"
 							]
-						}
+						},
+						"description": "This is a VALUE ADD capability of the Resource Server and is NOT part of the UMA specification.\n\nGet a list of Subjects (Requesting Parties) that have access to any of the Resource Owner's resources."
 					},
 					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "ee8d3502-c5b4-407f-a39c-b70b595c3b07",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "aad50e7b-79b1-44f0-93c8-4a64ffd984c6",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
 				}
 			],
 			"protocolProfileBehavior": {}
@@ -780,7 +791,8 @@
 						".well-known",
 						"uma2-configuration"
 					]
-				}
+				},
+				"description": "Get the UMA configuration data from the \"well known\" end point."
 			},
 			"response": []
 		}

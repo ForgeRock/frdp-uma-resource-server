@@ -1,0 +1,593 @@
+{
+	"info": {
+		"_postman_id": "0b5acb4c-58d4-468c-a91c-fe9db5086f42",
+		"name": "UMA Requesting Party",
+		"description": "UMA Requesting Party",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "AuthN AuthZ",
+			"item": [
+				{
+					"name": "Authenticate",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "7a3b76f7-bd1e-496b-b84b-f63131135cdf",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"postman.setEnvironmentVariable(\"tokenId\", jsonData.tokenId);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "accept-api-version",
+								"value": "resource=2.0,protocol=1.0"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-OpenAM-Username",
+								"value": "{{userName}}"
+							},
+							{
+								"key": "X-OpenAM-Password",
+								"value": "{{userPassword}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{FQDN-openam}}/openam/json/realms/root/authenticate",
+							"host": [
+								"{{FQDN-openam}}"
+							],
+							"path": [
+								"openam",
+								"json",
+								"realms",
+								"root",
+								"authenticate"
+							]
+						},
+						"description": "Login with username and password, get the AM sso token"
+					},
+					"response": []
+				},
+				{
+					"name": "Validate SSO",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept-API-Version",
+								"value": "resource=2.1,protocol=1.0"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \n  \"tokenId\": \"{{tokenId}}\" \n}"
+						},
+						"url": {
+							"raw": "{{FQDN-openam}}/openam/json/realms/root/sessions?_action=validate",
+							"host": [
+								"{{FQDN-openam}}"
+							],
+							"path": [
+								"openam",
+								"json",
+								"realms",
+								"root",
+								"sessions"
+							],
+							"query": [
+								{
+									"key": "_action",
+									"value": "validate"
+								}
+							]
+						},
+						"description": "Verify the AM sso token is still good."
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Get Resource",
+			"item": [
+				{
+					"name": "1: Submit Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "5971aa40-ff4a-4d28-9feb-441f64d56f6e",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"postman.setEnvironmentVariable(\"permissionTicket\", jsonData.ticket);",
+									"postman.setEnvironmentVariable(\"asURI\", jsonData.as_uri);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-frdp-rpt",
+								"value": "{{reqPartyToken}}"
+							},
+							{
+								"key": "x-frdp-ssotoken",
+								"type": "text",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/share/resources/{{resourceId}}/?scopes={{scopes}}",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"share",
+								"resources",
+								"{{resourceId}}",
+								""
+							],
+							"query": [
+								{
+									"key": "scopes",
+									"value": "{{scopes}}"
+								}
+							]
+						},
+						"description": "Used to initially submit request (without RPT) to get the Permission Ticket.  Then used, a second time, to get the resource"
+					},
+					"response": []
+				},
+				{
+					"name": "2: Get Authz Code",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "9cc72303-52d5-4dc1-8686-afa46ff9c0d0",
+								"exec": [
+									"// get the authorization code from the HTML <INPUT> element",
+									"",
+									"const $ = cheerio.load(responseBody);",
+									"const code = $(\"input[name='code']\").val();",
+									"postman.setEnvironmentVariable(\"authzCode\", code); ",
+									"",
+									"// create and save the basic auth header value",
+									"",
+									"const client = postman.getEnvironmentVariable(\"clientId\");",
+									"const secret = postman.getEnvironmentVariable(\"clientSecret\");",
+									"const encode = \"Basic \" + btoa( client + \":\" + secret);",
+									"",
+									"postman.setEnvironmentVariable(\"basicAuth\", encode); ",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/x-www-form-urlencoded",
+								"type": "text"
+							},
+							{
+								"key": "iPlanetDirectoryPro",
+								"value": "{{tokenId}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "response_type",
+									"value": "code",
+									"type": "text"
+								},
+								{
+									"key": "save_consent",
+									"value": "off",
+									"type": "text"
+								},
+								{
+									"key": "decision",
+									"value": "allow",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "{{clientId}}",
+									"type": "text"
+								},
+								{
+									"key": "redirect_uri",
+									"value": "{{clientURI}}",
+									"type": "text"
+								},
+								{
+									"key": "scope",
+									"value": "openid",
+									"type": "text"
+								},
+								{
+									"key": "response_mode",
+									"value": "form_post",
+									"type": "text"
+								},
+								{
+									"key": "csrf",
+									"value": "{{tokenId}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{asURI}}/authorize",
+							"host": [
+								"{{asURI}}"
+							],
+							"path": [
+								"authorize"
+							]
+						},
+						"description": "In order to get the Claim Token (an OAuth 2.0 access token) we need to use our AM session token to get an authorization code, which will be used in the next step."
+					},
+					"response": []
+				},
+				{
+					"name": "3: Get Claim Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "b8fc919c-5a29-41c3-89cc-e712b365b53f",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"postman.setEnvironmentVariable(\"claimToken\", jsonData.id_token);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/x-www-form-urlencoded",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "{{basicAuth}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "grant_type",
+									"value": "authorization_code",
+									"type": "text"
+								},
+								{
+									"key": "redirect_uri",
+									"value": "{{clientURI}}",
+									"type": "text"
+								},
+								{
+									"key": "code",
+									"value": "{{authzCode}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{asURI}}/access_token",
+							"host": [
+								"{{asURI}}"
+							],
+							"path": [
+								"access_token"
+							]
+						},
+						"description": "Use the \"authorization code\" flow to obtain the Claim Token (an OAuth 2.0 access token)."
+					},
+					"response": []
+				},
+				{
+					"name": "4: Get RPT",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "b8fc919c-5a29-41c3-89cc-e712b365b53f",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"postman.setEnvironmentVariable(\"reqPartyToken\", jsonData.access_token);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/x-www-form-urlencoded"
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "{{basicAuth}}"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "grant_type",
+									"value": "urn:ietf:params:oauth:grant-type:uma-ticket",
+									"type": "text"
+								},
+								{
+									"key": "ticket",
+									"value": "{{permissionTicket}}",
+									"type": "text"
+								},
+								{
+									"key": "scope",
+									"value": "{{scope}}",
+									"type": "text"
+								},
+								{
+									"key": "claim_token",
+									"value": "{{claimToken}}",
+									"type": "text"
+								},
+								{
+									"key": "claim_token_format",
+									"value": "http://openid.net/specs/openid-connect-core-1_0.html#IDToken",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{asURI}}/access_token",
+							"host": [
+								"{{asURI}}"
+							],
+							"path": [
+								"access_token"
+							]
+						},
+						"description": "Use the Permission Ticket (from 1st step) and the Claim Token to get the Requesting Party Toklen (RPT).  Re-submit the resource request, after getting the RPT."
+					},
+					"response": []
+				},
+				{
+					"name": "5: Re-Submit Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "5971aa40-ff4a-4d28-9feb-441f64d56f6e",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-frdp-rpt",
+								"value": "{{reqPartyToken}}"
+							},
+							{
+								"key": "x-frdp-ssotoken",
+								"type": "text",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/share/resources/{{resourceId}}/?scopes={{scopes}}",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"share",
+								"resources",
+								"{{resourceId}}",
+								""
+							],
+							"query": [
+								{
+									"key": "scopes",
+									"value": "{{scopes}}"
+								}
+							]
+						},
+						"description": "Re-submit the request to get the resource, now that we have a RPT"
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Extra",
+			"item": [
+				{
+					"name": "Shared With Me",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"type": "text",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/share/withme",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"share",
+								"withme"
+							]
+						},
+						"description": "This is a VALUE ADD capability of the Resource Server and is NOT part of the UMA specification.\n\nGet the resources that are currently being shared \"with me\", across all Resource Owners."
+					},
+					"response": []
+				},
+				{
+					"name": "Discover Resources",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/share/owners/{{resourceOwner}}/discover",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"share",
+								"owners",
+								"{{resourceOwner}}",
+								"discover"
+							]
+						},
+						"description": "This is a VALUE ADD capability of the Resource Server and is NOT part of the UMA specification.\n\nGets a list of resources that when been \"flagged\" as discoverable, for a specific Resource Owner."
+					},
+					"response": []
+				},
+				{
+					"name": "Revoke My Access",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/share/resources/{{resourceId}}/policy",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"share",
+								"resources",
+								"{{resourceId}}",
+								"policy"
+							]
+						},
+						"description": "This is a VALUE ADD capability of the Resource Server and is NOT part of the UMA specification.\n\nThe Requesting Party can revoke their own access to a resource."
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "well-known",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{FQDN-openam}}/openam/uma/.well-known/uma2-configuration",
+					"host": [
+						"{{FQDN-openam}}"
+					],
+					"path": [
+						"openam",
+						"uma",
+						".well-known",
+						"uma2-configuration"
+					]
+				},
+				"description": "Get the UMA configuration data from the \"well known\" end point."
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "4168bf23-6308-4b10-8f07-3b652b17d689",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "1beec1bb-b0fe-46d7-b72b-97ca97a814bf",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"protocolProfileBehavior": {}
+}

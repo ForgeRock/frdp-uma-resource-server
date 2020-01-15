@@ -178,6 +178,7 @@ This procedure creates / configures an OAuth 2.0 client for the Requesting Party
 1. Click **+ Add Client** 
 1. Set **Client ID** to `UMA-RqP-Client` 
 1. Set **Client Secret** `password` 
+1. Set **Redirection URIs** `_PROTOCOL_://_HOSTNAME_:_APP_PORT_/resource-server/callbacks/oauth2.html`
 1. Set **Scopes** `read` and `openid` *(press Enter after each item)*
 1. Click **Create** 
 1. Select **Advanced** Tab 
