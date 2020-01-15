@@ -386,3 +386,23 @@ The `client` attributes MUST match the values used when the Access Manager OAuth
 
 Restart the Tomcat server running the **Resource Server** (`resource-server`)
 
+# Testing
+
+There following Use Cases will test the UMA 2.0 capabilities and "value add" features of the Resource Server:
+
+| Actor            | Use Case       | Category | Description |
+| ---------------- | -------------- | -------- | ----------- |
+| Resource Owner   | 
+|                  | Resources | UMA 2.0 | Create, Read, Update, Delete resources (meta, content, regisrtration, policies).
+|                  | Requests | Value Add | Accessing a resource, without permission, will generate a access request.
+|                  | People | Value Add | Who has access to my resources.
+| Requesting Party | 
+|                  | Resources | UMA 2.0 | Accessing shared resources
+|                  | Shared With Me | Value Add | What resource do I currently have access to
+|                  | Diascovery | Value Add | What resources are discoverable
+
+Use the provided Postman [collections](/postman) to test the Use Cases:
+
+- [UMA Resource Owner](/postman/UMA_RO.md)
+- [UMA Requesting Party](/postman/UMA_RqP.md)
+
