@@ -7,10 +7,10 @@
 	},
 	"item": [
 		{
-			"name": "AuthN AuthZ",
+			"name": "Authenticate",
 			"item": [
 				{
-					"name": "Authenticate",
+					"name": "Login",
 					"event": [
 						{
 							"listen": "test",
@@ -49,12 +49,11 @@
 							"raw": ""
 						},
 						"url": {
-							"raw": "{{FQDN-openam}}/openam/json/realms/root/authenticate",
+							"raw": "{{FQDN-openam}}/json/realms/root/authenticate",
 							"host": [
 								"{{FQDN-openam}}"
 							],
 							"path": [
-								"openam",
 								"json",
 								"realms",
 								"root",
@@ -66,7 +65,7 @@
 					"response": []
 				},
 				{
-					"name": "Validate SSO",
+					"name": "Validate",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -84,12 +83,11 @@
 							"raw": "{ \n  \"tokenId\": \"{{tokenId}}\" \n}"
 						},
 						"url": {
-							"raw": "{{FQDN-openam}}/openam/json/realms/root/sessions?_action=validate",
+							"raw": "{{FQDN-openam}}/json/realms/root/sessions?_action=validate",
 							"host": [
 								"{{FQDN-openam}}"
 							],
 							"path": [
-								"openam",
 								"json",
 								"realms",
 								"root",
@@ -110,7 +108,7 @@
 			"protocolProfileBehavior": {}
 		},
 		{
-			"name": "Resource",
+			"name": "Manage Resource",
 			"item": [
 				{
 					"name": "Create",
@@ -128,7 +126,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\t\"meta\": {\n\t\t\"discoverable\": false,\n    \t\"name\": \"IRA-456\",\n\t\t\"type\": \"finance-investment\",\n\t\t\"label\": \"Spouse IRA\",\n\t\t\"description\": \"Self managed IRS for Tom\"\n\t},\n\t\"content\": {\n\t\t\"foo\": \"bar\",\n\t\t\"aString\": \"some string value\",\n\t\t\"aNumber\": 007,\n\t\t\"aBoolean\": true\n\t},\n\t\"register\": {\n\t\t\"resource_scopes\": [ \"content\", \"meta\", \"print\", \"download\"],\n\t\t\"icon_uri\": \"https://img.icons8.com/doodle/48/000000/money.png\",\n\t\t\"policy\": {\n\t\t\t\"permissions\": [\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"aadams\",\n\t\t\t\t\t\"scopes\": [\"content\", \"meta\"]\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"myoshida\",\n\t\t\t\t\t\"scopes\": [\"content\"]\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t}\n}"
+							"raw": "{\n\t\"meta\": {\n\t\t\"discoverable\": false,\n    \t\"name\": \"IRA-456\",\n\t\t\"type\": \"finance-investment\",\n\t\t\"label\": \"Spouse IRA\",\n\t\t\"description\": \"Self managed IRA for Tom\"\n\t},\n\t\"content\": {\n\t\t\"object\": {\n\t\t\t\"foo\": \"bar\"\n\t\t},\n\t\t\"array\": [ \"item1\", \"item2\", \"item3\"],\n\t\t\"aString\": \"some string value\",\n\t\t\"aNumber\": 007,\n\t\t\"aBoolean\": true\n\t},\n\t\"register\": {\n\t\t\"resource_scopes\": [ \"content\", \"meta\", \"print\", \"download\"],\n\t\t\"icon_uri\": \"https://img.icons8.com/doodle/48/000000/money.png\",\n\t\t\"policy\": {\n\t\t\t\"permissions\": [\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"aadams\",\n\t\t\t\t\t\"scopes\": [\"content\", \"meta\"]\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"myoshida\",\n\t\t\t\t\t\"scopes\": [\"content\"]\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"bjensen\",\n\t\t\t\t\t\"scopes\": [\"content\", \"meta\", \"print\"]\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t}\n}"
 						},
 						"url": {
 							"raw": "{{FQDN-rs}}/rest/manage/resources",
@@ -240,367 +238,26 @@
 					"response": []
 				}
 			],
-			"protocolProfileBehavior": {}
-		},
-		{
-			"name": "Meta",
-			"item": [
+			"event": [
 				{
-					"name": "Meta Read",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
-							}
-						],
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/meta",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"meta"
-							]
-						},
-						"description": "Get only the \"meta data\" associated with a resource."
-					},
-					"response": []
+					"listen": "prerequest",
+					"script": {
+						"id": "f5052c15-57cf-4ace-b962-16a2c8578a2f",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
 				},
 				{
-					"name": "Meta Replace",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"discoverable\": true,\n    \"name\": \"Savings001\",\n    \"description\": \"Savings account with spouse\",\n    \"label\": \"Joint Savings\",\n    \"type\": \"finance-savings\"\n}"
-						},
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/meta",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"meta"
-							]
-						},
-						"description": "Replace only the \"meta data\" associated with the reosurce."
-					},
-					"response": []
-				}
-			],
-			"protocolProfileBehavior": {}
-		},
-		{
-			"name": "Content",
-			"item": [
-				{
-					"name": "Content Read",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
-							}
-						],
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"content"
-							]
-						},
-						"description": "Read the content (JSON) from the Content Server"
-					},
-					"response": []
-				},
-				{
-					"name": "Content Replace",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n   \"type\": \"test\",\n   \"results\": \"negative\",\n   \"quantity\": 123,\n   \"active\": false\n}"
-						},
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"content"
-							]
-						},
-						"description": "Replace the content (JSON) in the Content Server"
-					},
-					"response": []
-				},
-				{
-					"name": "Content Delete",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
-							}
-						],
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"content"
-							]
-						},
-						"description": "Delete the content (JSON) from the Content Server"
-					},
-					"response": []
-				}
-			],
-			"protocolProfileBehavior": {}
-		},
-		{
-			"name": "Register",
-			"item": [
-				{
-					"name": "Register Read",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
-							}
-						],
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"register"
-							],
-							"query": [
-								{
-									"key": "expand",
-									"value": "policy",
-									"disabled": true
-								}
-							]
-						},
-						"description": "Read the UMA registration attributes"
-					},
-					"response": []
-				},
-				{
-					"name": "Register Replace",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"resource_scopes\": [\n        \"content\",\n        \"meta\",\n        \"print\",\n        \"download\"\n    ],\n    \"icon_uri\": \"https://img.icons8.com/doodle/48/000000/money-bag--v1.png\"\n}"
-						},
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"register"
-							]
-						},
-						"description": "Replace the UMA registration attributes."
-					},
-					"response": []
-				},
-				{
-					"name": "Register Delete",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
-							}
-						],
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"register"
-							]
-						},
-						"description": "Delete the UMA registration attributes.  Actaully de-registers the resource from the Authorization Server."
-					},
-					"response": []
-				}
-			],
-			"protocolProfileBehavior": {}
-		},
-		{
-			"name": "Policy",
-			"item": [
-				{
-					"name": "Policy Read",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
-							}
-						],
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register/policy",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"register",
-								"policy"
-							]
-						},
-						"description": "Read the policies / permissions associated with the registered resource."
-					},
-					"response": []
-				},
-				{
-					"name": "Policy Replace",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n   \"permissions\": [\n      {\n         \"subject\": \"aadams\",\n         \"scopes\": [ \"content\", \"meta\" ]\n      },\n      {\n         \"subject\": \"myoshida\",\n         \"scopes\": [ \"content\", \"meta\" ]\n      },\n            {\n         \"subject\": \"bjensen\",\n         \"scopes\": [ \"content\", \"meta\", \"print\" ]\n      }\n    ]\n}"
-						},
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register/policy",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"register",
-								"policy"
-							]
-						},
-						"description": "Replace the policies / permissions associated with the registered resource."
-					},
-					"response": []
-				},
-				{
-					"name": "Policy Delete",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
-							}
-						],
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register/policy",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"register",
-								"policy"
-							]
-						},
-						"description": "Delete all the policies / permissions associated with a registered resource."
-					},
-					"response": []
+					"listen": "test",
+					"script": {
+						"id": "5b2fad9b-ed18-4469-9737-f3d3392bf8d1",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
 				}
 			],
 			"protocolProfileBehavior": {}
@@ -722,6 +379,345 @@
 			"name": "Extra",
 			"item": [
 				{
+					"name": "Meta Read",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/meta",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"meta"
+							]
+						},
+						"description": "Get only the \"meta data\" associated with a resource."
+					},
+					"response": []
+				},
+				{
+					"name": "Meta Replace",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"discoverable\": true,\n    \"name\": \"Savings001\",\n    \"description\": \"Savings account with spouse\",\n    \"label\": \"Joint Savings\",\n    \"type\": \"finance-savings\"\n}"
+						},
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/meta",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"meta"
+							]
+						},
+						"description": "Replace only the \"meta data\" associated with the reosurce."
+					},
+					"response": []
+				},
+				{
+					"name": "Content Read",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"content"
+							]
+						},
+						"description": "Read the content (JSON) from the Content Server"
+					},
+					"response": []
+				},
+				{
+					"name": "Content Replace",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n   \"type\": \"test\",\n   \"results\": \"negative\",\n   \"quantity\": 123,\n   \"active\": false\n}"
+						},
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"content"
+							]
+						},
+						"description": "Replace the content (JSON) in the Content Server"
+					},
+					"response": []
+				},
+				{
+					"name": "Content Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"content"
+							]
+						},
+						"description": "Delete the content (JSON) from the Content Server"
+					},
+					"response": []
+				},
+				{
+					"name": "Register Read",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"register"
+							],
+							"query": [
+								{
+									"key": "expand",
+									"value": "policy",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Read the UMA registration attributes"
+					},
+					"response": []
+				},
+				{
+					"name": "Register Replace",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"resource_scopes\": [\n        \"content\",\n        \"meta\",\n        \"print\",\n        \"download\"\n    ],\n    \"icon_uri\": \"https://img.icons8.com/doodle/48/000000/money-bag--v1.png\"\n}"
+						},
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"register"
+							]
+						},
+						"description": "Replace the UMA registration attributes."
+					},
+					"response": []
+				},
+				{
+					"name": "Register Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"register"
+							]
+						},
+						"description": "Delete the UMA registration attributes.  Actaully de-registers the resource from the Authorization Server."
+					},
+					"response": []
+				},
+				{
+					"name": "Policy Read",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register/policy",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"register",
+								"policy"
+							]
+						},
+						"description": "Read the policies / permissions associated with the registered resource."
+					},
+					"response": []
+				},
+				{
+					"name": "Policy Replace",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n   \"permissions\": [\n      {\n         \"subject\": \"aadams\",\n         \"scopes\": [ \"content\", \"meta\" ]\n      },\n      {\n         \"subject\": \"myoshida\",\n         \"scopes\": [ \"content\", \"meta\" ]\n      },\n            {\n         \"subject\": \"bjensen\",\n         \"scopes\": [ \"content\", \"meta\", \"print\" ]\n      }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register/policy",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"register",
+								"policy"
+							]
+						},
+						"description": "Replace the policies / permissions associated with the registered resource."
+					},
+					"response": []
+				},
+				{
+					"name": "Policy Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{tokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register/policy",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"register",
+								"policy"
+							]
+						},
+						"description": "Delete all the policies / permissions associated with a registered resource."
+					},
+					"response": []
+				},
+				{
 					"name": "Subjects Search",
 					"request": {
 						"method": "GET",
@@ -781,12 +777,11 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{FQDN-openam}}/openam/uma/.well-known/uma2-configuration",
+					"raw": "{{FQDN-openam}}/uma/.well-known/uma2-configuration",
 					"host": [
 						"{{FQDN-openam}}"
 					],
 					"path": [
-						"openam",
 						"uma",
 						".well-known",
 						"uma2-configuration"

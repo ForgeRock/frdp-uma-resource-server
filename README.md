@@ -60,7 +60,7 @@ drwxr-xr-x   5 scott.fehrman  staff       160 Jan  6 20:15 resource-server
 
 # Settings
 
-The procedures in this document will use the folowing settings.  You will need to change some of these settings to match your test environment.
+The procedures in this document will use the following settings.  You will need to change some of these settings to match your test environment.
 
 | Technology   | Category | Name      | Value      |
 | ------------ | -------- | --------- | ---------- |
@@ -364,7 +364,7 @@ The `client` attributes MUST match the values used when the Access Manager OAuth
    }
 ```
 
-- Set **password**: Password for the Access Manager adminstrator account: `password`
+- Set **password**: Password for the Access Manager administrator account: `password`
 
 ### Content Server (CS) Connection: `cs.connect`
 
@@ -393,16 +393,16 @@ There following Use Cases will test the UMA 2.0 capabilities and "value add" fea
 | Actor            | Use Case       | Category | Description |
 | ---------------- | -------------- | -------- | ----------- |
 | Resource Owner   | 
-|                  | Resources | UMA 2.0 | Create, Read, Update, Delete resources (meta, content, regisrtration, policies).
+|                  | Resources | UMA 2.0 | Create, Read, Update, Delete resources (meta, content, registration, policies).
 |                  | Requests | Value Add | Accessing a resource, without permission, will generate a access request.
 |                  | People | Value Add | Who has access to my resources.
 | Requesting Party | 
 |                  | Resources | UMA 2.0 | Accessing shared resources
 |                  | Shared With Me | Value Add | What resource do I currently have access to
-|                  | Diascovery | Value Add | What resources are discoverable
+|                  | Discovery | Value Add | What resources are discoverable
 
 Use the provided Postman [collections](/postman) to test the Use Cases:
 
-- [UMA Resource Owner](/postman/UMA_RO.md)
-- [UMA Requesting Party](/postman/UMA_RqP.md)
+- [UMA Resource Owner](/testing/RO/README.md)
+- [UMA Requesting Party](/testing/RqP/README.md)
 

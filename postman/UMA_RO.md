@@ -1,1 +1,0 @@
-# UMA Resource Owner
