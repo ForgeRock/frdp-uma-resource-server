@@ -16,15 +16,18 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 This test uses the [Postman](https://www.getpostman.com/downloads/) utility to execute REST/JSON commands with the **Resource Server (RS)** and the **Authorization Server (AS)**.
 
-Set Postman Preferences:
+Set Preferences:
 
 - General:\
 Disable SSL certificate verification
 
-Load the Postman Collections: 
+Load Environment Variables:
+- `../Resource_Server.postman_environment.json`
+
+Load Collection: 
 - `UMA_RO.postman_collection.json`
 
-Set Postman Environment variables for the **Resource Server** ... NOTE: set both the **`INITIAL VALUE`** and **`CURRENT VALUE`** the same.
+Set Environment variables for the **Resource Server** ... NOTE: set both the **`INITIAL VALUE`** and **`CURRENT VALUE`** the same.
 - `FQDN-openam`:\
 Set your **Authorization Server (AS)** deployment, *ForgeRock Access Manager*\
 Example: `https://uma.example.com:443/openam`

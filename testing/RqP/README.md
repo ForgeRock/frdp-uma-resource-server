@@ -16,12 +16,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 This test uses the [Postman](https://www.getpostman.com/downloads/) utility to execute REST/JSON commands with the **Resource Server (RS)** and the **Authorization Server (AS)**.
 
-Set Postman Preferences:
+Set Preferences:
 
 - General:\
 Disable SSL certificate verification
 
-Load the Postman Collections: 
+Load Environment Variables *(may have been loaded from the **RO** test):*
+- `../Resource_Server.postman_environment.json`
+
+Load Collections: 
 - `UMA_RqP.postman_collection.json`
 
 Set Postman Environment variables for the **Resource Server** ... NOTE: set both the **`INITIAL VALUE`** and **`CURRENT VALUE`** the same.
