@@ -394,20 +394,21 @@ Restart the Tomcat server running the **Resource Server** (`resource-server`)
 
 # Testing
 
-There following Use Cases will test the UMA 2.0 capabilities and "value add" features of the Resource Server:
+The following Use Cases will test the UMA 2.0 capabilities and "value add" features of the Resource Server:
 
 | Actor            | Use Case       | Category | Description |
 | ---------------- | -------------- | -------- | ----------- |
 | Resource Owner   | 
 |                  | Resources | UMA 2.0 | Create, Read, Update, Delete resources (meta, content, registration, policies).
-|                  | Requests | Value Add | Accessing a resource, without permission, will generate a access request.
 |                  | People | Value Add | Who has access to my resources.
+|                  | Requests | Value Add | Accessing a resource, without permission, will generate a access request.
 | Requesting Party | 
 |                  | Resources | UMA 2.0 | Accessing shared resources
 |                  | Shared With Me | Value Add | What resource do I currently have access to
 |                  | Discovery | Value Add | What resources are discoverable
+|                  | Revoke Access | Value Add | RqP initiated access revocation
 
-Use the provided Postman [collections](/postman) to test the Use Cases:
+Use the provided Postman [collections](/testing) to test the Use Cases:
 
 - [UMA Resource Owner](/testing/RO/README.md)
 - [UMA Requesting Party](/testing/RqP/README.md)
