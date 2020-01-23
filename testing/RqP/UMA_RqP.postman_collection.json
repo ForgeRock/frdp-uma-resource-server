@@ -18,7 +18,7 @@
 								"id": "7a3b76f7-bd1e-496b-b84b-f63131135cdf",
 								"exec": [
 									"var jsonData = JSON.parse(responseBody);",
-									"postman.setEnvironmentVariable(\"tokenId\", jsonData.tokenId);"
+									"postman.setEnvironmentVariable(\"RqPtokenId\", jsonData.tokenId);"
 								],
 								"type": "text/javascript"
 							}
@@ -37,11 +37,11 @@
 							},
 							{
 								"key": "X-OpenAM-Username",
-								"value": "{{userName}}"
+								"value": "{{RqPuserId}}"
 							},
 							{
 								"key": "X-OpenAM-Password",
-								"value": "{{userPassword}}"
+								"value": "{{RqPpassword}}"
 							}
 						],
 						"body": {
@@ -80,7 +80,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{ \n  \"tokenId\": \"{{tokenId}}\" \n}"
+							"raw": "{ \n  \"tokenId\": \"{{RqPtokenId}}\" \n}"
 						},
 						"url": {
 							"raw": "{{FQDN-openam}}/json/realms/root/sessions?_action=validate",
@@ -136,7 +136,7 @@
 							{
 								"key": "x-frdp-ssotoken",
 								"type": "text",
-								"value": "{{tokenId}}"
+								"value": "{{RqPtokenId}}"
 							}
 						],
 						"url": {
@@ -200,7 +200,7 @@
 							},
 							{
 								"key": "iPlanetDirectoryPro",
-								"value": "{{tokenId}}",
+								"value": "{{RqPtokenId}}",
 								"type": "text"
 							}
 						],
@@ -244,7 +244,7 @@
 								},
 								{
 									"key": "csrf",
-									"value": "{{tokenId}}",
+									"value": "{{RqPtokenId}}",
 									"type": "text"
 								}
 							]
@@ -394,7 +394,7 @@
 								"access_token"
 							]
 						},
-						"description": "Use the Permission Ticket (from 1st step) and the Claim Token to get the Requesting Party Token (RPT).  Re-submit the resource request, after getting the RPT."
+						"description": "Use the Permission Ticket (from 1st step) and the Claim Token to get the Requesting Party Toklen (RPT).  Re-submit the resource request, after getting the RPT."
 					},
 					"response": []
 				},
@@ -422,7 +422,7 @@
 							{
 								"key": "x-frdp-ssotoken",
 								"type": "text",
-								"value": "{{tokenId}}"
+								"value": "{{RqPtokenId}}"
 							}
 						],
 						"url": {
@@ -462,7 +462,7 @@
 							{
 								"key": "x-frdp-ssotoken",
 								"type": "text",
-								"value": "{{tokenId}}"
+								"value": "{{RqPtokenId}}"
 							}
 						],
 						"url": {
@@ -487,12 +487,12 @@
 						"header": [
 							{
 								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}",
+								"value": "{{RqPtokenId}}",
 								"type": "text"
 							}
 						],
 						"url": {
-							"raw": "{{FQDN-rs}}/rest/share/owners/{{resourceOwner}}/discover",
+							"raw": "{{FQDN-rs}}/rest/share/owners/{{ROuserId}}/discover",
 							"host": [
 								"{{FQDN-rs}}"
 							],
@@ -500,7 +500,7 @@
 								"rest",
 								"share",
 								"owners",
-								"{{resourceOwner}}",
+								"{{ROuserId}}",
 								"discover"
 							]
 						},
@@ -515,7 +515,7 @@
 						"header": [
 							{
 								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}",
+								"value": "{{RqPtokenId}}",
 								"type": "text"
 							}
 						],

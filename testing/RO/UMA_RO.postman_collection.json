@@ -18,7 +18,7 @@
 								"id": "7a3b76f7-bd1e-496b-b84b-f63131135cdf",
 								"exec": [
 									"var jsonData = JSON.parse(responseBody);",
-									"postman.setEnvironmentVariable(\"tokenId\", jsonData.tokenId);"
+									"postman.setEnvironmentVariable(\"ROtokenId\", jsonData.tokenId);"
 								],
 								"type": "text/javascript"
 							}
@@ -37,11 +37,11 @@
 							},
 							{
 								"key": "X-OpenAM-Username",
-								"value": "{{userName}}"
+								"value": "{{ROuserId}}"
 							},
 							{
 								"key": "X-OpenAM-Password",
-								"value": "{{userPassword}}"
+								"value": "{{ROpassword}}"
 							}
 						],
 						"body": {
@@ -80,7 +80,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{ \n  \"tokenId\": \"{{tokenId}}\" \n}"
+							"raw": "{ \n  \"tokenId\": \"{{ROtokenId}}\" \n}"
 						},
 						"url": {
 							"raw": "{{FQDN-openam}}/json/realms/root/sessions?_action=validate",
@@ -121,7 +121,7 @@
 							},
 							{
 								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
+								"value": "{{ROtokenId}}"
 							}
 						],
 						"body": {
@@ -167,7 +167,7 @@
 							},
 							{
 								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
+								"value": "{{ROtokenId}}"
 							}
 						],
 						"url": {
@@ -192,7 +192,7 @@
 						"header": [
 							{
 								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
+								"value": "{{ROtokenId}}"
 							}
 						],
 						"url": {
@@ -218,7 +218,7 @@
 						"header": [
 							{
 								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
+								"value": "{{ROtokenId}}"
 							}
 						],
 						"url": {
@@ -289,7 +289,7 @@
 							},
 							{
 								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
+								"value": "{{ROtokenId}}"
 							}
 						],
 						"url": {
@@ -318,7 +318,7 @@
 							},
 							{
 								"key": "x-frdp-ssotoken",
-								"value": "{{otkenId}}"
+								"value": "{{ROtokenId}}"
 							}
 						],
 						"url": {
@@ -344,7 +344,7 @@
 						"header": [
 							{
 								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
+								"value": "{{ROtokenId}}"
 							},
 							{
 								"key": "Content-Type",
@@ -385,7 +385,7 @@
 						"header": [
 							{
 								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
+								"value": "{{ROtokenId}}"
 							}
 						],
 						"url": {
@@ -416,7 +416,7 @@
 							},
 							{
 								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
+								"value": "{{ROtokenId}}"
 							}
 						],
 						"body": {
@@ -447,7 +447,7 @@
 						"header": [
 							{
 								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
+								"value": "{{ROtokenId}}"
 							}
 						],
 						"url": {
@@ -478,7 +478,7 @@
 							},
 							{
 								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
+								"value": "{{ROtokenId}}"
 							}
 						],
 						"body": {
@@ -509,7 +509,7 @@
 						"header": [
 							{
 								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
+								"value": "{{ROtokenId}}"
 							}
 						],
 						"url": {
@@ -536,7 +536,7 @@
 						"header": [
 							{
 								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
+								"value": "{{ROtokenId}}"
 							}
 						],
 						"url": {
@@ -570,7 +570,7 @@
 						"header": [
 							{
 								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
+								"value": "{{ROtokenId}}"
 							},
 							{
 								"key": "Content-Type",
@@ -605,7 +605,7 @@
 						"header": [
 							{
 								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
+								"value": "{{ROtokenId}}"
 							}
 						],
 						"url": {
@@ -632,7 +632,7 @@
 						"header": [
 							{
 								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
+								"value": "{{ROtokenId}}"
 							}
 						],
 						"url": {
@@ -660,7 +660,7 @@
 						"header": [
 							{
 								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
+								"value": "{{ROtokenId}}"
 							},
 							{
 								"key": "Content-Type",
@@ -669,7 +669,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n   \"permissions\": [\n      {\n         \"subject\": \"aadams\",\n         \"scopes\": [ \"content\", \"meta\" ]\n      },\n      {\n         \"subject\": \"myoshida\",\n         \"scopes\": [ \"content\", \"meta\" ]\n      },\n            {\n         \"subject\": \"bjensen\",\n         \"scopes\": [ \"content\", \"meta\", \"print\" ]\n      }\n    ]\n}"
+							"raw": "{\n   \"permissions\": [\n      {\n         \"subject\": \"aadams\",\n         \"scopes\": [ \"content\", \"meta\" ]\n      },\n      {\n         \"subject\": \"myoshida\",\n         \"scopes\": [ \"content\", \"meta\" ]\n      }\n    ]\n}"
 						},
 						"url": {
 							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register/policy",
@@ -696,7 +696,7 @@
 						"header": [
 							{
 								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
+								"value": "{{ROtokenId}}"
 							}
 						],
 						"url": {
@@ -728,7 +728,7 @@
 							},
 							{
 								"key": "x-frdp-ssotoken",
-								"value": "{{tokenId}}"
+								"value": "{{ROtokenId}}"
 							}
 						],
 						"url": {
