@@ -184,7 +184,7 @@ This procedure creates / configures an OAuth 2.0 client for the Requesting Party
 1. Click **+ Add Client** 
 1. Set **Client ID** to `UMA-RqP-Client` 
 1. Set **Client Secret** `password` 
-1. Set **Redirection URIs** `_PROTOCOL_://_HOSTNAME_:_APP_PORT_/resource-server/callbacks/oauth2.html`
+1. Set **Redirection URIs** `_PROTOCOL_://_HOSTNAME_:_PORT_/resource-server`
 1. Set **Scopes** `read` and `openid` *(press Enter after each item)*
 1. Click **Create** 
 1. Select **Advanced** Tab 
@@ -203,7 +203,7 @@ This procedure creates / configures an OAuth 2.0 client for the Resource Server 
 1. Click **+ Add Client** 
 1. Set **Client ID** to `UMA-Resource-Server` 
 1. Set **Client Secret** `password`
-1. Set **Redirection URIs** `_PROTOCOL_://_HOSTNAME_:_APP_PORT_/resource-server/callbacks/oauth2.html`
+1. Set **Redirection URIs** `_PROTOCOL_://_HOSTNAME_:_PORT_/resource-server`
 1. Set **Scopes** `uma_protection` *(press Enter after each item)*
 1. Click **Create** 
 1. Select **Core** Tab 
@@ -275,7 +275,7 @@ Edit the following sections of the JSON file:
       "connect": {
          "protocol": "_PROTOCOL_",
          "host": "_HOSTNAME_",
-         "port": "_APP_PORT_",
+         "port": "_PORT_",
          "deploy": "resource-server",
          "endpoint": "rest"
       },
@@ -284,7 +284,7 @@ Edit the following sections of the JSON file:
 ```
 - Set **protocol**: `http` or `https`
 - Set **host**: Fully Qualified Domain Name (FQDN) of installation
-- Set **port**: Port for Tomcat instance that has the Resource Server installed: `38080`
+- Set **port**: Port for Tomcat instance that has the Resource Server installed: `443`
 
 ### Resource Server (RS): No SQL Database (MongoDB): `rs.nosql`
 
@@ -319,7 +319,7 @@ Edit the following sections of the JSON file:
          "client": {
             "id": "UMA-Resource-Server",
             "secret": "_PASSWORD_",
-            "redirect": "_PROTOCOL_://_HOSTNAME_:_APP_PORT_/resource-server/callbacks/oauth2.html"
+            "redirect": "_PROTOCOL_://_HOSTNAME_:_APP_PORT_/resource-server"
          }
       },
       ...
@@ -329,7 +329,7 @@ Edit the following sections of the JSON file:
 - Set **secret**: Password for the OAuth 2.0 Client: `password`
 - Set **redirect PROTOCOL**: `http` or `https`
 - Set **redirect HOSTNAME**: Fully Qualified Domain Name (FQDN) of installation
-- Set **redirect APP_PORT**: Port for Tomcat instance that has the Resource Server installed: `38080`
+- Set **redirect APP_PORT**: Port for Tomcat instance that has the Resource Server installed: `443`
 
 #### NOTICE:  
 
@@ -346,7 +346,7 @@ The `client` attributes MUST match the values used when the Access Manager OAuth
       "connect": {
          "protocol": "_PROTOCOL_",
          "host": "_HOSTNAME_",
-         "port": "_AM_PORT_",
+         "port": "_PORT_",
          "path": "openam"
       },
       ...
@@ -355,7 +355,7 @@ The `client` attributes MUST match the values used when the Access Manager OAuth
 
 - Set **protocol**: `http` or `https`
 - Set **host**: Fully Qualified Domain Name (FQDN) of installation
-- Set **port**: Port for Tomcat instance that has the Access Manager installed: `18080`
+- Set **port**: Port for Tomcat instance that has the Access Manager installed: `443`
 
 ### Authorization Server (AS) admin credentials: `as.admin`
 
@@ -380,7 +380,7 @@ The `client` attributes MUST match the values used when the Access Manager OAuth
       "connect": {
          "protocol": "_PROTOCOL_",
          "host": "_HOSTNAME_",
-         "port": "_APP_PORT_",
+         "port": "_PORT_",
          "path": "content-server/rest/content-server/content"
       }
    }
@@ -388,7 +388,7 @@ The `client` attributes MUST match the values used when the Access Manager OAuth
 
 - Set **protocol**: `http` or `https`
 - Set **host**: Fully Qualified Domain Name (FQDN) of installation
-- Set **port**: Port for Tomcat instance that has the Content Server installed: `38080`
+- Set **port**: Port for Tomcat instance that has the Content Server installed: `443`
 
 Restart the Tomcat server running the **Resource Server** (`resource-server`)
 
