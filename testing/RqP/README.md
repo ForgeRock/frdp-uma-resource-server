@@ -49,7 +49,7 @@ The **UMA** protocol defines a specific *flow* for how a `resource` is accessed.
 | ---- | ----------- 
 | Submit Request | Submit a request which includes the `resource Id` and the `scopes`.  This request *will fail* because a valid **Requesting Party Token (RPT)** is not provided.  A **UMA Permission Ticket** is returned and will be used to create a new **RPT**.
 | Get Claim Token | A **UMA Claim Token** (an OAuth 2.0 access_token) needs to obtained from the **Authorization Server (AS)**.  This is done by getting an `authorization_code`, from the SSO token.  The `authorization_code` is then used to get the **UMA Claim Token** 
-| Get Requesting Party Token | A **UMA Requesting Party Token (RPT)** is obtained from the the **Authorization Server (AS)** using the **UMA Permission Ticket** and the **UMA Claim Token**
+| Get Requesting Party Token | A **UMA Requesting Party Token (RPT)** is obtained from the **Authorization Server (AS)** using the **UMA Permission Ticket** and the **UMA Claim Token**
 | Re-Submit Request | Submit a request which includes the `resource Id`, `scopes` and a valid **Requesting Party (RPT)**.  The **RPT** is verified by the **Resources Server (RS)**, which contacts the **Authorization Server (AS)**.  The **RS** returns a JSON response with data based on the `scopes`.
 
 # Authenticate
@@ -182,9 +182,9 @@ This use case leverages the ForgeRock Access Manager APIs to obtain a collection
 
 ## Scenario
 
-When the **Resource Owner (RO)** creates / registers a `resources` the UMA 2.0 registration process generates a `registrationId` and it is "wrapped" in a `resourceId` by the **Resource Servers (RS)**.  The `resourceId` is the "public" reference the the `resource`.  The UMA 2.0 Specification does not cover *how* the resource identifier is transferred the the **Requesting Parties (RqP)**.  This is call the Resource Transfer Of Information (RTOI) scenario.  
+When the **Resource Owner (RO)** creates / registers a `resources` the UMA 2.0 registration process generates a `registrationId` and it is "wrapped" in a `resourceId` by the **Resource Servers (RS)**.  The `resourceId` is the "public" reference the the `resource`.  The UMA 2.0 Specification does not cover *how* the resource identifier is transferred the the **Requesting Parties (RqP)**.  This is called the Resource Transfer Of Information (RTOI) scenario.  
 
-The **Requesting Party (RqP)** must know the *resource identifier* before they can initiate the resource access process.  The RTOI options can include the **Requesting Party (RqP)** pushing the *resource identifier* via a mechanism such as email or instant messaging.  Another RTOI option can involve the **Resource Owner (RO)** asking the **Resource Server (RS)** to what resources are currently being "Shared With Me".
+The **Requesting Party (RqP)** must know the *resource identifier* before they can initiate the resource access process.  The RTOI options can include the **Requesting Party (RqP)** pushing the *resource identifier* via an out-of-band mechanism such as email or instant messaging.  Another RTOI option can involve the **Resource Owner (RO)** asking the **Resource Server (RS)** what resources are currently being "Shared With Me".
 
 ## Procedure
 
@@ -274,7 +274,7 @@ This use case leverages "value add" features of the **Resource Server (RS)** and
 
 The **Shared With Me** scenario (above) relies on the resource being UMA 2.0 *registered* and having a *policy* giving the **Requesting Party (RqP)** access.  The **Resource Server (RS)** supports the ability of creating and registering `resources` without having a *policy*.  
 
-A **Resource Owner (RO)** may create / register resources but not pre-register or pre-assign a policy to them.  The **RO** might not know, in advance, which **Requesting Parties (RqP)** want or need access.  The **RO** would like to allow any **RqP** to "browse" or "discover" some or all of their resources.  The **Resource Server (RS)** provides a *discover* service where the **RqP** can get a list of `resources` that the **RO** has chosen to make *discoverable*.  The **RqP** can use the `resourceId` from the response to initiate a Request For Access.
+A **Resource Owner (RO)** may create / register resources but not pre-assign a policy to them.  The **RO** might not know, in advance, which **Requesting Parties (RqP)** want or need access.  The **RO** would like to allow any **RqP** to "browse" or "discover" some or all of their resources.  The **Resource Server (RS)** provides a *discover* service where the **RqP** can get a list of `resources` that the **RO** has chosen to make *discoverable*.  The **RqP** can use the `resourceId` from the response to initiate a Request For Access.
 
 ## Procedure
 
@@ -441,7 +441,7 @@ Clear all cookies
 
 1. Open the **UMA Resource Owner** Postman Collection
 
-1. Open the **Authenticate** Folder *(login as the **Resource Owner (RO)**)*
+1. Open the **Authenticate** Folder, *login as the **Resource Owner (RO)***
 
 1. Select the **Login** command \
 Click **Send** 

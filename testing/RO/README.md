@@ -43,7 +43,7 @@ The **Resource Owner (RO)** is a user that owns a `resource` and wants to *share
 
 A `resource` can represent anything.  This project uses a *document* concept to simulate a `resource` that is being shared.
 
-The **Resource Server (RS)** is designed to be flexible and supports a `resource` life-cycle with a number of states.  
+The **Resource Server (RS)** is designed to be flexible and supports the `resource` life-cycle states:
 
 | State | Description |
 | ----- | ----------- |
@@ -64,7 +64,7 @@ The **Resource Owner (RO)** needs to authenticate to the **Authorization Server 
 
 1. Select the **Login** command \
 This is a `POST` method that uses Header variables: `X-OpenAM-Username` and `X-OpenAM-Password` 
-to authenticate the user **(RO)**
+to authenticate the **RO** user
 
 1. Click **Send** \
 A JSON payload is returned: \
@@ -205,7 +205,7 @@ This use case leverages the ForgeRock Access Manager APIs for obtaining informat
 
 The **Resource Owner (RO)** will typically have many `resources` shared with multiple *People* / **Requesting Parties (RqP)**.  The `resource` search functionality of the **Resource Server (RS)** returns a list of resources that the **RO** owns.  It would be nice if the **RO** could get a list of *People* that have access to their resources.
 
-The **Resource Server (RS)** provides a "value add" service, not part of the UMA 2.0 specification, that enables the **RO** to get a list of "People" that have access to resources.  The **RS** leverages the ForgeRock Access Manager APIs to access policies associated to registered UMA `resources` and return a collection of *People* / **Requesting Parties (RqP)** along with what `resources` and `scopes` are assigned to each *Person*.
+The **RS** provides a "value add" service, not part of the UMA 2.0 specification, that enables the **RO** to get a list of "People" that have access to resources.  The **RS** leverages the ForgeRock Access Manager APIs to access policies associated to registered UMA `resources` and return a collection of *People* (the **RqP**) along with what `resources` and `scopes` are assigned to each *Person*.
 
 ## Procedure
 
@@ -280,9 +280,9 @@ This use case leverages the ForgeRock Access Manager APIs for processing UMA acc
 
 ## Scenario
 
-You may have a situation where the **Resource Owner (RO)** creates and registers a UMA resource.  But, the `resource` has not been shared with the **Requesting Party(RqP)**.  The **RqP** follows the [UMA flow](../Rqp/README.md) to access the `resource` ... the step to get the **Requesting Party Token (RPT)** will fail with an error message.  The message indicates that a request has been submitted.
+You may have a situation where the **Resource Owner (RO)** creates and registers a UMA resource.  But, the `resource` has not been shared with the **Requesting Party(RqP)**.  The **RqP** follows the [UMA flow](../Rqp/README.md) to access the `resource` ... the protocol step to get the **Requesting Party Token (RPT)** will fail with an error message.  The message indicates that a request has been submitted.
 
-When the **Authorization Server (AS)**, ForgeRock Access Manager, is unable to create a **Requesting Party Token (RPT)** because the **Resource Owner (RO)** has not configured a *policy* which grants access to the **Requesting Party (RqP)** with the specified `scopes` for the specific `resource` ... the ForgeRock Access Manager will create an access request for the **(RO)**.  The **(RO)** can either `allow` or `deny` the access request for the `resource`.  If the **(RO)** allows the request, the ForgeRock Access Manager will create a policy granting access to the **(RqP)** for the `resource` with the specified `scopes`.
+When the **Authorization Server (AS)**, ForgeRock Access Manager, is unable to create a **Requesting Party Token (RPT)** because the **RO** has not configured a *policy* which grants access to the **RqP** with the specified `scopes` for the specific `resource` ... the ForgeRock Access Manager will create an access request for the **RO**.  The **RO** can either `allow` or `deny` the access request for the `resource`.  If the **RO** allows the request, the ForgeRock Access Manager will create a policy granting access to the **RqP** for the `resource` with the specified `scopes`.
 
 ## Procedure
 
@@ -303,7 +303,7 @@ Clear all cookies
 
 1. Open the **UMA Resource Owner** Postman Collection
 
-1. Open the **Authenticate** Folder *(login as the **Resource Owner (RO)**)*
+1. Open the **Authenticate** Folder, *login as the **Resource Owner (RO)***
 
 1. Select the **Login** command \
 Click **Send** 
@@ -339,7 +339,7 @@ Clear all cookies
 
 1. Open the **UMA Requesting Party** Postman Collection
 
-1. Open the **Authenticate** Folder *(login as the **Requesting Party (RqP)**)*
+1. Open the **Authenticate** Folder, *login as the **Requesting Party (RqP)***
 
 1. Select the **Login** command \
 Click **Send** 
@@ -360,8 +360,8 @@ Click **Send**
 
 1. Select the **4: Get RPT** command \
 Click **Send** \
-The request will fail, `403 Forbidden`, because the **Requesting Party (RqP)** does not have permission (a policy).) \
-An "access request" is sen to the **Resource Owner (RO)**
+The request will fail, `403 Forbidden`, because the **Requesting Party (RqP)** does not have permission (a policy). \
+An "access request" is sent to the **Resource Owner (RO)**
 
 ```json
 {
@@ -378,7 +378,7 @@ Clear all cookies
 
 1. Open the **UMA Resource Owner** Postman Collection
 
-1. Open the **Authenticate** Folder *(login as the **Resource Owner (RO)**)*
+1. Open the **Authenticate** Folder, *login as the **Resource Owner (RO)***
 
 1. Select the **Login** command \
 Click **Send** 
@@ -410,7 +410,7 @@ Clear all cookies
 
 1. Open the **UMA Requesting Party** Postman Collection
 
-1. Open the **Authenticate** Folder *(login as the **Requesting Party (RqP)**)*
+1. Open the **Authenticate** Folder, *login as the **Requesting Party (RqP)***
 
 1. Select the **Login** command \
 Click **Send** 

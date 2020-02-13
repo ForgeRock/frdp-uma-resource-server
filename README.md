@@ -1,6 +1,6 @@
 # frdp-uma-resource-server
 
-ForgeRock Demonstration Platform : **UMA Resource Server** : A deployable web service that provides REST / JSON operations for the [User Managed Access (UMA) 2.0](https://kantarainitiative.org/confluence/display/uma/Home)  Resource Server (RS) functionality.  This service is implemented using the JAX-RS/Jersey REST API and MongoDB for document persistance. This service also leverages the [ForgeRock Access Manager](https://www.forgerock.com/platform/access-management) for the UMA 2.0 Authorization Server (AS) functionality.
+ForgeRock Demonstration Platform : **UMA Resource Server** : A deployable web service that provides REST / JSON operations for the [User Managed Access (UMA) 2.0](https://kantarainitiative.org/confluence/display/uma/Home)  Resource Server (RS) functionality.  This service is implemented using the Java JAX-RS/Jersey REST API and MongoDB for document persistance. This service also leverages the [ForgeRock Access Manager](https://www.forgerock.com/platform/access-management) for the UMA 2.0 Authorization Server (AS) functionality.
 
 ![overview image](images/overview.png)
 
@@ -105,7 +105,7 @@ The MongoDB object database needs to be configured for the **resources** and **c
 1. Access MongoDB system \
 \
 `ssh root@hostname`
-1. Connect as "root" MongoDB user to create database and collection \
+1. Connect as the "root" MongoDB user to create the database and collections \
 \
 `mongo --username "root" --password "<ROOT_PASSWORD>" --authenticationDatabase "admin" admin`
 1. We need to do some database initialization ... 
@@ -144,14 +144,14 @@ Read the documents from both collections. Quit MongoDB. \
 
 # Configure Access Manager
 
-The ForgeRock Access Manager (6.0.x, 6.5.x) needs to be configured to support UMA 2.0 Authorization Server (AS) functionality. The ForgeRock Access Manager Policy APIs and OAuth 2.0 functionality will also configured. See the Access Manager 6.5 [User Managed Access (UMA) 2.0 Guide](https://backstage.forgerock.com/docs/am/6.5/uma-guide/) for installation details.
+The ForgeRock Access Manager (6.0.x, 6.5.x) needs to be configured to support the UMA 2.0 Authorization Server (AS) functionality. The ForgeRock Access Manager Policy APIs and OAuth 2.0 functionality will also configured. See the Access Manager 6.5 [User Managed Access (UMA) 2.0 Guide](https://backstage.forgerock.com/docs/am/6.5/uma-guide/) for installation details.
 
 These procedures will create and configure:
 - **OAuth2 Provider** 
 - **UMA Provider**
 - **OAuth 2.0 Client Agent**, application used by the Requesting Party (RqP)
 - **OAuth 2.0 Resource Server (RS)**
-- **Resource Owner (RS)**, the user, `dcrane`, that owns the resources
+- **Resource Owner (RO)**, the user, `dcrane`, that owns the resources
 - **Requesting Party (RqP)**, the user, `bjensen`, that requests and gets access to the resources
 
 See the Access Manager 6.5 [UMA Setup Procedures](https://backstage.forgerock.com/docs/am/6.5/uma-guide/#uma-set-up-procedures) documentation for details
@@ -176,7 +176,7 @@ This procedure will create two **Services**:
 
 ## Create OAuth 2.0 *UMA Requesting Party (RqP)* Client
 
-This procedure creates / configures an OAuth 2.0 client for the Requesting Party (RqP) application which will access resources.
+This procedure creates an OAuth 2.0 client for the Requesting Party (RqP) application which will access resources.
 
 1. From **Top Menu Bar**, select `Realms` > `Top Level Realm` 
 1. From the Left Menu, select **Applications** > **OAuth 2.0** 
@@ -195,7 +195,7 @@ This procedure creates / configures an OAuth 2.0 client for the Requesting Party
 
 ## Create OAuth 2.0 *UMA Resource Server (RS)* Client
 
-This procedure creates / configures an OAuth 2.0 client for the Resource Server (RS) application.
+This procedure creates an OAuth 2.0 client for the Resource Server (RS) application.
 
 1. From **Top Menu Bar**, select `Realms` > `Top Level Realm` 
 1. From the Left Menu, select **Applications**, Select **OAuth 2.0** 
