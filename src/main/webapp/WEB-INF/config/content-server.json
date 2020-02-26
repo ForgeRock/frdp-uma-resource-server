@@ -1,0 +1,80 @@
+{
+    "comment": "Content Servers",
+    "servers": {
+        "mongo": {
+            "label": "MongoDB Content Server",
+            "description": "The reference implementation sample Content Service, using MongoDB",
+            "comment": "The default Content Server, REST interface to MongoDB",
+            "enabled": true,
+            "operations": {
+                "create": {
+                    "action": "post",
+                    "url": "https://uma.example.com:443/content-server/rest/content-server/content",
+                    "headers": {
+                        "Content-Type": "application/json"
+                    }
+                },
+                "read": {
+                    "action": "get",
+                    "headers": {
+                        "Accept": "application/json"
+                    }
+                },
+                "update": {
+                    "action": "put",
+                    "headers": {
+                        "Content-Type": "application/json"
+                    }
+                },
+                "delete": {
+                    "action": "delete"
+                }
+            }
+        },
+        "fhir": {
+            "label": "FHIR",
+            "description": "This is the sample FHIR service",
+            "comment": "Example FHIR URL https://fhir.example.com:443/fhir-request/Claim?patient=1234",
+            "enabled": false,
+            "operations": {
+                "create": {
+                    "comment": "Test the provided URL, returns error if not 200:OK",
+                    "action": "get",
+                    "headers": {
+                        "Accept": "application/json"
+                    }
+                },
+                "read": {
+                    "action": "get",
+                    "headers": {
+                        "Accept": "application/json"
+                    }
+                },
+                "update": {
+                    "action": "reference"
+                },
+                "delete": {
+                    "action": "reference"
+                }
+            }
+        },
+        "refurl": {
+            "comment": "The URL is only for reference, it is NOT use to manage/access external content",
+            "enabled": false,
+            "operations": {
+                "create": {
+                    "action": "reference"
+                },
+                "read": {
+                    "action": "reference"
+                },
+                "update": {
+                    "action": "reference"
+                },
+                "delete": {
+                    "action": "reference"
+                }
+            }
+        }
+    }
+}

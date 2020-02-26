@@ -2,10 +2,13 @@
  * Copyright (c) 2018-2020, ForgeRock, Inc., All rights reserved
  * Use subject to license terms.
  */
-
 package com.forgerock.frdp.resourceserver.rest;
 
 import com.forgerock.frdp.common.ConstantsIF;
+import com.forgerock.frdp.config.BasicConfiguration;
+import com.forgerock.frdp.config.ConfigurationIF;
+import com.forgerock.frdp.config.ConfigurationManager;
+import com.forgerock.frdp.config.ConfigurationManagerIF;
 import com.forgerock.frdp.dao.Operation;
 import com.forgerock.frdp.dao.OperationIF;
 import com.forgerock.frdp.handler.HandlerManager;
@@ -52,9 +55,9 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 /**
- * Abstract Resource class for REST Services. All REST Srevice end-point classes
+ * Abstract Resource class for REST Services. All REST Service end-point classes
  * extend this class.
- * 
+ *
  * @author Scott Fehrman, ForgeRock, Inc.
  */
 public abstract class RSResource extends Resource {
@@ -62,11 +65,13 @@ public abstract class RSResource extends Resource {
    private final String CLASS = this.getClass().getName();
    private JSONObject _config = null;
    private HandlerManagerIF _handlerMgr = null;
+   private ConfigurationManagerIF _configMgr = null;
 
-   protected static final String CONFIG_FILE = "config/resource-server.json";
+   protected static final String CONFIG_FILE_RS = "config/resource-server.json";
+   protected static final String CONFIG_FILE_CS = "config/content-server.json";
    protected static final String PUBLIC_FILE = "config/public.json";
 
-   protected static final String CTX_ATTR_CONFIG = "com.forgerock.frdp.config";
+   protected static final String CTX_ATTR_CONFIG_MGR = "com.forgerock.frdp.config.configmanager";
    protected static final String CTX_ATTR_PARAMS = "com.forgerock.frdp.params";
    protected static final String CTX_ATTR_PUBLIC = "com.forgerock.frdp.public";
    protected static final String CTX_ATTR_HANDLER_MGR = "com.forgerock.frdp.handler.handlermanager";
@@ -104,7 +109,7 @@ public abstract class RSResource extends Resource {
     */
    /**
     * Get the handler for the specified handler identifier.
-    * 
+    *
     * @param handlerId String handler identifier
     * @return JaxrsHandlerIF handler
     */
@@ -117,13 +122,13 @@ public abstract class RSResource extends Resource {
       if (_handlerMgr == null) {
          this.abort(METHOD, "Handler Manager is null", Status.INTERNAL_SERVER_ERROR);
       } else {
-         if (_handlerMgr.containsHandler(handlerId)) {
+         if (_handlerMgr.contains(handlerId)) {
             handler = (JaxrsHandlerIF) _handlerMgr.getHandler(handlerId);
 
             if (handler != null) {
                if (handler.getState() != STATE.READY) {
                   this.abort(METHOD, "Handler not ready:, handlerId='" + handlerId + "', Status=" + handler.getStatus(),
-                        Status.INTERNAL_SERVER_ERROR);
+                     Status.INTERNAL_SERVER_ERROR);
                }
             } else {
                this.abort(METHOD, "Handler is null, handlerId='" + handlerId + "'", Status.INTERNAL_SERVER_ERROR);
@@ -139,9 +144,9 @@ public abstract class RSResource extends Resource {
    }
 
    /**
-    * Get the specified attribute from the HTTP Header. Will abort if attribute is
-    * missing / empty.
-    * 
+    * Get the specified attribute from the HTTP Header. Will abort if attribute
+    * is missing / empty.
+    *
     * @param attrName String attribute name
     * @return String attribute value
     */
@@ -156,10 +161,11 @@ public abstract class RSResource extends Resource {
 
    /**
     * Get the specified attribute from the HTTP Header. Set True if the method
-    * should abort when attribute is missing / empty, else False will return null.
-    * 
+    * should abort when attribute is missing / empty, else False will return
+    * null.
+    *
     * @param attrName String attribute name
-    * @param abort    boolean if True, will abort on missing / null attribute
+    * @param abort boolean if True, will abort on missing / null attribute
     * @return String attribute value
     */
    protected String getAttributeFromHeader(final String attrName, final boolean abort) {
@@ -200,7 +206,7 @@ public abstract class RSResource extends Resource {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "attrName=''{0}'', value=''{1}''",
-               new Object[] { attrName == null ? NULL : attrName, value == null ? NULL : value });
+            new Object[]{attrName == null ? NULL : attrName, value == null ? NULL : value});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -210,10 +216,11 @@ public abstract class RSResource extends Resource {
 
    /**
     * Get the specified attribute from the HTTP Cookie. Set True if the method
-    * should abort when attribute is missing / empty, else False will return null.
-    * 
+    * should abort when attribute is missing / empty, else False will return
+    * null.
+    *
     * @param attrName String attribute name
-    * @param abort    boolean if True, will abort on missing / null attribute
+    * @param abort boolean if True, will abort on missing / null attribute
     * @return String attribute value
     */
    protected String getAttributeFromCookie(final String attrName, final boolean abort) {
@@ -261,7 +268,7 @@ public abstract class RSResource extends Resource {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "attrName=''{0}'', value=''{1}''",
-               new Object[] { attrName == null ? NULL : attrName, value == null ? NULL : value });
+            new Object[]{attrName == null ? NULL : attrName, value == null ? NULL : value});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -270,8 +277,8 @@ public abstract class RSResource extends Resource {
    }
 
    /**
-    * Get Single Sign On Token for the admin user, it is used to perform privilaged
-    * operations.
+    * Get Single Sign On Token for the admin user, it is used to perform
+    * privilaged operations.
     *
     * <pre>
     * Get a sso session token with "admin" credentials
@@ -283,7 +290,7 @@ public abstract class RSResource extends Resource {
     *   }
     * }
     * </pre>
-    * 
+    *
     * @return String sso token
     */
    protected String getSSOTokenForAdmin() {
@@ -313,7 +320,7 @@ public abstract class RSResource extends Resource {
 
    /**
     * Get the Single Sign On Token from the user's session
-    * 
+    *
     * @return String sso token
     */
    protected String getSSOTokenFromSSOSession() {
@@ -358,7 +365,7 @@ public abstract class RSResource extends Resource {
     *   "valid":false
     * }
     * </pre>
-    * 
+    *
     * @return String user id
     */
    protected String getUserIdFromSSOSession() {
@@ -388,17 +395,17 @@ public abstract class RSResource extends Resource {
          userId = JSON.getString(operOutput.getJSON(), ConstantsIF.DATA + "." + ConstantsIF.UID);
          if (STR.isEmpty(userId)) {
             this.abort(METHOD, "JSON output is null or missing 'uid', " + operOutput.getStatus(),
-                  Status.INTERNAL_SERVER_ERROR);
+               Status.INTERNAL_SERVER_ERROR);
          }
       } else {
          this.abort(METHOD,
-               "Could not read session: " + operOutput.getState().toString() + ": " + operOutput.getStatus(),
-               Status.UNAUTHORIZED);
+            "Could not read session: " + operOutput.getState().toString() + ": " + operOutput.getStatus(),
+            Status.UNAUTHORIZED);
       }
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "ssotoken=''{0}'', userId=''{1}''",
-               new Object[] { ssotoken == null ? NULL : ssotoken, userId == null ? NULL : userId });
+            new Object[]{ssotoken == null ? NULL : ssotoken, userId == null ? NULL : userId});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -427,7 +434,7 @@ public abstract class RSResource extends Resource {
     *   }
     * }
     * </pre>
-    * 
+    *
     * @return String access token
     */
    protected String getAccessToken() {
@@ -460,11 +467,11 @@ public abstract class RSResource extends Resource {
       jsonOutput = operOutput.getJSON();
 
       access_token = JSON.getString(jsonOutput,
-            ConstantsIF.DATA + "." + ConstantsIF.CREDENTIAL + "." + ConstantsIF.ACCESS_TOKEN);
+         ConstantsIF.DATA + "." + ConstantsIF.CREDENTIAL + "." + ConstantsIF.ACCESS_TOKEN);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "ssotoken=''{0}'', access_token=''{1}''",
-               new Object[] { ssotoken == null ? NULL : ssotoken, access_token == null ? NULL : access_token });
+            new Object[]{ssotoken == null ? NULL : ssotoken, access_token == null ? NULL : access_token});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -493,9 +500,9 @@ public abstract class RSResource extends Resource {
     *   }
     * }
     * </pre>
-    * 
+    *
     * @param owner String owner id
-    * @return
+    * @return String the access token
     */
    protected String getAccessToken(final String owner) {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -528,11 +535,11 @@ public abstract class RSResource extends Resource {
       jsonOutput = operOutput.getJSON();
 
       access_token = JSON.getString(jsonOutput,
-            ConstantsIF.DATA + "." + ConstantsIF.CREDENTIAL + "." + ConstantsIF.ACCESS_TOKEN);
+         ConstantsIF.DATA + "." + ConstantsIF.CREDENTIAL + "." + ConstantsIF.ACCESS_TOKEN);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "owner=''{0}'', access_token=''{1}''",
-               new Object[] { owner == null ? NULL : owner, access_token == null ? NULL : access_token });
+            new Object[]{owner == null ? NULL : owner, access_token == null ? NULL : access_token});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -542,7 +549,7 @@ public abstract class RSResource extends Resource {
 
    /**
     * Get the UMA registration GUID related to the specified resource identifier
-    * 
+    *
     * @param resourceId String resource identifier
     * @return String registration GUID
     */
@@ -578,7 +585,7 @@ public abstract class RSResource extends Resource {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "resourceId=''{0}'', registerGUID=''{1}''",
-               new Object[] { resourceId == null ? NULL : resourceId, registerGUID == null ? NULL : registerGUID });
+            new Object[]{resourceId == null ? NULL : resourceId, registerGUID == null ? NULL : registerGUID});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -588,7 +595,7 @@ public abstract class RSResource extends Resource {
 
    /**
     * Get the JSON Content GUID related to the specified resource identifier
-    * 
+    *
     * @param resourceId String resource identifier
     * @return String content GUID
     */
@@ -624,7 +631,7 @@ public abstract class RSResource extends Resource {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "resourceId=''{0}'', contentGUID=''{1}''",
-               new Object[] { resourceId == null ? NULL : resourceId, contentGUID == null ? NULL : contentGUID });
+            new Object[]{resourceId == null ? NULL : resourceId, contentGUID == null ? NULL : contentGUID});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -643,7 +650,7 @@ public abstract class RSResource extends Resource {
     *   "timestamps": { ... }
     * }
     * </pre>
-    * 
+    *
     * @param resourceUid String resource uid
     * @return OperationIF output
     */
@@ -671,8 +678,8 @@ public abstract class RSResource extends Resource {
       operOutput = resourcesHandler.process(operInput);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "resourceUid=''{0}'', operOutput=''{1}''", new Object[] {
-               resourceUid == null ? NULL : resourceUid, operOutput == null ? NULL : operOutput.toString() });
+         _logger.log(DEBUG_LEVEL, "resourceUid=''{0}'', operOutput=''{1}''", new Object[]{
+            resourceUid == null ? NULL : resourceUid, operOutput == null ? NULL : operOutput.toString()});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -710,8 +717,8 @@ public abstract class RSResource extends Resource {
       operOutput = metaHandler.process(operInput);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "resourceUid=''{0}'', operOutput=''{1}''", new Object[] {
-               resourceUid == null ? NULL : resourceUid, operOutput == null ? NULL : operOutput.toString() });
+         _logger.log(DEBUG_LEVEL, "resourceUid=''{0}'', operOutput=''{1}''", new Object[]{
+            resourceUid == null ? NULL : resourceUid, operOutput == null ? NULL : operOutput.toString()});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -759,8 +766,8 @@ public abstract class RSResource extends Resource {
       }
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "resourceUid=''{0}'', operOutput=''{1}''", new Object[] {
-               resourceUid == null ? NULL : resourceUid, operOutput == null ? NULL : operOutput.toString() });
+         _logger.log(DEBUG_LEVEL, "resourceUid=''{0}'', operOutput=''{1}''", new Object[]{
+            resourceUid == null ? NULL : resourceUid, operOutput == null ? NULL : operOutput.toString()});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -771,23 +778,23 @@ public abstract class RSResource extends Resource {
    /**
     * Get UMA 2.0 registration data related to the resource. If the owner is
     * "empty" the SSO token is used for "self"
-    * 
+    *
     * <pre>
     * JSON input ...
     * {
     *   "uid" : "...", // Register Id
     *   "access_token": "..."
     * }
-    * JSON output ... 
+    * JSON output ...
     * {
     *   "resource_scopes" [ ... ],
     *   "icon_uri": "..."
     * }
     * </pre>
-    * 
+    *
     * @param resourceUid String resource uid
-    * @param owner       String owner
-    * @return
+    * @param owner String owner
+    * @return OperationIF registration data
     */
    protected OperationIF getRegistration(final String resourceUid, final String owner) {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -836,7 +843,7 @@ public abstract class RSResource extends Resource {
 
          if (jsonRegisterOutput == null || jsonRegisterOutput.isEmpty()) {
             this.abort(METHOD, "JSON data for registered resource is empty: " + operOutput.getState().toString() + ": "
-                  + operOutput.getStatus(), Status.INTERNAL_SERVER_ERROR);
+               + operOutput.getStatus(), Status.INTERNAL_SERVER_ERROR);
          }
 
          /*
@@ -846,7 +853,7 @@ public abstract class RSResource extends Resource {
 
          if (jsonScopes == null || jsonScopes.isEmpty()) {
             this.abort(METHOD, "JSON Array 'resource_scopes' is empty: " + operOutput.getState().toString() + ": "
-                  + operOutput.getStatus(), Status.INTERNAL_SERVER_ERROR);
+               + operOutput.getStatus(), Status.INTERNAL_SERVER_ERROR);
          }
 
          jsonOutput = new JSONObject();
@@ -865,8 +872,8 @@ public abstract class RSResource extends Resource {
       }
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "resourceUid=''{0}'', operOutput=''{1}''", new Object[] {
-               resourceUid == null ? NULL : resourceUid, operOutput == null ? NULL : operOutput.toString() });
+         _logger.log(DEBUG_LEVEL, "resourceUid=''{0}'', operOutput=''{1}''", new Object[]{
+            resourceUid == null ? NULL : resourceUid, operOutput == null ? NULL : operOutput.toString()});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -876,7 +883,7 @@ public abstract class RSResource extends Resource {
 
    /**
     * Get Policy for the specified resource uid
-    * 
+    *
     * <pre>
     * JSON input ...
     * {
@@ -884,7 +891,7 @@ public abstract class RSResource extends Resource {
     *   "sso_token": "...",
     *   "owner": "..."
     * }
-    * JSON output ... 
+    * JSON output ...
     * {
     *   "data": {
     *      "permissions": [
@@ -899,7 +906,7 @@ public abstract class RSResource extends Resource {
     *   ]
     * }
     * </pre>
-    * 
+    *
     * @param resourceUid String resource uid
     * @return OperationIF output
     */
@@ -972,13 +979,13 @@ public abstract class RSResource extends Resource {
                   name = o.toString();
                   if (!STR.isEmpty(name)) {
                      switch (name) {
-                     case ConstantsIF.PERMISSIONS: {
-                        break;
-                     }
-                     default: {
-                        jsonPolicyOutput.remove(name);
-                        break;
-                     }
+                        case ConstantsIF.PERMISSIONS: {
+                           break;
+                        }
+                        default: {
+                           jsonPolicyOutput.remove(name);
+                           break;
+                        }
                      }
                   }
                }
@@ -995,7 +1002,7 @@ public abstract class RSResource extends Resource {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "resourceUid=''{0}'', operOutput=''{1}''",
-               new Object[] { resourceUid == null ? NULL : resourceUid, operOutput.toString() });
+            new Object[]{resourceUid == null ? NULL : resourceUid, operOutput.toString()});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -1005,7 +1012,7 @@ public abstract class RSResource extends Resource {
 
    /**
     * Get the "well known" UMA information
-    * 
+    *
     * @return JSONObject output
     */
    protected JSONObject getWellKnown() {
@@ -1027,7 +1034,7 @@ public abstract class RSResource extends Resource {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "jsonOutput=''{0}''",
-               new Object[] { jsonOutput == null ? NULL : jsonOutput.toString() });
+            new Object[]{jsonOutput == null ? NULL : jsonOutput.toString()});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -1039,10 +1046,10 @@ public abstract class RSResource extends Resource {
     * Get HTTP Response object for a JSON object overide the method from
     * com.forgerock.frdp.rest.Resource The JSON payload in the above class is
     * processed completely as the "entity" and returned to the client.
-    * 
+    *
     * This class, uses the JSON payload "data" object as the "entity". The JSON
-    * payload can support other objects, such as "headers" which need to be handled
-    * differently
+    * payload can support other objects, such as "headers" which need to be
+    * handled differently
     *
     * <pre>
     * JSON input structure (possible structure):
@@ -1060,7 +1067,7 @@ public abstract class RSResource extends Resource {
     * }
     * </pre>
     *
-    * @param uri  UriInfo URI info from the session
+    * @param uri UriInfo URI info from the session
     * @param oper OperationIF input
     * @return Response HTTP response
     */
@@ -1083,7 +1090,7 @@ public abstract class RSResource extends Resource {
       _logger.entering(CLASS, METHOD);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "oper=''{0}''", new Object[] { oper != null ? oper.toString() : NULL });
+         _logger.log(DEBUG_LEVEL, "oper=''{0}''", new Object[]{oper != null ? oper.toString() : NULL});
       }
 
       if (oper == null) {
@@ -1093,7 +1100,7 @@ public abstract class RSResource extends Resource {
       jsonOutput = oper.getJSON();
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "json=''{0}''", new Object[] { jsonOutput != null ? jsonOutput.toString() : NULL });
+         _logger.log(DEBUG_LEVEL, "json=''{0}''", new Object[]{jsonOutput != null ? jsonOutput.toString() : NULL});
       }
 
       jsonData = JSON.getObject(jsonOutput, ConstantsIF.DATA);
@@ -1114,57 +1121,58 @@ public abstract class RSResource extends Resource {
          response = Response.status(this.getStatusFromState(oper.getState())).type(media).entity(entity).build();
       } else {
          switch (oper.getType()) {
-         case CREATE: {
-            builder = uri.getAbsolutePathBuilder();
-            /*
-             * If the operation was initially a PUT, the URI has the UID The operation
-             * object will be non-null if the CREATE was a REPLACE
-             */
-            if (oper.getObject() == null) {
-               str = this.getUidFromOperation(oper);
-               builder.path(str);
-            }
+            case CREATE: {
+               builder = uri.getAbsolutePathBuilder();
+               /*
+                * If the operation was initially a PUT, the URI has the UID The operation
+                * object will be non-null if the CREATE was a REPLACE
+                */
+               if (oper.getObject() == null) {
+                  str = this.getUidFromOperation(oper);
+                  builder.path(str);
+               }
 
-            responseBuilder = Response.created(builder.build());
-            break;
-         }
-         case READ: {
-            responseBuilder = Response.status(this.getStatusFromState(oper.getState())).type(MediaType.APPLICATION_JSON)
-                  .entity(jsonData.toString());
-            break;
-         }
-         case REPLACE: {
-            switch (oper.getState()) {
-            case FAILED: {
-               responseBuilder = Response.status(this.getStatusFromState(oper.getState())).entity(oper.getStatus());
+               responseBuilder = Response.created(builder.build());
                break;
             }
-            case NOTEXIST: {
-               responseBuilder = Response.status(Status.NOT_FOUND);
+            case READ: {
+               responseBuilder = Response.status(this.getStatusFromState(oper.getState()))
+                  .type(MediaType.APPLICATION_JSON).entity(jsonData.toString());
                break;
             }
-            default: {
+            case REPLACE: {
+               switch (oper.getState()) {
+                  case FAILED: {
+                     responseBuilder = Response.status(this.getStatusFromState(oper.getState()))
+                        .entity(oper.getStatus());
+                     break;
+                  }
+                  case NOTEXIST: {
+                     responseBuilder = Response.status(Status.NOT_FOUND);
+                     break;
+                  }
+                  default: {
+                     responseBuilder = Response.noContent();
+                     break;
+                  }
+               }
+               break;
+            }
+            case DELETE: {
                responseBuilder = Response.noContent();
                break;
             }
+            case SEARCH: {
+               jsonUids = this.getUidsFromSearch(jsonData);
+               str = jsonUids.toJSONString();
+               responseBuilder = Response.ok().type(MediaType.APPLICATION_JSON).entity(str);
+               break;
             }
-            break;
-         }
-         case DELETE: {
-            responseBuilder = Response.noContent();
-            break;
-         }
-         case SEARCH: {
-            jsonUids = this.getUidsFromSearch(jsonData);
-            str = jsonUids.toJSONString();
-            responseBuilder = Response.ok().type(MediaType.APPLICATION_JSON).entity(str);
-            break;
-         }
-         default: {
-            responseBuilder = Response.status(Status.INTERNAL_SERVER_ERROR).type(MediaType.TEXT_PLAIN)
+            default: {
+               responseBuilder = Response.status(Status.INTERNAL_SERVER_ERROR).type(MediaType.TEXT_PLAIN)
                   .entity("Unsupported Type: " + oper.getType().toString());
-            break;
-         }
+               break;
+            }
          }
 
          /*
@@ -1189,8 +1197,8 @@ public abstract class RSResource extends Resource {
       }
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "uri=''{0}'', status=''{1}''", new Object[] { uri == null ? NULL : uri.getPath(),
-               response == null ? NULL : response.getStatusInfo().getReasonPhrase() });
+         _logger.log(DEBUG_LEVEL, "uri=''{0}'', status=''{1}''", new Object[]{uri == null ? NULL : uri.getPath(),
+            response == null ? NULL : response.getStatusInfo().getReasonPhrase()});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -1198,38 +1206,37 @@ public abstract class RSResource extends Resource {
       return response;
    }
 
+//   /**
+//    * Get URI endpoint
+//    * 
+//    * @return String URI
+//    * @throws Exception
+//    */
+//   protected String getUriEndpoint() throws Exception {
+//      String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
+//      StringBuilder buf = null;
+//
+//      _logger.entering(CLASS, METHOD);
+//
+//      buf = new StringBuilder();
+//
+//      buf.append(this.getConfigValueAsString(ConfigIF.RS_CONNECT_PROTOCOL, false)).append("://")
+//            .append(this.getConfigValueAsString(ConfigIF.RS_CONNECT_HOST, false)).append(":")
+//            .append(this.getConfigValueAsString(ConfigIF.RS_CONNECT_PORT, false)).append("/")
+//            .append(this.getConfigValueAsString(ConfigIF.RS_CONNECT_DEPLOY, false)).append("/")
+//            .append(this.getConfigValueAsString(ConfigIF.RS_CONNECT_ENDPOINT, false));
+//
+//      if (_logger.isLoggable(DEBUG_LEVEL)) {
+//         _logger.log(DEBUG_LEVEL, "endpoint=''{0}''", new Object[] { buf.toString() });
+//      }
+//
+//      _logger.exiting(CLASS, METHOD);
+//
+//      return buf.toString();
+//   }
    /**
-    * Get URI endpoint
-    * 
-    * @return String URI
-    * @throws Exception
-    */
-   protected String getUriEndpoint() throws Exception {
-      String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
-      StringBuilder buf = null;
-
-      _logger.entering(CLASS, METHOD);
-
-      buf = new StringBuilder();
-
-      buf.append(this.getConfigValueAsString(ConfigIF.RS_CONNECT_PROTOCOL, false)).append("://")
-            .append(this.getConfigValueAsString(ConfigIF.RS_CONNECT_HOST, false)).append(":")
-            .append(this.getConfigValueAsString(ConfigIF.RS_CONNECT_PORT, false)).append("/")
-            .append(this.getConfigValueAsString(ConfigIF.RS_CONNECT_DEPLOY, false)).append("/")
-            .append(this.getConfigValueAsString(ConfigIF.RS_CONNECT_ENDPOINT, false));
-
-      if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "endpoint=''{0}''", new Object[] { buf.toString() });
-      }
-
-      _logger.exiting(CLASS, METHOD);
-
-      return buf.toString();
-   }
-
-   /**
-    * Check if the authenitcated user is the "owner" of the specified resource
-    * 
+    * Check if the authenticated user is the "owner" of the specified resource
+    *
     * @param resourceId String resource id
     * @return boolean True if user is the owner
     */
@@ -1268,9 +1275,9 @@ public abstract class RSResource extends Resource {
    }
 
    /**
-    * Check if the authenticated user is the owner of the specified resource. Will
-    * abort if not the owner.
-    * 
+    * Check if the authenticated user is the owner of the specified resource.
+    * Will abort if not the owner.
+    *
     * @param resourceId String resource id
     */
    protected void checkAuthenUserIsOwner(final String resourceId) {
@@ -1291,11 +1298,11 @@ public abstract class RSResource extends Resource {
    }
 
    /**
-    * Attempt to get a String value from the configration JSON object "name" is a
-    * "dot" delimited JSON object name: "rs.headers.ssotoken" If the flag
+    * Attempt to get a String value from the configration JSON object "name" is
+    * a "dot" delimited JSON object name: "rs.headers.ssotoken" If the flag
     * "allowEmpty" is false, abort if attribute does not exist or is empty
-    * 
-    * @param name       String configuration name
+    *
+    * @param name String configuration name
     * @param allowEmpty boolean allow empty values
     * @return String configuration value
     */
@@ -1321,11 +1328,11 @@ public abstract class RSResource extends Resource {
    }
 
    /**
-    * Attempt to get a JSONObjct value from the configration JSON object "name" is
-    * a "dot" delimited JSON object name: "rs.connect" If the flag "allowEmpty" is
-    * false, abort if attribute does not exist or is empty
-    * 
-    * @param name       String configuration name
+    * Attempt to get a JSONObject value from the configuration JSON object
+    * "name" is a "dot" delimited JSON object name: "rs.connect" If the flag
+    * "allowEmpty" is false, abort if attribute does not exist or is empty
+    *
+    * @param name String configuration name
     * @param allowEmpty boolean allow empty values
     * @return JSONObject configuration object
     */
@@ -1361,37 +1368,85 @@ public abstract class RSResource extends Resource {
       String configFile = null;
       java.nio.file.Path pathConfigFile = null;
       JSONParser parser = null;
+      ConfigurationIF config = null;
 
       /*
-       * Check the Servlet Context for ... - configuration JSON object - Handler
-       * Manager
+       * Check the Servlet Context for ... 
+       * - Configuration Manager
+       * - Handler Manager
        */
       _logger.entering(CLASS, METHOD);
 
-      if (_config == null) {
-         obj = _servletCtx.getAttribute(CTX_ATTR_CONFIG);
+      /*
+       * Need a Configuration Manager.  Check Servlet Context, else create one
+       */
+      if (_configMgr == null) {
+         obj = _servletCtx.getAttribute(CTX_ATTR_CONFIG_MGR);
+
+         if (obj != null && obj instanceof ConfigurationManagerIF) {
+            _configMgr = (ConfigurationManagerIF) obj;
+         } else {
+            _configMgr = new ConfigurationManager();
+            _servletCtx.setAttribute(CTX_ATTR_CONFIG_MGR, _configMgr);
+         }
+
+      }
+
+      /*
+       * Load the Resource Server configuration.
+       * Check the Configuration Manger for existing RS Configuration object
+       * Else, read configuration file, create new RS Configuration object, add to Config Manager
+       */
+      if (!_configMgr.contains(ConstantsIF.RESOURCE)) {
+         config = new BasicConfiguration();
+
+         parser = this.getParserFromCtx(_servletCtx);
+         realPath = _servletCtx.getRealPath("/");
+         configFile = realPath + "WEB-INF" + File.separator + CONFIG_FILE_RS; // Resource Server
+         pathConfigFile = Paths.get(configFile);
+
+         try {
+            bytes = Files.readAllBytes(pathConfigFile);
+            obj = parser.parse(new String(bytes));
+         } catch (IOException | ParseException ex) {
+            this.abort(METHOD, "Exception: " + ex.getMessage(), Response.Status.INTERNAL_SERVER_ERROR);
+         }
 
          if (obj != null && obj instanceof JSONObject) {
-            _config = (JSONObject) obj;
+            config.setJSON((JSONObject) obj);
+            _configMgr.setConfiguration(ConstantsIF.RESOURCE, config);
          } else {
-            parser = this.getParserFromCtx(_servletCtx);
-            realPath = _servletCtx.getRealPath("/");
-            configFile = realPath + "WEB-INF" + File.separator + CONFIG_FILE;
-            pathConfigFile = Paths.get(configFile);
+            this.abort(METHOD, "Resource Sserver Config object is null or not a JSON object",
+               Response.Status.INTERNAL_SERVER_ERROR);
+         }
+      }
 
-            try {
-               bytes = Files.readAllBytes(pathConfigFile);
-               obj = parser.parse(new String(bytes));
-            } catch (IOException | ParseException ex) {
-               this.abort(METHOD, "Exception: " + ex.getMessage(), Response.Status.INTERNAL_SERVER_ERROR);
-            }
+      /*
+       * Load the Content Server configuration.
+       * Check the Configuration Manger for existing CS Configuration object
+       * Else, read configuration file, create new CS Configuration object, add to Config Manager
+       */
+      if (!_configMgr.contains(ConstantsIF.CONTENT)) {
+         config = new BasicConfiguration();
 
-            if (obj != null && obj instanceof JSONObject) {
-               _config = (JSONObject) obj;
-               _servletCtx.setAttribute(CTX_ATTR_CONFIG, _config);
-            } else {
-               this.abort(METHOD, "Config object is null or not a JSON object", Response.Status.INTERNAL_SERVER_ERROR);
-            }
+         parser = this.getParserFromCtx(_servletCtx);
+         realPath = _servletCtx.getRealPath("/");
+         configFile = realPath + "WEB-INF" + File.separator + CONFIG_FILE_CS; // Content Server
+         pathConfigFile = Paths.get(configFile);
+
+         try {
+            bytes = Files.readAllBytes(pathConfigFile);
+            obj = parser.parse(new String(bytes));
+         } catch (IOException | ParseException ex) {
+            this.abort(METHOD, "Exception: " + ex.getMessage(), Response.Status.INTERNAL_SERVER_ERROR);
+         }
+
+         if (obj != null && obj instanceof JSONObject) {
+            config.setJSON((JSONObject) obj);
+            _configMgr.setConfiguration(ConstantsIF.CONTENT, config);
+         } else {
+            this.abort(METHOD, "Content Server Config object is null or not a JSON object",
+               Response.Status.INTERNAL_SERVER_ERROR);
          }
       }
 
@@ -1406,35 +1461,37 @@ public abstract class RSResource extends Resource {
             /*
              * Add all the handlers
              */
-            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_AMOAUTH2, new AMOAuth2Handler(_config, _handlerMgr));
+            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_AMOAUTH2, new AMOAuth2Handler(_configMgr, _handlerMgr));
 
-            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_AMPROXYADM, new AMProxyAdminHandler(_config, _handlerMgr));
+            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_AMPROXYADM, new AMProxyAdminHandler(_configMgr, _handlerMgr));
 
-            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_AMSESSION, new AMSessionHandler(_config, _handlerMgr));
+            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_AMSESSION, new AMSessionHandler(_configMgr, _handlerMgr));
 
-            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_CONTENT, new ContentHandler(_config, _handlerMgr));
+            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_CONTENT, new ContentHandler(_configMgr, _handlerMgr));
 
-            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_UMA_PAT, new ProtectionApiTokenHandler(_config, _handlerMgr));
+            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_UMA_PAT, new ProtectionApiTokenHandler(_configMgr, _handlerMgr));
 
-            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_META, new MetaHandler(_config, _handlerMgr));
+            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_META, new MetaHandler(_configMgr, _handlerMgr));
 
-            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_RESOURCES, new ResourcesHandler(_config, _handlerMgr));
+            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_RESOURCES, new ResourcesHandler(_configMgr, _handlerMgr));
 
-            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_UMA_DISCOVER, new DiscoverHandler(_config, _handlerMgr));
+            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_UMA_DISCOVER, new DiscoverHandler(_configMgr, _handlerMgr));
 
-            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_UMA_POLICY, new PolicyHandler(_config, _handlerMgr));
+            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_UMA_POLICY, new PolicyHandler(_configMgr, _handlerMgr));
 
-            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_UMA_PERMREQ, new PermissionRequestHandler(_config, _handlerMgr));
+            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_UMA_PERMREQ,
+               new PermissionRequestHandler(_configMgr, _handlerMgr));
 
-            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_UMA_REGISTER, new RegisterHandler(_config, _handlerMgr));
+            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_UMA_REGISTER, new RegisterHandler(_configMgr, _handlerMgr));
 
-            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_UMA_REQUESTS, new RequestsHandler(_config, _handlerMgr));
+            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_UMA_REQUESTS, new RequestsHandler(_configMgr, _handlerMgr));
 
-            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_UMA_SHAREDWITHME, new SharedWithMeHandler(_config, _handlerMgr));
+            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_UMA_SHAREDWITHME,
+               new SharedWithMeHandler(_configMgr, _handlerMgr));
 
-            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_UMA_SUBJECTS, new SubjectsHandler(_config, _handlerMgr));
+            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_UMA_SUBJECTS, new SubjectsHandler(_configMgr, _handlerMgr));
 
-            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_UMA_WELLKNOWN, new WellKnownHandler(_config, _handlerMgr));
+            _handlerMgr.setHandler(JaxrsHandlerIF.HANDLER_UMA_WELLKNOWN, new WellKnownHandler(_configMgr, _handlerMgr));
 
             _servletCtx.setAttribute(CTX_ATTR_HANDLER_MGR, _handlerMgr);
 

@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2018-2019, ForgeRock, Inc., All rights reserved
+ * Copyright (c) 2018-2020, ForgeRock, Inc., All rights reserved
  * Use subject to license terms.
  */
-
 package com.forgerock.frdp.resourceserver.handler;
 
 import com.forgerock.frdp.common.ConstantsIF;
+import com.forgerock.frdp.config.ConfigurationIF;
+import com.forgerock.frdp.config.ConfigurationManagerIF;
 import com.forgerock.frdp.dao.Operation;
 import com.forgerock.frdp.dao.OperationIF;
 import com.forgerock.frdp.dao.mongo.MongoFactory;
@@ -20,7 +21,7 @@ import org.json.simple.JSONObject;
 
 /**
  * Content Handler
- * 
+ *
  * @author Scott Fehrman, ForgeRock, Inc.
  */
 public class ContentHandler extends JaxrsHandler {
@@ -29,14 +30,14 @@ public class ContentHandler extends JaxrsHandler {
 
    /**
     * Constructor
-    * 
-    * @param config     JSONObject configuration data
+    *
+    * @param configMgr ConfigurationManagerIF management of configurations
     * @param handlerMgr HandlerManagerIF handler manager
     */
-   public ContentHandler(final JSONObject config, final HandlerManagerIF handlerMgr) {
-      super(config, handlerMgr);
+   public ContentHandler(final ConfigurationManagerIF configMgr, final HandlerManagerIF handlerMgr) {
+      super(configMgr, handlerMgr);
 
-      String METHOD = "ContentHandler(config, handlerMgr)";
+      String METHOD = "ContentHandler(configMgr, handlerMgr)";
 
       _logger.entering(CLASS, METHOD);
 
@@ -50,12 +51,11 @@ public class ContentHandler extends JaxrsHandler {
    /*
     * ================= PROTECTED METHODS =================
     */
-
    /**
-    * Validate the OperationIF object, overides the subclass
-    * 
+    * Validate the OperationIF object, overrides the subclass
+    *
     * @param oper OperationIF
-    * @throws Exception
+    * @throws Exception could not validate the operation
     */
    @Override
    protected void validate(final OperationIF oper) throws Exception {
@@ -74,15 +74,15 @@ public class ContentHandler extends JaxrsHandler {
       }
 
       switch (oper.getType()) {
-      case READ:
-      case REPLACE:
-      case DELETE: {
-         this.checkUid(jsonInput);
-         break;
-      }
-      default: {
-         break;
-      }
+         case READ:
+         case REPLACE:
+         case DELETE: {
+            this.checkUid(jsonInput);
+            break;
+         }
+         default: {
+            break;
+         }
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -92,7 +92,7 @@ public class ContentHandler extends JaxrsHandler {
 
    /**
     * Enable "read" operation
-    * 
+    *
     * <pre>
     * JSON input ...
     * { "uid": "..." } // Content GUID
@@ -103,7 +103,7 @@ public class ContentHandler extends JaxrsHandler {
     *   }
     * }
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input object
     * @return OperationIF output object
     */
@@ -119,8 +119,8 @@ public class ContentHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       operOutput = new Operation(OperationIF.TYPE.READ);
@@ -145,8 +145,8 @@ public class ContentHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "output=''{0}'', json=''{1}''",
-               new Object[] { operOutput != null ? operOutput.toString() : NULL,
-                     operOutput.getJSON() != null ? operOutput.getJSON().toString() : NULL });
+            new Object[]{operOutput != null ? operOutput.toString() : NULL,
+               operOutput.getJSON() != null ? operOutput.getJSON().toString() : NULL});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -156,7 +156,7 @@ public class ContentHandler extends JaxrsHandler {
 
    /**
     * Enable "replace" operation
-    * 
+    *
     * <pre>
     * JSON input ... replace content
     * {
@@ -166,7 +166,7 @@ public class ContentHandler extends JaxrsHandler {
     *   }
     * }
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input object
     * @return OperationIF output object
     */
@@ -183,8 +183,8 @@ public class ContentHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       operOutput = new Operation(OperationIF.TYPE.REPLACE);
@@ -209,8 +209,8 @@ public class ContentHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "output=''{0}'', json=''{1}''",
-               new Object[] { operOutput != null ? operOutput.toString() : NULL,
-                     operOutput.getJSON() != null ? operOutput.getJSON().toString() : NULL });
+            new Object[]{operOutput != null ? operOutput.toString() : NULL,
+               operOutput.getJSON() != null ? operOutput.getJSON().toString() : NULL});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -220,14 +220,14 @@ public class ContentHandler extends JaxrsHandler {
 
    /**
     * Enable "delete" operation
-    * 
+    *
     * <pre>
     * JSON input ... delete content
     * {
     *   "uid": "..." // Resource Uid ... not the Content Uid
     * }
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input object
     * @return OperationIF output object
     */
@@ -243,8 +243,8 @@ public class ContentHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       operOutput = new Operation(OperationIF.TYPE.DELETE);
@@ -268,8 +268,8 @@ public class ContentHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "output=''{0}'', json=''{1}''",
-               new Object[] { operOutput != null ? operOutput.toString() : NULL,
-                     operOutput.getJSON() != null ? operOutput.getJSON().toString() : NULL });
+            new Object[]{operOutput != null ? operOutput.toString() : NULL,
+               operOutput.getJSON() != null ? operOutput.getJSON().toString() : NULL});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -280,51 +280,66 @@ public class ContentHandler extends JaxrsHandler {
    /*
     * =============== PRIVATE METHODS ===============
     */
-
    /**
     * Initialize the object
     */
    private void init() {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
+      String msg = null;
+      String configType = ConstantsIF.RESOURCE;
+      ConfigurationIF config = null;
+      JSONObject json = null;
       Map<String, String> map = null;
 
       _logger.entering(CLASS, METHOD);
 
+      config = _configMgr.getConfiguration(configType);
+
+      if (config != null) {
+         json = config.getJSON();
+         if (json == null) {
+            msg = CLASS + ": " + METHOD + ": JSON data for '" + configType + "' is null";
+            this.setError(true);
+         }
+      } else {
+         msg = CLASS + ": " + METHOD + ": Configuration for '" + configType + "' is null";
+         this.setError(true);
+      }
+
       /*
        * setup the REST Data Access Object
        */
-      if (_ContentServerDAO == null) {
-         map = JSON.convertToParams(JSON.getObject(_config, ConfigIF.CS_CONNECT));
+      if (!this.isError() && _ContentServerDAO == null) {
+         map = JSON.convertToParams(JSON.getObject(json, ConfigIF.CS_CONNECT));
 
          try {
             _ContentServerDAO = new RestDataAccess(map);
          } catch (Exception ex) {
+            msg = CLASS + ": " + METHOD + ": REST DAO: " + ex.getMessage();
             this.setError(true);
-            this.setState(STATE.ERROR);
-            this.setStatus(CLASS + ": " + METHOD + ": REST DAO: " + ex.getMessage());
-            _logger.log(Level.SEVERE, this.getStatus());
          }
       }
 
       /*
        * setup the Mongo Data Access Object
        */
-
       if (!this.isError() && _MongoDAO == null) {
-         map = JSON.convertToParams(JSON.getObject(_config, ConfigIF.RS_NOSQL));
+         map = JSON.convertToParams(JSON.getObject(json, ConfigIF.RS_NOSQL));
 
          try {
             _MongoDAO = MongoFactory.getInstance(map);
          } catch (Exception ex) {
+            msg = CLASS + ": " + METHOD + ": Mongo DAO:" + ex.getMessage();
             this.setError(true);
-            this.setState(STATE.ERROR);
-            this.setStatus(CLASS + ": " + METHOD + ": Mongo DAO:" + ex.getMessage());
-            _logger.severe(this.getStatus());
          }
       }
 
       if (!this.isError()) {
          this.setState(STATE.READY);
+      } else {
+         this.setState(STATE.ERROR);
+         this.setStatus(msg);
+         _logger.log(Level.SEVERE, this.getStatus());
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -334,10 +349,10 @@ public class ContentHandler extends JaxrsHandler {
 
    /**
     * Create implementation
-    * 
+    *
     * <pre>
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input
     * @return OperationIF output
     */
@@ -355,7 +370,7 @@ public class ContentHandler extends JaxrsHandler {
       _logger.entering(CLASS, METHOD);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "json=''{0}''", new Object[] { jsonContent != null ? jsonContent.toString() : NULL });
+         _logger.log(DEBUG_LEVEL, "json=''{0}''", new Object[]{jsonContent != null ? jsonContent.toString() : NULL});
       }
 
       if (jsonContent != null && !jsonContent.isEmpty()) {
@@ -379,10 +394,10 @@ public class ContentHandler extends JaxrsHandler {
 
    /**
     * Read implementation
-    * 
+    *
     * <pre>
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input
     * @return OperationIF output
     */
@@ -400,7 +415,7 @@ public class ContentHandler extends JaxrsHandler {
       _logger.entering(CLASS, METHOD);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "contentUid=''{0}''", new Object[] { contentUid != null ? contentUid : NULL });
+         _logger.log(DEBUG_LEVEL, "contentUid=''{0}''", new Object[]{contentUid != null ? contentUid : NULL});
       }
 
       if (!STR.isEmpty(contentUid)) {
@@ -424,7 +439,7 @@ public class ContentHandler extends JaxrsHandler {
 
    /**
     * Replace implementation
-    * 
+    *
     * <pre>
     * Read the existing entry using the "uid"
     * If the "content" attribute value exists, (uid for the Content Server)
@@ -433,7 +448,7 @@ public class ContentHandler extends JaxrsHandler {
     * - Create the "data" on the Content Server
     * - Set the "content" attribute with the uid from the Content Server
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input
     * @return OperationIF output
     */
@@ -451,8 +466,8 @@ public class ContentHandler extends JaxrsHandler {
       _logger.entering(CLASS, METHOD);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "resourceUid=''{0}'', json=''{1}''", new Object[] {
-               resourceUid != null ? resourceUid : NULL, jsonContent != null ? jsonContent.toString() : NULL });
+         _logger.log(DEBUG_LEVEL, "resourceUid=''{0}'', json=''{1}''", new Object[]{
+            resourceUid != null ? resourceUid : NULL, jsonContent != null ? jsonContent.toString() : NULL});
       }
 
       jsonInput = new JSONObject();
@@ -462,7 +477,7 @@ public class ContentHandler extends JaxrsHandler {
       operReadInput.setJSON(jsonInput);
 
       this.setDatabaseAndCollection(operReadInput, ConfigIF.RS_NOSQL_DATABASE,
-            ConfigIF.RS_NOSQL_COLLECTIONS_RESOURCES_NAME);
+         ConfigIF.RS_NOSQL_COLLECTIONS_RESOURCES_NAME);
 
       operReadOutput = _MongoDAO.execute(operReadInput);
 
@@ -487,7 +502,7 @@ public class ContentHandler extends JaxrsHandler {
 
                if (operReplaceOutput.isError()) {
                   throw new Exception(
-                        METHOD + ": " + operReplaceOutput.getState().toString() + ": " + operReplaceOutput.getStatus());
+                     METHOD + ": " + operReplaceOutput.getState().toString() + ": " + operReplaceOutput.getStatus());
                }
             } else // CREATE CONTENT
             {
@@ -503,13 +518,13 @@ public class ContentHandler extends JaxrsHandler {
                operReplaceInput.setJSON(jsonInput);
 
                this.setDatabaseAndCollection(operReplaceInput, ConfigIF.RS_NOSQL_DATABASE,
-                     ConfigIF.RS_NOSQL_COLLECTIONS_RESOURCES_NAME);
+                  ConfigIF.RS_NOSQL_COLLECTIONS_RESOURCES_NAME);
 
                operReplaceOutput = _MongoDAO.execute(operReplaceInput);
 
                if (operReplaceOutput.isError()) {
                   throw new Exception(
-                        METHOD + ": " + operReplaceOutput.getState().toString() + ": " + operReplaceOutput.getStatus());
+                     METHOD + ": " + operReplaceOutput.getState().toString() + ": " + operReplaceOutput.getStatus());
                }
             }
          } else {
@@ -526,18 +541,17 @@ public class ContentHandler extends JaxrsHandler {
 
    /**
     * Delete implementation
-    * 
+    *
     * <pre>
     * Read the existing entry using the Resource "uid"
     * If the "content" attribute value exists, (uid for the Content Server)
     * - Delete the "data" on the Content Server
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input
     * @return OperationIF output
     */
-   private void deleteImpl(final String resourceUid) throws Exception
-   {
+   private void deleteImpl(final String resourceUid) throws Exception {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String contentUid = null;
       OperationIF operReadInput = null;
@@ -553,7 +567,7 @@ public class ContentHandler extends JaxrsHandler {
       _logger.entering(CLASS, METHOD);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "resourceUid=''{0}''", new Object[] { resourceUid != null ? resourceUid : NULL });
+         _logger.log(DEBUG_LEVEL, "resourceUid=''{0}''", new Object[]{resourceUid != null ? resourceUid : NULL});
       }
 
       jsonInput = new JSONObject();
@@ -563,7 +577,7 @@ public class ContentHandler extends JaxrsHandler {
       operReadInput.setJSON(jsonInput);
 
       this.setDatabaseAndCollection(operReadInput, ConfigIF.RS_NOSQL_DATABASE,
-            ConfigIF.RS_NOSQL_COLLECTIONS_RESOURCES_NAME);
+         ConfigIF.RS_NOSQL_COLLECTIONS_RESOURCES_NAME);
 
       operReadOutput = _MongoDAO.execute(operReadInput);
 
@@ -587,7 +601,7 @@ public class ContentHandler extends JaxrsHandler {
 
                if (operDeleteOutput.isError()) {
                   throw new Exception(
-                        METHOD + ": " + operDeleteOutput.getState().toString() + ": " + operDeleteOutput.getStatus());
+                     METHOD + ": " + operDeleteOutput.getState().toString() + ": " + operDeleteOutput.getStatus());
                }
 
                /*
@@ -603,13 +617,13 @@ public class ContentHandler extends JaxrsHandler {
                operReplaceInput.setJSON(jsonInput);
 
                this.setDatabaseAndCollection(operReplaceInput, ConfigIF.RS_NOSQL_DATABASE,
-                     ConfigIF.RS_NOSQL_COLLECTIONS_RESOURCES_NAME);
+                  ConfigIF.RS_NOSQL_COLLECTIONS_RESOURCES_NAME);
 
                operReplaceOutput = _MongoDAO.execute(operReplaceInput);
 
                if (operReplaceOutput.isError()) {
                   throw new Exception(
-                        METHOD + ": " + operReplaceOutput.getState().toString() + ": " + operReplaceOutput.getStatus());
+                     METHOD + ": " + operReplaceOutput.getState().toString() + ": " + operReplaceOutput.getStatus());
                }
             }
          }

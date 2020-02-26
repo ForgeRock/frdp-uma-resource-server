@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2015-2019, ForgeRock, Inc., All rights reserved
+ * Copyright (c) 2015-2020, ForgeRock, Inc., All rights reserved
  * Use subject to license terms.
  */
-
 package com.forgerock.frdp.resourceserver.handler;
 
 import com.forgerock.frdp.common.ConstantsIF;
+import com.forgerock.frdp.config.ConfigurationIF;
+import com.forgerock.frdp.config.ConfigurationManagerIF;
 import com.forgerock.frdp.dao.DataAccessIF;
 import com.forgerock.frdp.dao.Operation;
 import com.forgerock.frdp.dao.OperationIF;
@@ -18,7 +19,7 @@ import org.json.simple.JSONObject;
 
 /**
  * Abstract JaxRS / Jersey Handler
- * 
+ *
  * @author Scott Fehrman, ForgeRock Inc.
  */
 public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
@@ -31,27 +32,27 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
    protected static final String AM_ATTR_RESOURCE_OWNER_ID = "resourceOwnerId";
    protected static final String AM_ATTR_RESOURCE_SERVER = "resourceServer";
 
-   protected JSONObject _config = null;
    protected DataAccessIF _MongoDAO = null;
    protected DataAccessIF _AuthzServerDAO = null;
    protected DataAccessIF _ContentServerDAO = null;
 
+   protected ConfigurationManagerIF _configMgr = null;
    private HandlerManagerIF _handlerMgr = null;
 
    /**
     * Constructor
-    * 
-    * @param config     JSONObject configuration data
+    *
+    * @param configMgr ConfigurationManagerIF management of configurations
     * @param handlerMgr HandlerManagerIF handler manager
     */
-   public JaxrsHandler(final JSONObject config, final HandlerManagerIF handlerMgr) {
+   public JaxrsHandler(final ConfigurationManagerIF configMgr, final HandlerManagerIF handlerMgr) {
       super();
 
-      String METHOD = "JaxrsHandler(config, handlerMgr)";
+      String METHOD = "JaxrsHandler(configMgr, handlerMgr)";
 
       _logger.entering(CLASS, METHOD);
 
-      _config = config;
+      _configMgr = configMgr;
       _handlerMgr = handlerMgr;
 
       _logger.exiting(CLASS, METHOD);
@@ -60,7 +61,7 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
    }
 
    /**
-    * Process the opertion input object, returns an output opertion object.
+    * Process the operation input object, returns an output operation object.
     *
     * @param operInput OperationIF input
     * @return OperationIF output
@@ -96,34 +97,34 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
 
          if (!operOutput.isError()) {
             switch (operInput.getType()) {
-            case CREATE: {
-               operOutput = this.create(operInput);
-               break;
-            }
-            case READ: {
-               operOutput = this.read(operInput);
-               break;
-            }
-            case REPLACE: {
-               operOutput = this.replace(operInput);
-               break;
-            }
-            case DELETE: {
-               operOutput = this.delete(operInput);
-               break;
-            }
-            case SEARCH: {
-               operOutput = this.search(operInput);
-               break;
-            }
-            default: {
-               msg.append("Unsupported operation '").append(operInput.getType().toString()).append("'");
-               operOutput = new Operation(operInput.getType());
-               operOutput.setError(true);
-               operOutput.setState(STATE.FAILED);
-               operOutput.setStatus(msg.toString());
-               break;
-            }
+               case CREATE: {
+                  operOutput = this.create(operInput);
+                  break;
+               }
+               case READ: {
+                  operOutput = this.read(operInput);
+                  break;
+               }
+               case REPLACE: {
+                  operOutput = this.replace(operInput);
+                  break;
+               }
+               case DELETE: {
+                  operOutput = this.delete(operInput);
+                  break;
+               }
+               case SEARCH: {
+                  operOutput = this.search(operInput);
+                  break;
+               }
+               default: {
+                  msg.append("Unsupported operation '").append(operInput.getType().toString()).append("'");
+                  operOutput = new Operation(operInput.getType());
+                  operOutput.setError(true);
+                  operOutput.setState(STATE.FAILED);
+                  operOutput.setStatus(msg.toString());
+                  break;
+               }
             }
          }
       }
@@ -152,7 +153,6 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
    /*
     * ================= PROTECTED METHODS =================
     */
-
    abstract protected void validate(OperationIF oper) throws Exception;
 
    protected OperationIF create(OperationIF operInput) {
@@ -180,7 +180,7 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
     *
     * @param handlerId String handler identifier
     * @return JaxrsHandlerIF handler
-    * @throws Exception
+    * @throws Exception could not get the handler instance
     */
    protected JaxrsHandlerIF getHandler(String handlerId) throws Exception {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -191,13 +191,13 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
       if (_handlerMgr == null) {
          this.abort(METHOD, "Handler Manager is null");
       } else {
-         if (_handlerMgr.containsHandler(handlerId)) {
+         if (_handlerMgr.contains(handlerId)) {
             handler = (JaxrsHandlerIF) _handlerMgr.getHandler(handlerId);
 
             if (handler != null) {
                if (handler.getState() != STATE.READY) {
                   this.abort(METHOD,
-                        "Handler not ready:, handlerId='" + handlerId + "', Status=" + handler.getStatus());
+                     "Handler not ready:, handlerId='" + handlerId + "', Status=" + handler.getStatus());
                }
             } else {
                this.abort(METHOD, "Handler is null, handlerId='" + handlerId + "'");
@@ -216,8 +216,8 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
     * Abort processing, write to log and throw exception.
     *
     * @param method String calling method data
-    * @param msg    String message
-    * @throws Exception
+    * @param msg String message
+    * @throws Exception had to abort internal processing
     */
    protected void abort(final String method, final String msg) throws Exception {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -225,7 +225,7 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
       _logger.entering(CLASS, METHOD);
 
       _logger.log(Level.SEVERE, "{0}:{1}: {2}",
-            new Object[] { CLASS, (method == null ? "" : method), (msg == null ? NULL : msg) });
+         new Object[]{CLASS, (method == null ? "" : method), (msg == null ? NULL : msg)});
 
       _logger.exiting(CLASS, METHOD);
 
@@ -233,23 +233,40 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
    }
 
    /**
-    * Get a value from the configuration data (JSON).
+    * Get a value from the configuration data (JSON). Use the "configType" to
+    * get the Configuration object from the ConfigurationManager Get the JSON
+    * data from the Configuration object
     *
+    * @param configType String what type of configuration (RESOURCE, CONTENT)
     * @param name String configuration attribute name
     * @return String configuration attribute value
-    * @throws Exception
+    * @throws Exception could not set configuration value
     */
-   protected synchronized String getConfigValue(final String name) throws Exception {
+   protected synchronized String getConfigValue(final String configType, final String name) throws Exception {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String value = null;
+      ConfigurationIF configuration = null;
+      JSONObject json = null;
 
       _logger.entering(CLASS, METHOD);
+
+      if (STR.isEmpty(configType)) {
+         throw new Exception("Attribute 'configType' is null");
+      }
 
       if (STR.isEmpty(name)) {
          throw new Exception("Attribute 'name' is null");
       }
 
-      value = JSON.getString(_config, name);
+      configuration = _configMgr.getConfiguration(configType);
+
+      if (configuration == null) {
+         throw new Exception("Configuration is null for type '" + configType + "'");
+      }
+
+      json = configuration.getJSON();
+
+      value = JSON.getString(json, name);
 
       if (STR.isEmpty(value)) {
          throw new Exception("Attribute '" + name + "' is empty");
@@ -262,9 +279,9 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
 
    /**
     * Check for "uid" attribute in the JSON data
-    * 
+    *
     * @param json JSONObject JSON data
-    * @throws Exception
+    * @throws Exception could not verify the uid
     */
    protected void checkUid(JSONObject json) throws Exception {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -287,7 +304,7 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
     * Check for "user" and "password" attributes in the JSON data
     *
     * @param json JSONObject JSON data
-    * @throws Exception
+    * @throws Exception could not verify the user password
     */
    protected void checkUserPassword(JSONObject json) throws Exception {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -295,9 +312,9 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
       _logger.entering(CLASS, METHOD);
 
       if (STR.isEmpty(JSON.getString(json, ConstantsIF.USER))
-            || STR.isEmpty(JSON.getString(json, ConstantsIF.PASSWORD))) {
+         || STR.isEmpty(JSON.getString(json, ConstantsIF.PASSWORD))) {
          throw new Exception(
-               "Attribute '" + ConstantsIF.USER + "' or '" + ConstantsIF.PASSWORD + "' is missing or empty");
+            "Attribute '" + ConstantsIF.USER + "' or '" + ConstantsIF.PASSWORD + "' is missing or empty");
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -307,20 +324,20 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
 
    /**
     * Set the database and collection parameters in the operation.
-    * 
-    * @param oper       OperationIF operation
-    * @param database   String database value
+    *
+    * @param oper OperationIF operation
+    * @param database String database value
     * @param collection String collection value
-    * @throws Exception
+    * @throws Exception could not set the database or collection in operation
     */
    protected void setDatabaseAndCollection(final OperationIF oper, final String database, final String collection)
-         throws Exception {
+      throws Exception {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
 
       _logger.entering(CLASS, METHOD);
 
-      oper.setParam(ConstantsIF.DATABASE, this.getConfigValue(database));
-      oper.setParam(ConstantsIF.COLLECTION, this.getConfigValue(collection));
+      oper.setParam(ConstantsIF.DATABASE, this.getConfigValue(ConstantsIF.RESOURCE, database));
+      oper.setParam(ConstantsIF.COLLECTION, this.getConfigValue(ConstantsIF.RESOURCE, collection));
 
       _logger.exiting(CLASS, METHOD);
 
@@ -329,12 +346,12 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
 
    /**
     * Create a new AM SSO Session (primarily for creating "admin" session)
-    * 
+    *
     * <pre>
     * JSON input ...
     * {
-    *   "user": "<<user_login>>"
-    *   "password": "<<user_password>>"
+    *   "user": "_user_login_"
+    *   "password": "_user_password_"
     * }
     * JSON output ...
     * {
@@ -343,10 +360,10 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
     *   "realm": "/"
     * }
     * </pre>
-    * 
+    *
     * @param jsonInput JSONObject input
     * @return JSONObject output
-    * @throws Exception
+    * @throws Exception could not get the session
     */
    protected JSONObject getSession(final JSONObject jsonInput) throws Exception {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -382,7 +399,7 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
 
    /**
     * Validate the AM SSO Session
-    * 
+    *
     * <pre>
     * JSON input ...
     * {
@@ -398,10 +415,10 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
     * -or-
     * {"valid":false}
     * </pre>
-    * 
+    *
     * @param jsonInput JSONObject input
     * @return JSONObject output
-    * @throws Exception
+    * @throws Exception could not validate the session
     */
    protected JSONObject validateSession(final JSONObject jsonInput) throws Exception {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -433,7 +450,7 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
 
    /**
     * Get user id from the AM SSO session
-    * 
+    *
     * <pre>
     * JSON input ...
     * { "tokenId" : "..." // sso token }
@@ -448,7 +465,7 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
     * -or-
     * {"valid":false}
     * </pre>
-    * 
+    *
     * @param ssotoken String sso token
     * @return String user id
     */
@@ -481,10 +498,9 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
    /*
     * =============== PRIVATE METHODS ===============
     */
-
    /**
     * Create a new AM SSO Session (primarily for creating "admin" session)
-    * 
+    *
     * <pre>
     * JSON input ...
     * {
@@ -523,7 +539,7 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "user=''{0}'', password=''{1}''",
-               new Object[] { user != null ? user : NULL, password != null ? password : NULL });
+            new Object[]{user != null ? user : NULL, password != null ? password : NULL});
       }
 
       if (!STR.isEmpty(user) && !STR.isEmpty(password)) {
@@ -546,7 +562,7 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
 
    /**
     * Validate the SSO session
-    * 
+    *
     * <pre>
     * JSON input ...
     * { "uid" : "..." // sso token }
@@ -561,7 +577,7 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
     * -or-
     * {"valid":false}
     * </pre>
-    * 
+    *
     * @param operInput
     * @return
     * @throws Exception
@@ -583,7 +599,7 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
       tokenId = JSON.getString(operInput.getJSON(), ConstantsIF.UID);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "tokenId=''{0}''", new Object[] { tokenId != null ? tokenId : NULL });
+         _logger.log(DEBUG_LEVEL, "tokenId=''{0}''", new Object[]{tokenId != null ? tokenId : NULL});
       }
 
       if (!STR.isEmpty(tokenId)) {

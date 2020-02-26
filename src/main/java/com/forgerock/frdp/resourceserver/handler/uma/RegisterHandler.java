@@ -2,10 +2,11 @@
  * Copyright (c) 2018-2020, ForgeRock, Inc., All rights reserved
  * Use subject to license terms.
  */
-
 package com.forgerock.frdp.resourceserver.handler.uma;
 
 import com.forgerock.frdp.common.ConstantsIF;
+import com.forgerock.frdp.config.ConfigurationIF;
+import com.forgerock.frdp.config.ConfigurationManagerIF;
 import com.forgerock.frdp.dao.Operation;
 import com.forgerock.frdp.dao.OperationIF;
 import com.forgerock.frdp.handler.HandlerManagerIF;
@@ -14,13 +15,14 @@ import com.forgerock.frdp.resourceserver.dao.AMRestDataAccess;
 import com.forgerock.frdp.resourceserver.handler.JaxrsHandler;
 import com.forgerock.frdp.utils.JSON;
 import com.forgerock.frdp.utils.STR;
+import java.util.Map;
 import java.util.logging.Level;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 /**
  * Register Handler. Provides UMA resource registration operations.
- * 
+ *
  * <pre>
  * This class implements the following operations:
  * - create: regsiter a new UMA resource, returns registeration id
@@ -29,7 +31,7 @@ import org.json.simple.JSONObject;
  * - replace: update the UMA resource registration data (meta data)
  * - delete: de-register the UMA resource
  * </pre>
- * 
+ *
  * @author Scott Fehrman, ForgeRock, Inc.
  */
 public class RegisterHandler extends JaxrsHandler {
@@ -40,13 +42,13 @@ public class RegisterHandler extends JaxrsHandler {
    /**
     * Constructor
     *
-    * @param config     JSONObject containing configuration data
+    * @param configMgr ConfigurationManagerIF management of configurations
     * @param handlerMgr HandlerManagerIF provides management of Handlers
     */
-   public RegisterHandler(final JSONObject config, final HandlerManagerIF handlerMgr) {
-      super(config, handlerMgr);
+   public RegisterHandler(final ConfigurationManagerIF configMgr, final HandlerManagerIF handlerMgr) {
+      super(configMgr, handlerMgr);
 
-      String METHOD = "ContentHandler(config, handlerMgr)";
+      String METHOD = "ContentHandler(configMgr, handlerMgr)";
 
       _logger.entering(CLASS, METHOD);
 
@@ -60,12 +62,11 @@ public class RegisterHandler extends JaxrsHandler {
    /*
     * ================= PROTECTED METHODS =================
     */
-
    /**
     * Override the "validate" interface, used to check the operation input
-    * 
+    *
     * @param oper OperationaIF operation input
-    * @exception Exception
+    * @exception Exception could not validate the operation
     */
    @Override
    protected void validate(final OperationIF oper) throws Exception {
@@ -84,14 +85,14 @@ public class RegisterHandler extends JaxrsHandler {
       }
 
       switch (oper.getType()) {
-      case READ:
-      case REPLACE:
-      case DELETE: {
-         this.checkUid(jsonInput);
-         break;
-      }
-      default:
-         break;
+         case READ:
+         case REPLACE:
+         case DELETE: {
+            this.checkUid(jsonInput);
+            break;
+         }
+         default:
+            break;
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -101,13 +102,13 @@ public class RegisterHandler extends JaxrsHandler {
 
    /**
     * Override interface to support the "create" operation
-    * 
+    *
     * <pre>
-    * 
+    *
     * JSON input ...
     * {
     *   "data": {
-    *     "name": "", 
+    *     "name": "",
     *     "type": "",
     *     "resource_scopes": [ "view", ...  ]
     *   },
@@ -116,7 +117,7 @@ public class RegisterHandler extends JaxrsHandler {
     * JSON output ...
     * { "uid": "..." }
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input for create operation
     * @return OperationIF output from create operation
     */
@@ -134,8 +135,8 @@ public class RegisterHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       operOutput = new Operation(operInput.getType());
@@ -175,10 +176,7 @@ public class RegisterHandler extends JaxrsHandler {
 
    /**
     * Override interface to support the "search" operation
-    * 
-    * <pre>
-    * </pre>
-    * 
+    *
     * @param operInput OperationIF input for search operation
     * @return OperationIF output from search operation
     */
@@ -191,8 +189,8 @@ public class RegisterHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       try {
@@ -211,17 +209,17 @@ public class RegisterHandler extends JaxrsHandler {
 
    /**
     * Override interface to support the "read" operation
-    * 
+    *
     * <pre>
     * JSON input ... read registration
-    * { 
+    * {
     *   "uid": "...", // Register Id
     *   "access_token": "..."
     * }
     * JSON output ...
     * { "data": { ... } }
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input for read operation
     * @return OperationIF output from read operation
     */
@@ -239,8 +237,8 @@ public class RegisterHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       operOutput = new Operation(OperationIF.TYPE.READ);
@@ -284,7 +282,7 @@ public class RegisterHandler extends JaxrsHandler {
     * JSON input ... replace registration
     * {
     *   "data": {
-    *     "name": "", 
+    *     "name": "",
     *     "type": "",
     *     "resource_scopes": [ "view", ...  ]
     *   },
@@ -292,7 +290,7 @@ public class RegisterHandler extends JaxrsHandler {
     *   "uid": "..."
     * }
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input for replace operation
     * @return OperationIF output from replace operation
     */
@@ -308,8 +306,8 @@ public class RegisterHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       operOutput = new Operation(OperationIF.TYPE.REPLACE);
@@ -343,12 +341,12 @@ public class RegisterHandler extends JaxrsHandler {
     *
     * <pre>
     * JSON input ... delete registration
-    * { 
+    * {
     *   "uid": "...",
     *   "access_token": "..."
     * }
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input for delete operation
     * @return OperationIF output from delete operation
     */
@@ -364,8 +362,8 @@ public class RegisterHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       operOutput = new Operation(OperationIF.TYPE.DELETE);
@@ -397,43 +395,61 @@ public class RegisterHandler extends JaxrsHandler {
    /*
     * =============== PRIVATE METHODS ===============
     */
-
    /**
     * Initialize object instance
     */
    private void init() {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
+      String configType = ConstantsIF.RESOURCE;
+      String msg = null;
+      String type = ConstantsIF.RESOURCE;
+      ConfigurationIF config = null;
+      JSONObject json = null;
+      Map<String, String> map = null;
 
       _logger.entering(CLASS, METHOD);
+
+      config = _configMgr.getConfiguration(type);
+
+      if (config != null) {
+         json = config.getJSON();
+         if (json == null) {
+            msg = CLASS + ": " + METHOD + ": JSON data for '" + type + "' is null";
+            this.setError(true);
+         }
+      } else {
+         msg = CLASS + ": " + METHOD + ": Configuration for '" + type + "' is null";
+         this.setError(true);
+      }
 
       /*
        * setup the REST Data Access Object for the Authorization Server (AS)
        */
-
-      if (_AuthzServerDAO == null) {
+      if (!this.isError() && _AuthzServerDAO == null) {
+         map = JSON.convertToParams(JSON.getObject(json, ConfigIF.AS_CONNECT));
          try {
-            _AuthzServerDAO = new AMRestDataAccess(JSON.convertToParams(JSON.getObject(_config, ConfigIF.AS_CONNECT)));
+            _AuthzServerDAO = new AMRestDataAccess(map);
          } catch (Exception ex) {
+            msg = CLASS + ": " + METHOD + ": REST DAO: " + ex.getMessage();
             this.setError(true);
-            this.setState(STATE.ERROR);
-            this.setStatus(CLASS + ": " + METHOD + ": REST DAO: " + ex.getMessage());
-            _logger.severe(this.getStatus());
          }
       }
 
       if (!this.isError()) {
          try {
-            _path = this.getConfigValue(ConfigIF.AS_UMA_RESOURCE_SET_PATH);
+            _path = this.getConfigValue(configType, ConfigIF.AS_UMA_RESOURCE_SET_PATH);
          } catch (Exception ex) {
+            msg = CLASS + ": " + METHOD + ": _path : " + ex.getMessage();
             this.setError(true);
-            this.setState(STATE.ERROR);
-            this.setStatus(CLASS + ": " + METHOD + ": _path : " + ex.getMessage());
-            _logger.log(Level.SEVERE, this.getStatus());
          }
       }
 
       if (!this.isError()) {
          this.setState(STATE.READY);
+      } else {
+         this.setState(STATE.ERROR);
+         this.setStatus(msg);
+         _logger.log(Level.SEVERE, this.getStatus());
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -443,12 +459,12 @@ public class RegisterHandler extends JaxrsHandler {
 
    /**
     * Implementation of the "create" operation.
-    * 
+    *
     * <pre>
     * JSON input ...
     * {
     *   "data": {
-    *     "name": "", 
+    *     "name": "",
     *     "type": "",
     *     "resource_scopes": [ "view", ...  ]
     *   },
@@ -472,7 +488,7 @@ public class RegisterHandler extends JaxrsHandler {
     *    "user_access_policy_uri": "https://.../XUI/?realm=/#uma/share/..."
     * }
     * </pre>
-    * 
+    *
     * @param jsonInput JSONObject input
     * @return String registration unique identifier
     * @throws Exception
@@ -531,7 +547,7 @@ public class RegisterHandler extends JaxrsHandler {
 
    /**
     * Implementation of the "search" operation.
-    * 
+    *
     * <pre>
     * JSON input ...
     * {
@@ -555,7 +571,7 @@ public class RegisterHandler extends JaxrsHandler {
     * --header "Authorization: Bearer 515d6551-6512-5279-98b6-c0ef3f03a723" \
     * https://...:8443/openam/uma/realms/root/resource_set
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input
     * @return OperationIF output
     * @throws Exception
@@ -611,7 +627,7 @@ public class RegisterHandler extends JaxrsHandler {
 
    /**
     * Implementation of the "read" operation. Get "register" data from the
-    * Auhorization Server, using the uid
+    * Authorization Server, using the uid
     *
     * <pre>
     * JSON input ...
@@ -619,7 +635,7 @@ public class RegisterHandler extends JaxrsHandler {
     *   "uid" : "...", // Register Id
     *   "access_token": "..."
     * }
-    * JSON output ... 
+    * JSON output ...
     * {
     *   "resource_scopes": ["scope1","scope2","scope3"],
     *   "name": "...",
@@ -642,7 +658,7 @@ public class RegisterHandler extends JaxrsHandler {
     *   "user_access_policy_uri": ".../openam/XUI/?realm=/#uma/share/<<uid>>"
     * }
     * </pre>
-    * 
+    *
     * @param jsonInput JSONObject input
     * @return JSONObject output
     * @throws Exception
@@ -703,21 +719,21 @@ public class RegisterHandler extends JaxrsHandler {
 
    /**
     * Implementation of the "replace" operation. Read the existing registered
-    * resource, using the "uid" Merge the input attributes into the retieved
+    * resource, using the "uid" Merge the input attributes into the retrieved
     * registered resource
     *
     * <pre>
     * JSON input ...
     * {
     *   "data": {
-    *     "name": "", 
+    *     "name": "",
     *     "type": "",
     *     "resource_scopes": [ "view", ...  ],
     *     "icon_uri": ...
     *   },
     *   "access_token": "...",
     *   "uid": "..."
-    * }     
+    * }
     *
     * curl example:
     * curl -X PUT \
@@ -736,7 +752,7 @@ public class RegisterHandler extends JaxrsHandler {
     *   "user_access_policy_uri": ".../openam/XUI/?realm=/#uma/share/..."
     * }
     * </pre>
-    * 
+    *
     * @param jsonInput JSONObject input
     * @throws Exception
     */
@@ -794,7 +810,7 @@ public class RegisterHandler extends JaxrsHandler {
 
       if (operReplaceOutput.isError()) {
          throw new Exception(
-               METHOD + ": " + operReplaceOutput.getState().toString() + ": " + operReplaceOutput.getStatus());
+            METHOD + ": " + operReplaceOutput.getState().toString() + ": " + operReplaceOutput.getStatus());
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -803,10 +819,10 @@ public class RegisterHandler extends JaxrsHandler {
    }
 
    /**
-    * Implementation of the "delete" operation. Read the existing entry using the
-    * "uid" If the "content" attribute value exists, (uid for the Content Server) -
-    * Delete the "data" on the Content Server
-    * 
+    * Implementation of the "delete" operation. Read the existing entry using
+    * the "uid" If the "content" attribute value exists, (uid for the Content
+    * Server) - Delete the "data" on the Content Server
+    *
     * <pre>
     * curl example:
     * curl -X DELETE \
@@ -851,8 +867,8 @@ public class RegisterHandler extends JaxrsHandler {
 
             if (operDeleteOutput.getState() != STATE.SUCCESS && operDeleteOutput.getState() != STATE.NOTEXIST) {
                throw new Exception(
-                     METHOD + ": Delete failed: STATE: " + operDeleteOutput.getState().toString() + ", STATUS: "
-                           + operDeleteOutput.getStatus() + ", JSON: " + operDeleteOutput.getJSON().toString());
+                  METHOD + ": Delete failed: STATE: " + operDeleteOutput.getState().toString() + ", STATUS: "
+                  + operDeleteOutput.getStatus() + ", JSON: " + operDeleteOutput.getJSON().toString());
             }
          } else {
             throw new Exception(METHOD + ": registered resource id is empty");

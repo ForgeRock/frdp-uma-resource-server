@@ -2,10 +2,11 @@
  * Copyright (c) 2018-2020, ForgeRock, Inc., All rights reserved
  * Use subject to license terms.
  */
-
 package com.forgerock.frdp.resourceserver.handler.uma;
 
 import com.forgerock.frdp.common.ConstantsIF;
+import com.forgerock.frdp.config.ConfigurationIF;
+import com.forgerock.frdp.config.ConfigurationManagerIF;
 import com.forgerock.frdp.dao.Operation;
 import com.forgerock.frdp.dao.OperationIF;
 import com.forgerock.frdp.dao.mongo.MongoFactory;
@@ -25,12 +26,12 @@ import org.json.simple.JSONObject;
  * list of resources that they have access to (via a policy). This service is
  * NOT part of the UMA 2.0 specification. This class provides value-added
  * services which leverage the Access Manager APIs.
- * 
+ *
  * <pre>
  * This class implements the following operations:
  * - search: get a Subjects (Requesting Party) list of resources
  * </pre>
- * 
+ *
  * @author Scott Fehrman, ForgeRock, Inc.
  */
 public class SubjectsHandler extends JaxrsHandler {
@@ -40,13 +41,13 @@ public class SubjectsHandler extends JaxrsHandler {
    /**
     * Constructor
     *
-    * @param config     JSONObject containing configuration data
+    * @param configMgr ConfigurationManagerIF management of configurations
     * @param handlerMgr HandlerManagerIF provides management of Handlers
     */
-   public SubjectsHandler(final JSONObject config, final HandlerManagerIF handlerMgr) {
-      super(config, handlerMgr);
+   public SubjectsHandler(final ConfigurationManagerIF configMgr, final HandlerManagerIF handlerMgr) {
+      super(configMgr, handlerMgr);
 
-      String METHOD = "SubjectsHandler(config, handlerMgr)";
+      String METHOD = "SubjectsHandler(configMgr, handlerMgr)";
 
       _logger.entering(CLASS, METHOD);
 
@@ -62,9 +63,9 @@ public class SubjectsHandler extends JaxrsHandler {
     */
    /**
     * Override the "validate" interface, used to check the operation input
-    * 
+    *
     * @param oper OperationaIF operation input
-    * @exception Exception
+    * @exception Exception could not validate the operation
     */
    @Override
    protected void validate(final OperationIF oper) throws Exception {
@@ -83,13 +84,13 @@ public class SubjectsHandler extends JaxrsHandler {
       }
 
       switch (oper.getType()) {
-      case SEARCH: // GET
-      {
-         break;
-      }
-      default: {
-         throw new Exception("Unsupported operation type: '" + oper.getType().toString() + "'");
-      }
+         case SEARCH: // GET
+         {
+            break;
+         }
+         default: {
+            throw new Exception("Unsupported operation type: '" + oper.getType().toString() + "'");
+         }
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -98,12 +99,12 @@ public class SubjectsHandler extends JaxrsHandler {
    }
 
    /**
-    * Override interface to support the "search" operation. Get the collection of
-    * pending access requests for the give resource owner
+    * Override interface to support the "search" operation. Get the collection
+    * of pending access requests for the give resource owner
     *
     * <pre>
     * JSON input ... search for pending requests
-    * { 
+    * {
     *   "sso_token": "...", // header: iPlanetDirectoryPro
     *   "owner": "..." // used to build the URL
     * }
@@ -122,7 +123,7 @@ public class SubjectsHandler extends JaxrsHandler {
     *   }
     * }
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input for search operation
     * @return OperationIF output from search operation
     */
@@ -135,8 +136,8 @@ public class SubjectsHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       try {
@@ -156,27 +157,45 @@ public class SubjectsHandler extends JaxrsHandler {
    /*
     * =============== PRIVATE METHODS ===============
     */
-
    /**
     * Initialize object instance
     */
    private void init() {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
+      String msg = null;
+      String type = ConstantsIF.RESOURCE;
+      ConfigurationIF config = null;
+      JSONObject json = null;
+      Map<String, String> map = null;
 
       _logger.entering(CLASS, METHOD);
 
       /*
+       * Get JSON data from the Config object via the Config Manager
+       */
+      config = _configMgr.getConfiguration(type);
+
+      if (config != null) {
+         json = config.getJSON();
+         if (json == null) {
+            msg = CLASS + ": " + METHOD + ": JSON data for '" + type + "' is null";
+            this.setError(true);
+         }
+      } else {
+         msg = CLASS + ": " + METHOD + ": Configuration for '" + type + "' is null";
+         this.setError(true);
+      }
+
+      /*
        * setup the REST Data Access Object for the Authorization Server (AS)
        */
-
-      if (_AuthzServerDAO == null) {
+      if (!this.isError() && _AuthzServerDAO == null) {
+         map = JSON.convertToParams(JSON.getObject(json, ConfigIF.AS_CONNECT));
          try {
-            _AuthzServerDAO = new AMRestDataAccess(JSON.convertToParams(JSON.getObject(_config, ConfigIF.AS_CONNECT)));
+            _AuthzServerDAO = new AMRestDataAccess(map);
          } catch (Exception ex) {
+            msg = CLASS + ": " + METHOD + ": REST DAO: " + ex.getMessage();
             this.setError(true);
-            this.setState(STATE.ERROR);
-            this.setStatus(CLASS + ": " + METHOD + ": REST DAO: " + ex.getMessage());
-            _logger.severe(this.getStatus());
          }
       }
 
@@ -184,17 +203,21 @@ public class SubjectsHandler extends JaxrsHandler {
        * setup the Mongo Data Access Object
        */
       if (!this.isError() && _MongoDAO == null) {
+         map = JSON.convertToParams(JSON.getObject(json, ConfigIF.RS_NOSQL));
          try {
-            _MongoDAO = MongoFactory.getInstance(JSON.convertToParams(JSON.getObject(_config, ConfigIF.RS_NOSQL)));
+            _MongoDAO = MongoFactory.getInstance(map);
          } catch (Exception ex) {
+            msg = CLASS + ": " + METHOD + ": Mongo DAO:" + ex.getMessage();
             this.setError(true);
-            this.setState(STATE.ERROR);
-            this.setStatus(CLASS + ": " + METHOD + ": Mongo DAO:" + ex.getMessage());
-            _logger.severe(this.getStatus());
          }
       }
+
       if (!this.isError()) {
          this.setState(STATE.READY);
+      } else {
+         this.setState(STATE.ERROR);
+         this.setStatus(msg);
+         _logger.severe(this.getStatus());
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -203,9 +226,9 @@ public class SubjectsHandler extends JaxrsHandler {
    }
 
    /**
-    * Implementation of the "search" operation. Get the "pending" access requests
-    * for the owner
-    * 
+    * Implementation of the "search" operation. Get the "pending" access
+    * requests for the owner
+    *
     * <pre>
     * JSON input ...
     * {
@@ -246,7 +269,7 @@ public class SubjectsHandler extends JaxrsHandler {
     * https://.../openam/json/realms/root/users/<<owner>>/uma/policies
     *
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input
     * @return OperationIF output
     * @throws Exception
@@ -255,6 +278,7 @@ public class SubjectsHandler extends JaxrsHandler {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String sso_token = null;
       String owner = null;
+      String configType = ConstantsIF.RESOURCE;
       JSONObject jsonData = null;
       JSONObject jsonQuery = null;
       JSONObject jsonHeaders = null;
@@ -277,8 +301,8 @@ public class SubjectsHandler extends JaxrsHandler {
          jsonQuery.put(ConstantsIF.OPERATOR, ConstantsIF.NONE);
 
          jsonHeaders = new JSONObject();
-         jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(ConfigIF.AS_UMA_POLICIES_ACCEPT));
-         jsonHeaders.put(this.getConfigValue(ConfigIF.AS_COOKIE), sso_token);
+         jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(configType, ConfigIF.AS_UMA_POLICIES_ACCEPT));
+         jsonHeaders.put(this.getConfigValue(configType, ConfigIF.AS_COOKIE), sso_token);
 
          jsonParams = new JSONObject();
          jsonParams.put("_pageSize", "10");
@@ -291,7 +315,8 @@ public class SubjectsHandler extends JaxrsHandler {
          jsonSearch.put(ConstantsIF.HEADERS, jsonHeaders);
          jsonSearch.put(ConstantsIF.QUERY_PARAMS, jsonParams);
          jsonSearch.put(ConstantsIF.PATH,
-               this.getConfigValue(ConfigIF.AS_UMA_POLICIES_PATH).replaceAll(PROP_VAR_OWNER, owner));
+            this.getConfigValue(configType, ConfigIF.AS_UMA_POLICIES_PATH)
+               .replaceAll(PROP_VAR_OWNER, owner));
 
          operASInput = new Operation(OperationIF.TYPE.SEARCH); // GET
          operASInput.setJSON(jsonSearch);
@@ -473,7 +498,7 @@ public class SubjectsHandler extends JaxrsHandler {
     *   "results" : [
     *     {
     *       "uid": "...",
-    *       "data: { 
+    *       "data: {
     *         ...
     *       }
     *     },
@@ -481,7 +506,7 @@ public class SubjectsHandler extends JaxrsHandler {
     *   ]
     * }
     * </pre>
-    * 
+    *
     * @param registerId String registeration identifier
     * @return String resource identifier
     */
@@ -510,7 +535,7 @@ public class SubjectsHandler extends JaxrsHandler {
 
          try {
             this.setDatabaseAndCollection(operInput, ConfigIF.RS_NOSQL_DATABASE,
-                  ConfigIF.RS_NOSQL_COLLECTIONS_RESOURCES_NAME);
+               ConfigIF.RS_NOSQL_COLLECTIONS_RESOURCES_NAME);
          } catch (Exception ex) {
             this.setError(true);
             operOutput = new Operation(OperationIF.TYPE.SEARCH);

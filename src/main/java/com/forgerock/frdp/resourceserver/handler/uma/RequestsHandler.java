@@ -2,10 +2,11 @@
  * Copyright (c) 2018-2020, ForgeRock, Inc., All rights reserved
  * Use subject to license terms.
  */
-
 package com.forgerock.frdp.resourceserver.handler.uma;
 
 import com.forgerock.frdp.common.ConstantsIF;
+import com.forgerock.frdp.config.ConfigurationIF;
+import com.forgerock.frdp.config.ConfigurationManagerIF;
 import com.forgerock.frdp.dao.Operation;
 import com.forgerock.frdp.dao.OperationIF;
 import com.forgerock.frdp.handler.HandlerManagerIF;
@@ -14,21 +15,23 @@ import com.forgerock.frdp.resourceserver.dao.AMRestDataAccess;
 import com.forgerock.frdp.resourceserver.handler.JaxrsHandler;
 import com.forgerock.frdp.utils.JSON;
 import com.forgerock.frdp.utils.STR;
+import java.util.Map;
 import java.util.logging.Level;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 /**
- * Requests Handler. Provides the processing of access requests for a UMA resource.
- * Request processing is NOT part of the UMA 2.0 specification.  The class provides value-added
- * services which leverage the Access Manager request APIs.
+ * Requests Handler. Provides the processing of access requests for a UMA
+ * resource. Request processing is NOT part of the UMA 2.0 specification. The
+ * class provides value-added services which leverage the Access Manager request
+ * APIs.
  * <pre>
  * This class implements the following operations:
  * - search: find all requests for a given Resource owner
  * - read: get the details for a given request
  * - replace: set the requests action (allow / deny) and the scopes
  * </pre>
- * 
+ *
  * @author Scott Fehrman, ForgeRock, Inc.
  */
 public class RequestsHandler extends JaxrsHandler {
@@ -38,13 +41,13 @@ public class RequestsHandler extends JaxrsHandler {
    /**
     * Constructor
     *
-    * @param config     JSONObject containing configuration data
+    * @param configMgr ConfigurationManagerIF management of configurations
     * @param handlerMgr HandlerManagerIF provides management of Handlers
     */
-   public RequestsHandler(final JSONObject config, final HandlerManagerIF handlerMgr) {
-      super(config, handlerMgr);
+   public RequestsHandler(final ConfigurationManagerIF configMgr, final HandlerManagerIF handlerMgr) {
+      super(configMgr, handlerMgr);
 
-      String METHOD = "RequestsHandler(config, handlerMgr)";
+      String METHOD = "RequestsHandler(configMgr, handlerMgr)";
 
       _logger.entering(CLASS, METHOD);
 
@@ -58,12 +61,11 @@ public class RequestsHandler extends JaxrsHandler {
    /*
     * ================= PROTECTED METHODS =================
     */
-
    /**
     * Override the "validate" interface, used to check the operation input
-    * 
+    *
     * @param oper OperationaIF operation input
-    * @exception Exception
+    * @exception Exception could not validate the operation
     */
    @Override
    protected void validate(final OperationIF oper) throws Exception {
@@ -82,15 +84,15 @@ public class RequestsHandler extends JaxrsHandler {
       }
 
       switch (oper.getType()) {
-      case SEARCH: // GET
-      case READ: // GET with id
-      case REPLACE: // will map to a POST (approve or deny)
-      {
-         break;
-      }
-      default: {
-         throw new Exception("Unsupported operation type: '" + oper.getType().toString() + "'");
-      }
+         case SEARCH: // GET
+         case READ: // GET with id
+         case REPLACE: // will map to a POST (approve or deny)
+         {
+            break;
+         }
+         default: {
+            throw new Exception("Unsupported operation type: '" + oper.getType().toString() + "'");
+         }
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -101,10 +103,10 @@ public class RequestsHandler extends JaxrsHandler {
    /**
     * Override interface to support the "search" operation Get the collection of
     * pending access requests for the give resource owner
-    * 
+    *
     * <pre>
     * JSON input ... search for pending requests
-    * { 
+    * {
     *   "sso_token": "...", // header: iPlanetDirectoryPro
     *   "owner": "..." // used to build the URL
     * }
@@ -128,7 +130,7 @@ public class RequestsHandler extends JaxrsHandler {
     *   }
     * }
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input for search operation
     * @return OperationIF output from search operation
     */
@@ -141,8 +143,8 @@ public class RequestsHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       try {
@@ -160,12 +162,12 @@ public class RequestsHandler extends JaxrsHandler {
    }
 
    /**
-    * Override interface to support the "read" operation Get details related to an
-    * access request for the given resource owner
-    * 
+    * Override interface to support the "read" operation Get details related to
+    * an access request for the given resource owner
+    *
     * <pre>
     * JSON input ... read request details
-    * { 
+    * {
     *   "uid": "...", // Request GUID (was generated by AM)
     *   "sso_token": "...", // header: iPlanetDirectoryPro
     *   "owner": "..." // used to build the URL
@@ -182,7 +184,7 @@ public class RequestsHandler extends JaxrsHandler {
     *   }
     * }
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input for read operation
     * @return OperationIF output from read operation
     */
@@ -195,8 +197,8 @@ public class RequestsHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       try {
@@ -214,9 +216,9 @@ public class RequestsHandler extends JaxrsHandler {
    }
 
    /**
-    * Override interface to support the "replace" operation The POST HTTP Method is
-    * used by the AM API to approve or deny requests for access to a resource, from
-    * a requesting party.
+    * Override interface to support the "replace" operation The POST HTTP Method
+    * is used by the AM API to approve or deny requests for access to a
+    * resource, from a requesting party.
     *
     * <pre>
     * JSON input ...
@@ -232,7 +234,7 @@ public class RequestsHandler extends JaxrsHandler {
     * JSON output ...
     * {}
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input for replace operation
     * @return OperationIF output from replace operation
     */
@@ -245,8 +247,8 @@ public class RequestsHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       try {
@@ -266,31 +268,51 @@ public class RequestsHandler extends JaxrsHandler {
    /*
     * =============== PRIVATE METHODS ===============
     */
-
    /**
     * Initialize object instance
     */
    private void init() {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
+      String msg = null;
+      String type = ConstantsIF.RESOURCE;
+      ConfigurationIF config = null;
+      JSONObject json = null;
+      Map<String, String> map = null;
 
       _logger.entering(CLASS, METHOD);
+
+      config = _configMgr.getConfiguration(type);
+
+      if (config != null) {
+         json = config.getJSON();
+         if (json == null) {
+            msg = CLASS + ": " + METHOD + ": JSON data for '" + type + "' is null";
+            this.setError(true);
+         }
+      } else {
+         msg = CLASS + ": " + METHOD + ": Configuration for '" + type + "' is null";
+         this.setError(true);
+      }
 
       /*
        * setup the REST Data Access Object for the Authorization Server (AS)
        */
       if (_AuthzServerDAO == null) {
+         map = JSON.convertToParams(JSON.getObject(json, ConfigIF.AS_CONNECT));
          try {
-            _AuthzServerDAO = new AMRestDataAccess(JSON.convertToParams(JSON.getObject(_config, ConfigIF.AS_CONNECT)));
+            _AuthzServerDAO = new AMRestDataAccess(map);
          } catch (Exception ex) {
+            msg = CLASS + ": " + METHOD + ": REST AMDAO: " + ex.getMessage();
             this.setError(true);
-            this.setState(STATE.ERROR);
-            this.setStatus(CLASS + ": " + METHOD + ": REST AMDAO: " + ex.getMessage());
-            _logger.severe(this.getStatus());
          }
       }
 
       if (!this.isError()) {
          this.setState(STATE.READY);
+      } else {
+         this.setState(STATE.ERROR);
+         this.setStatus(msg);
+         _logger.severe(this.getStatus());
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -299,8 +321,8 @@ public class RequestsHandler extends JaxrsHandler {
    }
 
    /**
-    * Implementation of the "search" operation. Get the "pending" access requests
-    * for the owner
+    * Implementation of the "search" operation. Get the "pending" access
+    * requests for the owner
     *
     * <pre>
     * JSON input ...
@@ -327,15 +349,15 @@ public class RequestsHandler extends JaxrsHandler {
     *     "remainingPagedResults”:0
     *   }
     * }
-    * 
+    *
     * curl example:
     * curl -X GET
     * 'https://.../openam/json/realms/root/users/<<owner>>/uma/pendingrequests\
-    * ?_pageSize=10&_sortKeys=user&_queryFilter=true&_pagedResultsOffset=0’ 
-    * -H 'Accept-API-Version: protocol=1.0,resource=1.0’ 
+    * ?_pageSize=10&_sortKeys=user&_queryFilter=true&_pagedResultsOffset=0’
+    * -H 'Accept-API-Version: protocol=1.0,resource=1.0’
     * -H 'Cookie: iPlanetDirectoryPro=...*’
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input
     * @return OperationIF output
     * @throws Exception
@@ -344,6 +366,7 @@ public class RequestsHandler extends JaxrsHandler {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String sso_token = null;
       String owner = null;
+      String configType = ConstantsIF.RESOURCE;
       JSONObject jsonData = null;
       JSONObject jsonQuery = null;
       JSONObject jsonHeaders = null;
@@ -366,19 +389,20 @@ public class RequestsHandler extends JaxrsHandler {
          jsonQuery.put(ConstantsIF.OPERATOR, ConstantsIF.NONE);
 
          jsonHeaders = new JSONObject();
-         jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(ConfigIF.AS_UMA_PENDINGREQUESTS_ACCEPT));
-         jsonHeaders.put(this.getConfigValue(ConfigIF.AS_COOKIE), sso_token);
+         jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(configType, ConfigIF.AS_UMA_PENDINGREQUESTS_ACCEPT));
+         jsonHeaders.put(this.getConfigValue(configType, ConfigIF.AS_COOKIE), sso_token);
 
          jsonParams = new JSONObject();
-         jsonParams.put(PROP_SORTKEYS, this.getConfigValue(ConfigIF.AS_UMA_PENDINGREQUESTS_SORTKEYS));
-         jsonParams.put(PROP_QUERYFILTER, this.getConfigValue(ConfigIF.AS_UMA_PENDINGREQUESTS_QUERYFILTER));
+         jsonParams.put(PROP_SORTKEYS, this.getConfigValue(configType, ConfigIF.AS_UMA_PENDINGREQUESTS_SORTKEYS));
+         jsonParams.put(PROP_QUERYFILTER, this.getConfigValue(configType, ConfigIF.AS_UMA_PENDINGREQUESTS_QUERYFILTER));
 
          jsonSearch = new JSONObject();
          jsonSearch.put(ConstantsIF.QUERY, jsonQuery);
          jsonSearch.put(ConstantsIF.HEADERS, jsonHeaders);
          jsonSearch.put(ConstantsIF.QUERY_PARAMS, jsonParams);
          jsonSearch.put(ConstantsIF.PATH,
-               this.getConfigValue(ConfigIF.AS_UMA_PENDINGREQUESTS_PATH).replaceAll(PROP_VAR_OWNER, owner));
+            this.getConfigValue(configType, ConfigIF.AS_UMA_PENDINGREQUESTS_PATH)
+               .replaceAll(PROP_VAR_OWNER, owner));
 
          operASInput = new Operation(OperationIF.TYPE.SEARCH); // GET
          operASInput.setJSON(jsonSearch);
@@ -414,7 +438,7 @@ public class RequestsHandler extends JaxrsHandler {
     *
     * <pre>
     * JSON input ... read request details
-    * { 
+    * {
     *   "uid": "...", // Request GUID (was generated by AM)
     *   "sso_token": "...", // header: iPlanetDirectoryPro
     *   "owner": "..." // used to build the URL
@@ -433,11 +457,11 @@ public class RequestsHandler extends JaxrsHandler {
     *
     * curl example:
     * curl -X GET
-    * 'https://.../openam/json/realms/root/users/<<owner>>/uma/pendingrequests/<<id>>’ 
-    * -H 'Accept-API-Version: protocol=1.0,resource=1.0’ 
+    * 'https://.../openam/json/realms/root/users/<<owner>>/uma/pendingrequests/<<id>>’
+    * -H 'Accept-API-Version: protocol=1.0,resource=1.0’
     * -H 'Cookie: iPlanetDirectoryPro =...'
     * </pre>
-    * 
+    *
     * @param jsonInput JSONObject input
     * @return JSONObject output
     * @throws Exception
@@ -447,6 +471,7 @@ public class RequestsHandler extends JaxrsHandler {
       String sso_token = null;
       String owner = null;
       String requestId = null;
+      String configType = ConstantsIF.RESOURCE;
       JSONObject jsonHeaders = null;
       JSONObject jsonRead = null;
       JSONObject jsonOutput = null;
@@ -467,13 +492,14 @@ public class RequestsHandler extends JaxrsHandler {
          if (!STR.isEmpty(requestId)) {
             jsonHeaders = new JSONObject();
             jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION,
-                  this.getConfigValue(ConfigIF.AS_UMA_PENDINGREQUESTS_ACCEPT));
-            jsonHeaders.put(this.getConfigValue(ConfigIF.AS_COOKIE), sso_token);
+               this.getConfigValue(configType, ConfigIF.AS_UMA_PENDINGREQUESTS_ACCEPT));
+            jsonHeaders.put(this.getConfigValue(configType, ConfigIF.AS_COOKIE), sso_token);
 
             jsonRead = new JSONObject();
             jsonRead.put(ConstantsIF.HEADERS, jsonHeaders);
             jsonRead.put(ConstantsIF.PATH,
-                  this.getConfigValue(ConfigIF.AS_UMA_PENDINGREQUESTS_PATH).replaceAll(PROP_VAR_OWNER, owner));
+               this.getConfigValue(configType, ConfigIF.AS_UMA_PENDINGREQUESTS_PATH)
+                  .replaceAll(PROP_VAR_OWNER, owner));
             jsonRead.put(ConstantsIF.UID, requestId);
 
             operASInput = new Operation(OperationIF.TYPE.READ); // GET
@@ -505,7 +531,7 @@ public class RequestsHandler extends JaxrsHandler {
     *
     * <pre>
     * JSON input ... read request details
-    * { 
+    * {
     *   "uid": "...", // Request GUID (was generated by AM)
     *   "sso_token": "...", // header: iPlanetDirectoryPro
     *   "owner": "...", // used to build the URL
@@ -519,13 +545,13 @@ public class RequestsHandler extends JaxrsHandler {
     *
     * curl example:
     * curl -X POST
-    * 'https://.../openam/json/realms/root/users/<<owner>>/uma/pendingrequests/<<requesrUid>>?_action=approve’ 
-    * -H 'Accept-API-Version: protocol=1.0,resource=1.0’ 
+    * 'https://.../openam/json/realms/root/users/<<owner>>/uma/pendingrequests/<<requesrUid>>?_action=approve’
+    * -H 'Accept-API-Version: protocol=1.0,resource=1.0’
     * -H 'Cookie: iPlanetDirectoryPro=...'
-    * --data-binary '{"scopes":["meta"]}’ 
+    * --data-binary '{"scopes":["meta"]}’
     * --compressed
     * </pre>
-    * 
+    *
     * @param jsonInput JSONObject input
     * @return OperationIF output
     * @throws Exception
@@ -536,6 +562,7 @@ public class RequestsHandler extends JaxrsHandler {
       String owner = null;
       String requestId = null;
       String action = null;
+      String configType = ConstantsIF.RESOURCE;
       JSONObject jsonInput = null;
       JSONObject jsonDataInput = null;
       JSONObject jsonPayload = null;
@@ -586,7 +613,7 @@ public class RequestsHandler extends JaxrsHandler {
                action = JSON.getString(jsonDataInput, ConstantsIF.ACTION);
 
                if (!STR.isEmpty(action)
-                     && (action.equalsIgnoreCase(ConstantsIF.DENY) || action.equalsIgnoreCase(ConstantsIF.APPROVE))) {
+                  && (action.equalsIgnoreCase(ConstantsIF.DENY) || action.equalsIgnoreCase(ConstantsIF.APPROVE))) {
                   jsonPayload = new JSONObject();
                   jsonPayload.put(ConstantsIF.ACTION, action);
 
@@ -598,7 +625,7 @@ public class RequestsHandler extends JaxrsHandler {
                      } else {
                         if (_logger.isLoggable(Level.WARNING)) {
                            _logger.log(Level.WARNING,
-                                 "Approved access request is missing permissions, will grant all scopes");
+                              "Approved access request is missing permissions, will grant all scopes");
                         }
                         if (jsonScopes != null && !jsonScopes.isEmpty()) {
                            jsonPayload.put(ConstantsIF.SCOPES, jsonScopes);
@@ -610,8 +637,8 @@ public class RequestsHandler extends JaxrsHandler {
 
                   jsonHeaders = new JSONObject();
                   jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION,
-                        this.getConfigValue(ConfigIF.AS_UMA_PENDINGREQUESTS_ACCEPT));
-                  jsonHeaders.put(this.getConfigValue(ConfigIF.AS_COOKIE), sso_token);
+                     this.getConfigValue(configType, ConfigIF.AS_UMA_PENDINGREQUESTS_ACCEPT));
+                  jsonHeaders.put(this.getConfigValue(configType, ConfigIF.AS_COOKIE), sso_token);
 
                   jsonQueryParams = new JSONObject();
                   jsonQueryParams.put("_action", action);
@@ -620,7 +647,8 @@ public class RequestsHandler extends JaxrsHandler {
                   jsonReplace.put(ConstantsIF.HEADERS, jsonHeaders);
                   jsonReplace.put(ConstantsIF.QUERY_PARAMS, jsonQueryParams);
                   jsonReplace.put(ConstantsIF.PATH,
-                        this.getConfigValue(ConfigIF.AS_UMA_PENDINGREQUESTS_PATH).replaceAll(PROP_VAR_OWNER, owner));
+                     this.getConfigValue(configType, ConfigIF.AS_UMA_PENDINGREQUESTS_PATH)
+                        .replaceAll(PROP_VAR_OWNER, owner));
                   jsonReplace.put(ConstantsIF.UID, requestId);
                   jsonReplace.put(ConstantsIF.DATA, jsonPayload);
 

@@ -2,10 +2,10 @@
  * Copyright (c) 2018-2020, ForgeRock, Inc., All rights reserved
  * Use subject to license terms.
  */
-
 package com.forgerock.frdp.resourceserver.handler.uma;
 
 import com.forgerock.frdp.common.ConstantsIF;
+import com.forgerock.frdp.config.ConfigurationManagerIF;
 import com.forgerock.frdp.dao.Operation;
 import com.forgerock.frdp.dao.OperationIF;
 import com.forgerock.frdp.handler.HandlerManagerIF;
@@ -24,7 +24,7 @@ import org.json.simple.JSONObject;
 /**
  * Implements operations to the "credential" store (MongoDB) Create, Read,
  * Update, Delete, Search The "creation" of a credential is specific to the UMA
- * Proection API Token (PAT) - validate the user's SSO session - get an OAuth
+ * Protection API Token (PAT) - validate the user's SSO session - get an OAuth
  * authorization code - get an OAuth access token
  *
  * @author Scott Fehrman, ForgeRock, Inc.
@@ -36,13 +36,13 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
    /**
     * Constructor
     *
-    * @param config     JSONObject containing configuration data
+    * @param configMgr ConfigurationManagerIF management of configurations
     * @param handlerMgr HandlerManagerIF provides management of Handlers
     */
-   public ProtectionApiTokenHandler(final JSONObject config, final HandlerManagerIF handlerMgr) {
-      super(config, handlerMgr);
+   public ProtectionApiTokenHandler(final ConfigurationManagerIF configMgr, final HandlerManagerIF handlerMgr) {
+      super(configMgr, handlerMgr);
 
-      String METHOD = "ProtectionApiTokenHandler(config, handlerMgr)";
+      String METHOD = "ProtectionApiTokenHandler(configMgr, handlerMgr)";
 
       _logger.entering(CLASS, METHOD);
 
@@ -56,12 +56,11 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
    /*
     * ================= PROTECTED METHODS =================
     */
-
    /**
     * Override the "validate" interface, used to check the operation input
-    * 
+    *
     * @param oper OperationaIF operation input
-    * @exception Exception
+    * @exception Exception could not validate the operation
     */
    @Override
    protected void validate(final OperationIF oper) throws Exception {
@@ -85,12 +84,13 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
    }
 
    /**
-    * Override interface to support the "read" operation. Get the "credentials" For
-    * either the SSOToken (which is related to userId, the owner) Or the explicit
-    * "owner" Search the collection, return the first result (should be only one).
-    * Validate the credential, if validate return it Else, use refresh token and
-    * create a new token, save If not exist, create a new credential and save it
-    * 
+    * Override interface to support the "read" operation. Get the "credentials"
+    * For either the SSOToken (which is related to userId, the owner) Or the
+    * explicit "owner" Search the collection, return the first result (should be
+    * only one). Validate the credential, if validate return it Else, use
+    * refresh token and create a new token, save If not exist, create a new
+    * credential and save it
+    *
     * <pre>
     * JSON input ... (if using an SSO token)
     * { "ssotoken": "..." }
@@ -113,7 +113,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
     *   }
     * }
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input for create operation
     * @return OperationIF output from create operation
     */
@@ -126,6 +126,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
       String owner = null;
       String category = null;
       String credUid = null;
+      String configType = ConstantsIF.RESOURCE;
       OperationIF operOutput = null;
       OperationIF operReadInput = null;
       OperationIF operReadOutput = null;
@@ -143,8 +144,8 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
       jsonInput = operInput.getJSON();
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''", new Object[] {
-               operInput != null ? operInput.toString() : NULL, jsonInput != null ? jsonInput.toString() : NULL });
+         _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''", new Object[]{
+            operInput != null ? operInput.toString() : NULL, jsonInput != null ? jsonInput.toString() : NULL});
       }
 
       ssotoken = JSON.getString(jsonInput, ConstantsIF.SSO_TOKEN);
@@ -165,7 +166,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
 
       if (!STR.isEmpty(owner)) {
          try {
-            category = this.getConfigValue(ConfigIF.RS_CREDENTIAL_CATEGORIES_PAT_ID);
+            category = this.getConfigValue(configType, ConfigIF.RS_CREDENTIAL_CATEGORIES_PAT_ID);
             credUid = this.getCredentialUid(owner, category);
          } catch (Exception ex) {
             error = true;
@@ -183,7 +184,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
 
             if (!operReadOutput.isError()) {
                jsonCredential = JSON.getObject(operReadOutput.getJSON(),
-                     ConstantsIF.DATA + "." + ConstantsIF.CREDENTIAL);
+                  ConstantsIF.DATA + "." + ConstantsIF.CREDENTIAL);
                operOutput = operReadOutput;
             } else {
                /*
@@ -191,7 +192,8 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
                 * automatically. Log the error message and continue A new credential will be
                 * created.
                 */
-               _logger.log(Level.WARNING, "{0}: {1}: {2}", new Object[] { CLASS, METHOD, operReadOutput.getStatus() });
+               _logger.log(Level.WARNING, "{0}: {1}: {2}",
+                  new Object[]{CLASS, METHOD, operReadOutput.getStatus()});
             }
          }
       }
@@ -250,7 +252,8 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
       }
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "output=''{0}''", new Object[] { operOutput != null ? operOutput.toString() : NULL });
+         _logger.log(DEBUG_LEVEL, "output=''{0}''",
+            new Object[]{operOutput != null ? operOutput.toString() : NULL});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -261,10 +264,9 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
    /*
     * =============== PRIVATE METHODS ===============
     */
-
    /**
     * Implementation of the "read" operation.
-    * 
+    *
     * <pre>
     * JSON input ...
     * { "uid": "..." }
@@ -283,7 +285,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
     *   }
     * }
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input
     * @return OperationIF output
     */
@@ -305,7 +307,8 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
       _logger.entering(CLASS, METHOD);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "input=''{0}''", new Object[] { operInput != null ? operInput.toString() : NULL });
+         _logger.log(DEBUG_LEVEL, "input=''{0}''",
+            new Object[]{operInput != null ? operInput.toString() : NULL});
       }
 
       operOutput = new Operation(operInput.getType());
@@ -314,7 +317,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
 
       try {
          this.setDatabaseAndCollection(operInput, ConfigIF.RS_NOSQL_DATABASE,
-               ConfigIF.RS_NOSQL_COLLECTIONS_CREDENTIALS_NAME);
+            ConfigIF.RS_NOSQL_COLLECTIONS_CREDENTIALS_NAME);
       } catch (Exception ex) {
          error = true;
          buf.append(": ").append(ex.getMessage());
@@ -330,71 +333,71 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
             try {
                operValidateOutput = this.validateToken(operReadOutput);
                switch (operValidateOutput.getState()) {
-               case SUCCESS: // 200 valid
-               {
-                  operOutput = operReadOutput;
-                  break;
-               }
-               case NOTAUTHORIZED: // 401 invalid
-               {
-                  /*
-                   * get a new access token from the refresh token
-                   */
-
-                  operRefreshOutput = this.refreshToken(operReadOutput);
-
-                  if (operRefreshOutput.getState() == STATE.SUCCESS) {
+                  case SUCCESS: // 200 valid
+                  {
+                     operOutput = operReadOutput;
+                     break;
+                  }
+                  case NOTAUTHORIZED: // 401 invalid
+                  {
                      /*
+                   * get a new access token from the refresh token
+                      */
+
+                     operRefreshOutput = this.refreshToken(operReadOutput);
+
+                     if (operRefreshOutput.getState() == STATE.SUCCESS) {
+                        /*
                       * Got a new set of credential attributes "access_token" and "refresh_token"
                       * need to replace these attributes in the record
-                      */
-                     jsonReadData = JSON.getObject(operReadOutput.getJSON(), ConstantsIF.DATA);
+                         */
+                        jsonReadData = JSON.getObject(operReadOutput.getJSON(), ConstantsIF.DATA);
 
-                     jsonRefreshCred = operRefreshOutput.getJSON();
+                        jsonRefreshCred = operRefreshOutput.getJSON();
 
-                     if (jsonRefreshCred != null) {
-                        jsonReadData.put(ConstantsIF.CREDENTIAL, jsonRefreshCred);
+                        if (jsonRefreshCred != null) {
+                           jsonReadData.put(ConstantsIF.CREDENTIAL, jsonRefreshCred);
 
-                        jsonInput.put(ConstantsIF.DATA, jsonReadData);
+                           jsonInput.put(ConstantsIF.DATA, jsonReadData);
 
-                        operInput.setType(OperationIF.TYPE.REPLACE);
+                           operInput.setType(OperationIF.TYPE.REPLACE);
 
-                        operReplaceOutput = _MongoDAO.execute(operInput);
+                           operReplaceOutput = _MongoDAO.execute(operInput);
 
-                        if (operReplaceOutput.getState() == STATE.SUCCESS) {
-                           operOutput.setState(operReplaceOutput.getState());
-                           operOutput.setStatus(operReplaceOutput.getStatus());
-                           operOutput.setJSON(jsonInput);
-                        } else {
-                           /*
+                           if (operReplaceOutput.getState() == STATE.SUCCESS) {
+                              operOutput.setState(operReplaceOutput.getState());
+                              operOutput.setStatus(operReplaceOutput.getStatus());
+                              operOutput.setJSON(jsonInput);
+                           } else {
+                              /*
                             * failed to replace the credential, delete it
-                            */
+                               */
+                              delete = true;
+                           }
+                        } else {
                            delete = true;
+                           error = true;
+                           buf.append(": JSON data from refresh is empty");
                         }
                      } else {
-                        delete = true;
-                        error = true;
-                        buf.append(": JSON data from refresh is empty");
-                     }
-                  } else {
-                     /*
+                        /*
                       * Could NOT get a refresh token, Delete the record
-                      */
-                     delete = true;
+                         */
+                        delete = true;
+                     }
+                     break;
                   }
-                  break;
-               }
-               case FAILED:
-               case ERROR: {
-                  delete = true;
-                  error = true;
-                  buf.append(": ").append(operValidateOutput.getState().toString()).append(": ")
+                  case FAILED:
+                  case ERROR: {
+                     delete = true;
+                     error = true;
+                     buf.append(": ").append(operValidateOutput.getState().toString()).append(": ")
                         .append(operValidateOutput.getStatus());
-                  break;
-               }
-               default:
-                  error = true;
-                  buf.append(": Validate Output has an unsupportted state: '")
+                     break;
+                  }
+                  default:
+                     error = true;
+                     buf.append(": Validate Output has an unsupportted state: '")
                         .append(operValidateOutput.getState().toString()).append("'");
                }
             } catch (Exception ex) {
@@ -406,7 +409,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
          } else {
             error = true;
             buf.append(": Error reading credential: ").append(operReadOutput.getState().toString()).append(": ")
-                  .append(operReadOutput.getStatus());
+               .append(operReadOutput.getStatus());
          }
       }
 
@@ -414,7 +417,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
          operInput.setType(OperationIF.TYPE.DELETE);
 
          _logger.log(Level.WARNING, "{0}: {1}: Deleting credential, {2}",
-               new Object[] { CLASS, METHOD, operInput.toString() });
+            new Object[]{CLASS, METHOD, operInput.toString()});
 
          operDeleteOutput = _MongoDAO.execute(operInput);
 
@@ -427,7 +430,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
          } else {
             error = true;
             buf.append(": ").append(operDeleteOutput.getState().toString()).append(": ")
-                  .append(operDeleteOutput.getStatus());
+               .append(operDeleteOutput.getStatus());
          }
       }
 
@@ -441,7 +444,8 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
       }
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "output=''{0}''", new Object[] { operOutput != null ? operOutput.toString() : NULL });
+         _logger.log(DEBUG_LEVEL, "output=''{0}''",
+            new Object[]{operOutput != null ? operOutput.toString() : NULL});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -489,6 +493,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
       String msg = null;
       String owner = null; // 'uid' from SSO session validation
       String category = null;
+      String configType = ConstantsIF.RESOURCE;
       OperationIF operOutput = null;
       OperationIF authzOutput = null;
       OperationIF tokenOutput = null;
@@ -502,7 +507,8 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
       _logger.entering(CLASS, METHOD);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "input=''{0}''", new Object[] { operInput != null ? operInput.toString() : NULL });
+         _logger.log(DEBUG_LEVEL, "input=''{0}''",
+            new Object[]{operInput != null ? operInput.toString() : NULL});
       }
 
       operOutput = new Operation(operInput.getType());
@@ -524,7 +530,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
 
       if (!error) {
          try {
-            category = this.getConfigValue(ConfigIF.RS_CREDENTIAL_CATEGORIES_PAT_ID);
+            category = this.getConfigValue(configType, ConfigIF.RS_CREDENTIAL_CATEGORIES_PAT_ID);
             tokenOutput = this.getAccessToken(authzOutput);
          } catch (Exception ex) {
             error = true;
@@ -538,7 +544,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
             if (tokenOutput != null && !tokenOutput.isError()) {
                try {
                   this.setDatabaseAndCollection(credInput, ConfigIF.RS_NOSQL_DATABASE,
-                        ConfigIF.RS_NOSQL_COLLECTIONS_CREDENTIALS_NAME);
+                     ConfigIF.RS_NOSQL_COLLECTIONS_CREDENTIALS_NAME);
                } catch (Exception ex) {
                   error = true;
                   msg = ex.getMessage();
@@ -589,7 +595,8 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
       }
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "output=''{0}''", new Object[] { operOutput != null ? operOutput.toString() : NULL });
+         _logger.log(DEBUG_LEVEL, "output=''{0}''",
+            new Object[]{operOutput != null ? operOutput.toString() : NULL});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -598,9 +605,9 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
    }
 
    /**
-    * Get an OAuth 2.0 authorization code from the Authorization Server (AS). Get
-    * authorization code using the ssotoken .../openam/oauth2/authorize
-    * 
+    * Get an OAuth 2.0 authorization code from the Authorization Server (AS).
+    * Get authorization code using the ssotoken .../openam/oauth2/authorize
+    *
     * <pre>
     * JSON input ...
     * {
@@ -632,7 +639,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
     *   },
     *   "path": "oauth2/realms/root/authorize"
     * }
-    * Response is a 302 Found (redirect) ... 
+    * Response is a 302 Found (redirect) ...
     * need to get the "authorization code" from the "Location" header
     * {
     *   "headers": {
@@ -651,6 +658,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
       String ssoToken = null;
       String location = null;
       String code = null;
+      String configType = ConstantsIF.RESOURCE;
       StringBuilder buf = new StringBuilder(METHOD + ": ");
       OperationIF operOutput = null;
       OperationIF operASInput = null;
@@ -664,7 +672,8 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
       _logger.entering(CLASS, METHOD);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "input=''{0}''", new Object[] { operInput != null ? operInput.toString() : NULL });
+         _logger.log(DEBUG_LEVEL, "input=''{0}''",
+            new Object[]{operInput != null ? operInput.toString() : NULL});
       }
 
       operOutput = new Operation(OperationIF.TYPE.CREATE);
@@ -678,22 +687,22 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
          jsonForm.put(ConstantsIF.RESPONSE_TYPE, ConstantsIF.CODE);
          jsonForm.put(ConstantsIF.SAVE_CONSENT, ConstantsIF.OFF);
          jsonForm.put(ConstantsIF.DECISION, ConstantsIF.ALLOW);
-         jsonForm.put(ConstantsIF.CLIENT_ID, this.getConfigValue(ConfigIF.RS_OAUTH2_CLIENT_ID));
-         jsonForm.put(ConstantsIF.REDIRECT_URI, this.getConfigValue(ConfigIF.RS_OAUTH2_CLIENT_REDIRECT));
+         jsonForm.put(ConstantsIF.CLIENT_ID, this.getConfigValue(configType, ConfigIF.RS_OAUTH2_CLIENT_ID));
+         jsonForm.put(ConstantsIF.REDIRECT_URI, this.getConfigValue(configType, ConfigIF.RS_OAUTH2_CLIENT_REDIRECT));
          jsonForm.put(ConstantsIF.SCOPE, ConstantsIF.UMA_PROTECTION);
          jsonForm.put(ConstantsIF.CSRF, ssoToken);
 
          jsonHeaders = new JSONObject();
-         jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(ConfigIF.AS_OAUTH2_AUTHORIZE_ACCEPT));
+         jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(configType, ConfigIF.AS_OAUTH2_AUTHORIZE_ACCEPT));
          jsonHeaders.put(ConstantsIF.CONTENT_TYPE, ConstantsIF.APPLICATION_FORM_URLENCODED);
          jsonHeaders.put(ConstantsIF.ACCEPT, ConstantsIF.TYPE_WILDCARD);
-         jsonHeaders.put(this.getConfigValue(ConfigIF.AS_COOKIE), ssoToken);
-         jsonHeaders.put(ConstantsIF.COOKIE, this.getConfigValue(ConfigIF.AS_COOKIE) + "=" + ssoToken);
+         jsonHeaders.put(this.getConfigValue(configType, ConfigIF.AS_COOKIE), ssoToken);
+         jsonHeaders.put(ConstantsIF.COOKIE, this.getConfigValue(configType, ConfigIF.AS_COOKIE) + "=" + ssoToken);
 
          jsonInput = new JSONObject();
          jsonInput.put(ConstantsIF.FORM, jsonForm);
          jsonInput.put(ConstantsIF.HEADERS, jsonHeaders);
-         jsonInput.put(ConstantsIF.PATH, this.getConfigValue(ConfigIF.AS_OAUTH2_AUTHORIZE_PATH));
+         jsonInput.put(ConstantsIF.PATH, this.getConfigValue(configType, ConfigIF.AS_OAUTH2_AUTHORIZE_PATH));
 
          operASInput = new Operation(OperationIF.TYPE.CREATE); // POST
          operASInput.setJSON(jsonInput);
@@ -711,7 +720,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
                   location = JSON.getString(jsonHeaders, "Location");
                } else {
                   buf.append("'").append(ConstantsIF.HEADERS).append("' object does not have a '")
-                        .append(ConstantsIF.LOCATION).append("' attribute");
+                     .append(ConstantsIF.LOCATION).append("' attribute");
                   throw new Exception(buf.toString());
                }
 
@@ -755,7 +764,8 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
       }
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "output=''{0}''", new Object[] { operOutput != null ? operOutput.toString() : NULL });
+         _logger.log(DEBUG_LEVEL, "output=''{0}''",
+            new Object[]{operOutput != null ? operOutput.toString() : NULL});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -772,7 +782,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
     * {
     *   "code": "..."
     * }
-    *       
+    *
     * JSON output ...
     * {
     *   "data": {
@@ -784,9 +794,9 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
     *   }
     * }
     *
-    * curl --request POST 
-    * --header "accept-api-version: resource=2.0,protocol=1.0"  
-    * --header "Content-Type: application/x-www-form-urlencoded" 
+    * curl --request POST
+    * --header "accept-api-version: resource=2.0,protocol=1.0"
+    * --header "Content-Type: application/x-www-form-urlencoded"
     * --data "grant_type=authorization_code&
     *         code=<code>&
     *         redirect_uri=${REDURI}&
@@ -809,7 +819,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
     *   },
     *   "path": "oauth2/realms/root/access_token"
     * }
-    * Response is a 200 OK 
+    * Response is a 200 OK
     * {
     *   "access_token": "057ad16f-7dba-4049-9f34-e609d230d43a",
     *   "refresh_token": "340f82a4-9aa9-471c-ac42-f0ca1809c82b",
@@ -827,6 +837,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
    private OperationIF getAccessToken(final OperationIF operInput) throws Exception {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String code = null;
+      String configType = ConstantsIF.RESOURCE;
       StringBuilder buf = new StringBuilder(METHOD + ": ");
       OperationIF operOutput = null;
       OperationIF operASInput = null;
@@ -840,7 +851,8 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
       _logger.entering(CLASS, METHOD);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "input=''{0}''", new Object[] { operInput != null ? operInput.toString() : NULL });
+         _logger.log(DEBUG_LEVEL, "input=''{0}''",
+            new Object[]{operInput != null ? operInput.toString() : NULL});
       }
 
       operOutput = new Operation(OperationIF.TYPE.CREATE);
@@ -853,18 +865,18 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
          jsonForm = new JSONObject();
          jsonForm.put(ConstantsIF.GRANT_TYPE, ConstantsIF.AUTHORIZATION_CODE);
          jsonForm.put(ConstantsIF.CODE, code);
-         jsonForm.put(ConstantsIF.REDIRECT_URI, this.getConfigValue(ConfigIF.RS_OAUTH2_CLIENT_REDIRECT));
-         jsonForm.put(ConstantsIF.CLIENT_ID, this.getConfigValue(ConfigIF.RS_OAUTH2_CLIENT_ID));
-         jsonForm.put(ConstantsIF.CLIENT_SECRET, this.getConfigValue(ConfigIF.RS_OAUTH2_CLIENT_SECRET));
+         jsonForm.put(ConstantsIF.REDIRECT_URI, this.getConfigValue(configType, ConfigIF.RS_OAUTH2_CLIENT_REDIRECT));
+         jsonForm.put(ConstantsIF.CLIENT_ID, this.getConfigValue(configType, ConfigIF.RS_OAUTH2_CLIENT_ID));
+         jsonForm.put(ConstantsIF.CLIENT_SECRET, this.getConfigValue(configType, ConfigIF.RS_OAUTH2_CLIENT_SECRET));
 
          jsonHeaders = new JSONObject();
-         jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(ConfigIF.AS_OAUTH2_AUTHORIZE_ACCEPT));
+         jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(configType, ConfigIF.AS_OAUTH2_AUTHORIZE_ACCEPT));
          jsonHeaders.put(ConstantsIF.CONTENT_TYPE, ConstantsIF.APPLICATION_FORM_URLENCODED);
 
          jsonInput = new JSONObject();
          jsonInput.put(ConstantsIF.FORM, jsonForm);
          jsonInput.put(ConstantsIF.HEADERS, jsonHeaders);
-         jsonInput.put(ConstantsIF.PATH, this.getConfigValue(ConfigIF.AS_OAUTH2_ACCESS_TOKEN_PATH));
+         jsonInput.put(ConstantsIF.PATH, this.getConfigValue(configType, ConfigIF.AS_OAUTH2_ACCESS_TOKEN_PATH));
 
          operASInput = new Operation(OperationIF.TYPE.CREATE); // POST
          operASInput.setJSON(jsonInput);
@@ -887,7 +899,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
             }
          } else {
             buf.append("Authz Server DAO: ").append(operASOutput.getState().toString()).append(": ")
-                  .append(operASOutput.getStatus());
+               .append(operASOutput.getStatus());
             throw new Exception(buf.toString());
          }
       } else {
@@ -896,7 +908,8 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
       }
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "output=''{0}''", new Object[] { operOutput != null ? operOutput.toString() : NULL });
+         _logger.log(DEBUG_LEVEL, "output=''{0}''",
+            new Object[]{operOutput != null ? operOutput.toString() : NULL});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -906,7 +919,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
 
    /**
     * Validate the OAuth 2.0 access token from the Authorization Server.
-    * 
+    *
     * <pre>
     * JSON input ...
     * {
@@ -935,7 +948,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
     *   },
     *   "path": "oauth2/realms/root/tokeninfo"
     * }
-    * Response is a 200 OK 
+    * Response is a 200 OK
     * {
     *   "mail": "demo@example.com",
     *   "grant_type": "...",
@@ -964,6 +977,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       StringBuilder buf = new StringBuilder(METHOD + ": ");
       String access_token = null;
+      String configType = ConstantsIF.RESOURCE;
       JSONObject jsonHeaders = null;
       JSONObject jsonInput = null;
       OperationIF operOutput = null;
@@ -973,11 +987,12 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
       _logger.entering(CLASS, METHOD);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "input=''{0}''", new Object[] { operInput != null ? operInput.toString() : NULL });
+         _logger.log(DEBUG_LEVEL, "input=''{0}''",
+            new Object[]{operInput != null ? operInput.toString() : NULL});
       }
 
       access_token = JSON.getString(operInput.getJSON(),
-            ConstantsIF.DATA + "." + ConstantsIF.CREDENTIAL + "." + ConstantsIF.ACCESS_TOKEN);
+         ConstantsIF.DATA + "." + ConstantsIF.CREDENTIAL + "." + ConstantsIF.ACCESS_TOKEN);
 
       if (STR.isEmpty(access_token)) {
          buf.append("JSON input has en empty '" + ConstantsIF.ACCESS_TOKEN + "' value");
@@ -989,7 +1004,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
 
       jsonInput = new JSONObject();
       jsonInput.put(ConstantsIF.HEADERS, jsonHeaders);
-      jsonInput.put(ConstantsIF.PATH, this.getConfigValue(ConfigIF.AS_OAUTH2_TOKENINFO_PATH));
+      jsonInput.put(ConstantsIF.PATH, this.getConfigValue(configType, ConfigIF.AS_OAUTH2_TOKENINFO_PATH));
 
       operASInput = new Operation(OperationIF.TYPE.READ); // GET
       operASInput.setJSON(jsonInput);
@@ -999,7 +1014,8 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
       operOutput = operASOutput;
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "output=''{0}''", new Object[] { operOutput != null ? operOutput.toString() : NULL });
+         _logger.log(DEBUG_LEVEL, "output=''{0}''",
+            new Object[]{operOutput != null ? operOutput.toString() : NULL});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -1064,7 +1080,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
     *   },
     *   "path": "oauth2/realms/root/access_token"
     * }
-    * Response is a 200 OK 
+    * Response is a 200 OK
     * {
     *   "access_token": "057ad16f-7dba-4049-9f34-e609d230d43a",
     *   "refresh_token": "340f82a4-9aa9-471c-ac42-f0ca1809c82b",
@@ -1081,6 +1097,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
    private OperationIF refreshToken(final OperationIF operInput) throws Exception {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String refreshToken = null;
+      String configType = ConstantsIF.RESOURCE;
       StringBuilder buf = new StringBuilder(METHOD + ": ");
       OperationIF operOutput = null;
       OperationIF operASInput = null;
@@ -1092,31 +1109,31 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
       _logger.entering(CLASS, METHOD);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "input=''{0}''", new Object[] { operInput != null ? operInput.toString() : NULL });
+         _logger.log(DEBUG_LEVEL, "input=''{0}''", new Object[]{operInput != null ? operInput.toString() : NULL});
       }
 
       operOutput = new Operation(OperationIF.TYPE.CREATE);
 
       refreshToken = JSON.getString(operInput.getJSON(),
-            ConstantsIF.DATA + "." + ConstantsIF.CREDENTIAL + "." + ConstantsIF.REFRESH_TOKEN);
+         ConstantsIF.DATA + "." + ConstantsIF.CREDENTIAL + "." + ConstantsIF.REFRESH_TOKEN);
 
       if (!STR.isEmpty(refreshToken)) {
          jsonForm = new JSONObject();
          jsonForm.put(ConstantsIF.GRANT_TYPE, ConstantsIF.REFRESH_TOKEN);
-         jsonForm.put(ConstantsIF.REDIRECT_URI, this.getConfigValue(ConfigIF.RS_OAUTH2_CLIENT_REDIRECT));
+         jsonForm.put(ConstantsIF.REDIRECT_URI, this.getConfigValue(configType, ConfigIF.RS_OAUTH2_CLIENT_REDIRECT));
          jsonForm.put(ConstantsIF.REFRESH_TOKEN, refreshToken);
-         jsonForm.put(ConstantsIF.CLIENT_ID, this.getConfigValue(ConfigIF.RS_OAUTH2_CLIENT_ID));
-         jsonForm.put(ConstantsIF.CLIENT_SECRET, this.getConfigValue(ConfigIF.RS_OAUTH2_CLIENT_SECRET));
+         jsonForm.put(ConstantsIF.CLIENT_ID, this.getConfigValue(configType, ConfigIF.RS_OAUTH2_CLIENT_ID));
+         jsonForm.put(ConstantsIF.CLIENT_SECRET, this.getConfigValue(configType, ConfigIF.RS_OAUTH2_CLIENT_SECRET));
          jsonForm.put(ConstantsIF.SCOPE, ConstantsIF.UMA_PROTECTION);
 
          jsonHeaders = new JSONObject();
-         jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(ConfigIF.AS_OAUTH2_ACCESS_TOKEN_ACCEPT));
+         jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(configType, ConfigIF.AS_OAUTH2_ACCESS_TOKEN_ACCEPT));
          jsonHeaders.put(ConstantsIF.CONTENT_TYPE, ConstantsIF.APPLICATION_FORM_URLENCODED);
 
          jsonInput = new JSONObject();
          jsonInput.put(ConstantsIF.FORM, jsonForm);
          jsonInput.put(ConstantsIF.HEADERS, jsonHeaders);
-         jsonInput.put(ConstantsIF.PATH, this.getConfigValue(ConfigIF.AS_OAUTH2_ACCESS_TOKEN_PATH));
+         jsonInput.put(ConstantsIF.PATH, this.getConfigValue(configType, ConfigIF.AS_OAUTH2_ACCESS_TOKEN_PATH));
 
          operASInput = new Operation(OperationIF.TYPE.CREATE); // POST
          operASInput.setJSON(jsonInput);
@@ -1130,7 +1147,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
       }
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "output=''{0}''", new Object[] { operOutput != null ? operOutput.toString() : NULL });
+         _logger.log(DEBUG_LEVEL, "output=''{0}''", new Object[]{operOutput != null ? operOutput.toString() : NULL});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -1140,9 +1157,9 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
 
    /**
     * Get query parameters from a URL
-    * 
+    *
     * @param url URL
-    * @return Map<String, String> Map of query paramter key / value
+    * @return Map<String, String> Map of query parameter key / value
     * @throws UnsupportedEncodingException
     */
    private Map<String, String> getQueryParams(URL url) throws UnsupportedEncodingException {
@@ -1157,7 +1174,7 @@ public class ProtectionApiTokenHandler extends CredentialHandler {
       for (String pair : pairs) {
          index = pair.indexOf("=");
          query_pairs.put(URLDecoder.decode(pair.substring(0, index), "UTF-8"),
-               URLDecoder.decode(pair.substring(index + 1), "UTF-8"));
+            URLDecoder.decode(pair.substring(index + 1), "UTF-8"));
       }
 
       _logger.exiting(CLASS, METHOD);

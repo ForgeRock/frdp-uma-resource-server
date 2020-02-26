@@ -2,7 +2,6 @@
  * Copyright (c) 2018-2020, ForgeRock, Inc., All rights reserved
  * Use subject to license terms.
  */
-
 package com.forgerock.frdp.resourceserver.rest.manage;
 
 import com.forgerock.frdp.common.ConstantsIF;
@@ -36,14 +35,14 @@ public class ContentResource extends RSResource {
 
    /**
     * Constructor
-    * 
+    *
     * @param resourceUid String resource identifier
-    * @param uriInfo     UriInfo uri information
-    * @param servletCtx  ServletContext context from the servlet
-    * @param httpHdrs    HttpHeaders header information
+    * @param uriInfo UriInfo uri information
+    * @param servletCtx ServletContext context from the servlet
+    * @param httpHdrs HttpHeaders header information
     */
    public ContentResource(final String resourceUid, final UriInfo uriInfo, final ServletContext servletCtx,
-         final HttpHeaders httpHdrs) {
+      final HttpHeaders httpHdrs) {
       super();
 
       String METHOD = "ContentResource()";
@@ -62,7 +61,7 @@ public class ContentResource extends RSResource {
 
    /**
     * Read JSON content
-    * 
+    *
     * @return Response HTTP response object
     */
    @GET
@@ -93,7 +92,7 @@ public class ContentResource extends RSResource {
 
    /**
     * Replace JSON content
-    * 
+    *
     * @param data String JSON payload
     * @return Response HTTP response object
     */
@@ -133,7 +132,7 @@ public class ContentResource extends RSResource {
          jsonData = (JSONObject) parser.parse(data);
       } catch (Exception ex) {
          this.abort(METHOD, "Could not parser String to JSON: '" + data + "', " + ex.getMessage(),
-               Response.Status.BAD_REQUEST);
+            Response.Status.BAD_REQUEST);
       }
 
       contentHandler = this.getHandler(JaxrsHandlerIF.HANDLER_CONTENT);
@@ -156,7 +155,7 @@ public class ContentResource extends RSResource {
 
    /**
     * Delete JSON content
-    * 
+    *
     * @return Response HTTP response object
     */
    @DELETE

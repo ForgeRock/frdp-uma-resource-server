@@ -2,10 +2,11 @@
  * Copyright (c) 2019-2020, ForgeRock, Inc., All rights reserved
  * Use subject to license terms.
  */
-
 package com.forgerock.frdp.resourceserver.handler.uma;
 
 import com.forgerock.frdp.common.ConstantsIF;
+import com.forgerock.frdp.config.ConfigurationIF;
+import com.forgerock.frdp.config.ConfigurationManagerIF;
 import com.forgerock.frdp.dao.Operation;
 import com.forgerock.frdp.dao.OperationIF;
 import com.forgerock.frdp.dao.mongo.MongoFactory;
@@ -16,6 +17,7 @@ import com.forgerock.frdp.resourceserver.handler.JaxrsHandler;
 import com.forgerock.frdp.resourceserver.handler.JaxrsHandlerIF;
 import com.forgerock.frdp.utils.JSON;
 import com.forgerock.frdp.utils.STR;
+import java.util.Map;
 import java.util.logging.Level;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -25,12 +27,12 @@ import org.json.simple.JSONObject;
  * can find UMA resources that are currently "shared with them". This service is
  * NOT part of the UMA 2.0 specification. This class provides value-added
  * services which leverage the Access Manager APIs.
- * 
+ *
  * <pre>
  * This class implements the following operations:
  * - search: find all UMA resources that are shared to the given Requesting Party (RqP)
  * </pre>
- * 
+ *
  * @author Scott Fehrman, ForgeRock, Inc.
  */
 public class SharedWithMeHandler extends JaxrsHandler {
@@ -40,13 +42,13 @@ public class SharedWithMeHandler extends JaxrsHandler {
    /**
     * Constructor
     *
-    * @param config     JSONObject containing configuration data
+    * @param configMgr ConfigurationManagerIF management of configurations
     * @param handlerMgr HandlerManagerIF provides management of Handlers
     */
-   public SharedWithMeHandler(final JSONObject config, final HandlerManagerIF handlerMgr) {
-      super(config, handlerMgr);
+   public SharedWithMeHandler(final ConfigurationManagerIF configMgr, final HandlerManagerIF handlerMgr) {
+      super(configMgr, handlerMgr);
 
-      String METHOD = "SharedWithMeHandler(config, handlerMgr)";
+      String METHOD = "SharedWithMeHandler(configMgr, handlerMgr)";
 
       _logger.entering(CLASS, METHOD);
 
@@ -60,12 +62,11 @@ public class SharedWithMeHandler extends JaxrsHandler {
    /*
     * ================= PROTECTED METHODS =================
     */
-
    /**
     * Override the "validate" interface, used to check the operation input
-    * 
+    *
     * @param oper OperationaIF operation input
-    * @exception Exception
+    * @exception Exception could not validate the operation
     */
    @Override
    protected void validate(final OperationIF oper) throws Exception {
@@ -84,13 +85,13 @@ public class SharedWithMeHandler extends JaxrsHandler {
       }
 
       switch (oper.getType()) {
-      case SEARCH: // GET
-      {
-         break;
-      }
-      default: {
-         throw new Exception("Unsupported operation type: '" + oper.getType().toString() + "'");
-      }
+         case SEARCH: // GET
+         {
+            break;
+         }
+         default: {
+            throw new Exception("Unsupported operation type: '" + oper.getType().toString() + "'");
+         }
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -101,10 +102,10 @@ public class SharedWithMeHandler extends JaxrsHandler {
    /**
     * Override interface to support the "search" operation Get the collection of
     * shared resource for the Requesting Party (RqP)
-    * 
+    *
     * <pre>
     * JSON input ... search for pending requests
-    * { 
+    * {
     *   "subject": "aadams", // Requesting Party (RqP) login id
     *   "sso_token": "..." // Requesting Party (RqP) SSO session token
     *   "query" : {
@@ -132,7 +133,7 @@ public class SharedWithMeHandler extends JaxrsHandler {
     *   }
     * }
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input for search operation
     * @return OperationIF output from search operation
     */
@@ -145,8 +146,8 @@ public class SharedWithMeHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       try {
@@ -166,42 +167,67 @@ public class SharedWithMeHandler extends JaxrsHandler {
    /*
     * =============== PRIVATE METHODS ===============
     */
-
    /**
     * Initialize object instance
     */
    private void init() {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
+      String msg = null;
+      String type = ConstantsIF.RESOURCE;
+      ConfigurationIF config = null;
+      JSONObject json = null;
+      Map<String, String> map = null;
 
       _logger.entering(CLASS, METHOD);
 
       /*
+       * Get JSON data from the Config object via the Config Manager
+       */
+      config = _configMgr.getConfiguration(type);
+
+      if (config != null) {
+         json = config.getJSON();
+         if (json == null) {
+            msg = CLASS + ": " + METHOD + ": JSON data for '" + type + "' is null";
+            this.setError(true);
+         }
+      } else {
+         msg = CLASS + ": " + METHOD + ": Configuration for '" + type + "' is null";
+         this.setError(true);
+      }
+
+      /*
        * setup the Mongo Data Access Object
        */
-      if (_MongoDAO == null) {
+      if (!this.isError() && _MongoDAO == null) {
+         map = JSON.convertToParams(JSON.getObject(json, ConfigIF.RS_NOSQL));
          try {
-            _MongoDAO = MongoFactory.getInstance(JSON.convertToParams(JSON.getObject(_config, ConfigIF.RS_NOSQL)));
+            _MongoDAO = MongoFactory.getInstance(map);
          } catch (Exception ex) {
+            msg = CLASS + ": " + METHOD + ": Mongo DAO:" + ex.getMessage();
             this.setError(true);
-            this.setState(STATE.ERROR);
-            this.setStatus(CLASS + ": " + METHOD + ": Mongo DAO:" + ex.getMessage());
-            _logger.severe(this.getStatus());
          }
       }
 
+      /*
+       * setup the Authorization Server Data Access Object
+       */
       if (!this.isError() && _AuthzServerDAO == null) {
+         map = JSON.convertToParams(JSON.getObject(json, ConfigIF.AS_CONNECT));
          try {
-            _AuthzServerDAO = new AMRestDataAccess(JSON.convertToParams(JSON.getObject(_config, ConfigIF.AS_CONNECT)));
+            _AuthzServerDAO = new AMRestDataAccess(map);
          } catch (Exception ex) {
+            msg = CLASS + ": " + METHOD + ": REST DAO: " + ex.getMessage();
             this.setError(true);
-            this.setState(STATE.ERROR);
-            this.setStatus(CLASS + ": " + METHOD + ": REST DAO: " + ex.getMessage());
-            _logger.severe(this.getStatus());
          }
       }
 
       if (!this.isError()) {
          this.setState(STATE.READY);
+      } else {
+         this.setState(STATE.ERROR);
+         this.setStatus(msg);
+         _logger.severe(this.getStatus());
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -210,8 +236,8 @@ public class SharedWithMeHandler extends JaxrsHandler {
    }
 
    /**
-    * Implementation of the "search" operation. Get the "shared" resource for the
-    * Requesting Party (RqP)
+    * Implementation of the "search" operation. Get the "shared" resource for
+    * the Requesting Party (RqP)
     *
     * <pre>
     * Get the resources that are "shared with me" (the RqP)
@@ -226,7 +252,7 @@ public class SharedWithMeHandler extends JaxrsHandler {
     *   - Create JSON Object for output result
     *
     * JSON input ... search for pending requests
-    * { 
+    * {
     *   "subject": "aadams", // Requesting Party (RqP) login id
     *   "sso_token": "..." // Requesting Party (RqP) SSO session token
     *   "query" : { // OPTIONAL ... used to filter the results
@@ -277,17 +303,17 @@ public class SharedWithMeHandler extends JaxrsHandler {
     *   }
     * }
     *
-    * Use AM oauth2/resources/sets API to get the resource that are 
+    * Use AM oauth2/resources/sets API to get the resource that are
     * "shared with me" ... the Requesting Party (RqP)
     *
     * The response is a collection of Resource objects that the RqP
-    * has "some" policy to give them access.  The "scopes" in a response 
+    * has "some" policy to give them access.  The "scopes" in a response
     * record is the list of possible scopes for the resource ... not the
     * scopes that the RqP currently has.
     *
     * curl example:
     * curl -X GET
-    * -H 'Accept-API-Version: protocol=1.0,resource=1.0’ 
+    * -H 'Accept-API-Version: protocol=1.0,resource=1.0’
     * -H "iPlanetDirectoryPro: {{sso_token}}"
     * https://.../openam/json/realms/root/users/{{subject}}/oauth2/resources/sets
     * ?_sortKeys=name
@@ -317,7 +343,7 @@ public class SharedWithMeHandler extends JaxrsHandler {
     * }
     *
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input
     * @return OperationIF output
     * @throws Exception
@@ -326,6 +352,7 @@ public class SharedWithMeHandler extends JaxrsHandler {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String subject = null; // Requesting Party
       String sso_token = null;
+      String configType = ConstantsIF.RESOURCE;
       JSONObject jsonInput = null;
       JSONObject jsonQuery = null;
       JSONObject jsonHeaders = null;
@@ -351,20 +378,22 @@ public class SharedWithMeHandler extends JaxrsHandler {
          jsonQuery.put(ConstantsIF.OPERATOR, ConstantsIF.NONE);
 
          jsonHeaders = new JSONObject();
-         jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(ConfigIF.AS_UMA_SHAREDWITHME_ACCEPT));
-         jsonHeaders.put(this.getConfigValue(ConfigIF.AS_COOKIE), sso_token);
+         jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(configType, ConfigIF.AS_UMA_SHAREDWITHME_ACCEPT));
+         jsonHeaders.put(this.getConfigValue(configType, ConfigIF.AS_COOKIE), sso_token);
 
          jsonParams = new JSONObject();
-         jsonParams.put(PROP_SORTKEYS, this.getConfigValue(ConfigIF.AS_UMA_SHAREDWITHME_SORTKEYS));
+         jsonParams.put(PROP_SORTKEYS, this.getConfigValue(configType, ConfigIF.AS_UMA_SHAREDWITHME_SORTKEYS));
          jsonParams.put(PROP_QUERYFILTER,
-               this.getConfigValue(ConfigIF.AS_UMA_SHAREDWITHME_QUERYFILTER).replaceAll(PROP_VAR_OWNER, subject));
+            this.getConfigValue(configType, ConfigIF.AS_UMA_SHAREDWITHME_QUERYFILTER)
+               .replaceAll(PROP_VAR_OWNER, subject));
 
          jsonSearch = new JSONObject();
          jsonSearch.put(ConstantsIF.QUERY, jsonQuery);
          jsonSearch.put(ConstantsIF.HEADERS, jsonHeaders);
          jsonSearch.put(ConstantsIF.QUERY_PARAMS, jsonParams);
          jsonSearch.put(ConstantsIF.PATH,
-               this.getConfigValue(ConfigIF.AS_UMA_SHAREDWITHME_PATH).replaceAll(PROP_VAR_OWNER, subject));
+            this.getConfigValue(configType, ConfigIF.AS_UMA_SHAREDWITHME_PATH)
+               .replaceAll(PROP_VAR_OWNER, subject));
 
          operASInput = new Operation(OperationIF.TYPE.SEARCH); // GET
          operASInput.setJSON(jsonSearch);
@@ -399,12 +428,13 @@ public class SharedWithMeHandler extends JaxrsHandler {
    }
 
    /**
-    * Update the resource data. Get an "admin" SSO token, needed to read the policy
-    * Update each "entry" with Resource data Need to use the "registerId" (from AM)
-    * to get the Resource record NOTE: input array is named "result" (from AM AI)
-    * output array is named "results" to match other RS search responses Get the
-    * policy for each registration and find the "assigned" scopes
-    * 
+    * Update the resource data. Get an "admin" SSO token, needed to read the
+    * policy Update each "entry" with Resource data Need to use the "registerId"
+    * (from AM) to get the Resource record NOTE: input array is named "result"
+    * (from AM AI) output array is named "results" to match other RS search
+    * responses Get the policy for each registration and find the "assigned"
+    * scopes
+    *
     * <pre>
     * JSON input ...
     * {
@@ -486,7 +516,7 @@ public class SharedWithMeHandler extends JaxrsHandler {
     * }
     *
     * </pre>
-    * 
+    *
     * @param jsonInput JSONObject input
     * @return JSONObject output
     * @throws Exception
@@ -498,6 +528,7 @@ public class SharedWithMeHandler extends JaxrsHandler {
       String rsId = null;
       String sso_token = null;
       String resourceServer = null;
+      String configType = ConstantsIF.RESOURCE;
       JSONObject jsonOutput = null;
       JSONObject jsonSearch = null;
       JSONObject jsonQuery = null;
@@ -520,7 +551,7 @@ public class SharedWithMeHandler extends JaxrsHandler {
 
       proxyAdmHandler = this.getHandler(JaxrsHandlerIF.HANDLER_AMPROXYADM);
 
-      rsId = this.getConfigValue(ConfigIF.RS_ID);
+      rsId = this.getConfigValue(configType, ConfigIF.RS_ID);
 
       operProxyInput = new Operation(OperationIF.TYPE.READ);
       operProxyOutput = proxyAdmHandler.process(operProxyInput);
@@ -574,7 +605,7 @@ public class SharedWithMeHandler extends JaxrsHandler {
 
                         if (operOutput != null && operOutput.getState() == STATE.SUCCESS) {
                            jsonResource = JSON.getObject(operOutput.getJSON(),
-                                 ConstantsIF.DATA + "." + ConstantsIF.RESULTS + "[0]");
+                              ConstantsIF.DATA + "." + ConstantsIF.RESULTS + "[0]");
 
                            if (jsonResource != null && !jsonResource.isEmpty()) {
                               /*
@@ -585,7 +616,7 @@ public class SharedWithMeHandler extends JaxrsHandler {
                               jsonPolicy.put(ConstantsIF.SUBJECT, JSON.getString(jsonInput, ConstantsIF.SUBJECT));
                               jsonPolicy.put(ConstantsIF.REGISTERED, registerId);
                               jsonPolicy.put(ConstantsIF.OWNER,
-                                    JSON.getString(jsonRegister, JaxrsHandler.AM_ATTR_RESOURCE_OWNER_ID));
+                                 JSON.getString(jsonRegister, JaxrsHandler.AM_ATTR_RESOURCE_OWNER_ID));
 
                               arrayPolicyScopes = this.getScopes(jsonPolicy);
                               if (arrayPolicyScopes != null) {
@@ -594,11 +625,11 @@ public class SharedWithMeHandler extends JaxrsHandler {
 
                               jsonRegister.put(ConstantsIF.ID, JSON.getString(jsonResource, ConstantsIF.UID));
                               jsonRegister.put(ConstantsIF.LABEL, JSON.getString(jsonResource,
-                                    ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.LABEL));
+                                 ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.LABEL));
                               jsonRegister.put(ConstantsIF.DESCRIPTION, JSON.getString(jsonResource,
-                                    ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.DESCRIPTION));
+                                 ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.DESCRIPTION));
                               jsonRegister.put(ConstantsIF.OWNER,
-                                    jsonRegister.get(JaxrsHandler.AM_ATTR_RESOURCE_OWNER_ID));
+                                 jsonRegister.get(JaxrsHandler.AM_ATTR_RESOURCE_OWNER_ID));
 
                               jsonRegister.remove(ConstantsIF._ID);
                               jsonRegister.remove(ConstantsIF._REV);
@@ -607,7 +638,7 @@ public class SharedWithMeHandler extends JaxrsHandler {
                               jsonRegister.remove(JaxrsHandler.AM_ATTR_RESOURCE_OWNER_ID);
 
                               discoverable = JSON.getBoolean(jsonResource,
-                                    ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.DISCOVERABLE);
+                                 ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.DISCOVERABLE);
 
                               if (!discoverable) {
                                  jsonRegister.remove(ConstantsIF.SCOPES);
@@ -660,14 +691,14 @@ public class SharedWithMeHandler extends JaxrsHandler {
     * }
     *
     * Filter ...
-    * { 
+    * {
     *   "operator": "equals",
     *   "attribute": "type",
     *   "value": "healthcare"
     * }
     * </pre>
-    * 
-    * @param jsonInput  JSONObject input
+    *
+    * @param jsonInput JSONObject input
     * @param jsonFilter JSONObject filter
     * @return JSONObject output
     */
@@ -719,7 +750,7 @@ public class SharedWithMeHandler extends JaxrsHandler {
    /**
     * Get the scopes, for a registered resource, to an owner, for a specific
     * subject (Requesting Party)
-    * 
+    *
     * <pre>
     * JSON input ...
     * {
@@ -730,7 +761,7 @@ public class SharedWithMeHandler extends JaxrsHandler {
     * }
     * JSON output ...
     * [ "view" ]
-    * 
+    *
     * curl example:
     * curl -X GET \
     * -H "iPlanetDirectoryPro: <<ssoToken>>" \
@@ -749,7 +780,7 @@ public class SharedWithMeHandler extends JaxrsHandler {
     *   ]
     * }
     * </pre>
-    * 
+    *
     * @param jsonInput JSONObject input
     * @return JOSNObject output
     * @throws Exception
@@ -761,6 +792,8 @@ public class SharedWithMeHandler extends JaxrsHandler {
       String subject = null; // Requesting Party
       String sso_token = null;
       String permSub = null;
+      String configType = ConstantsIF.RESOURCE;
+      String msg = null;
       JSONObject jsonHeaders = null;
       JSONObject jsonData = null;
       JSONObject jsonPolicy = null;
@@ -781,18 +814,39 @@ public class SharedWithMeHandler extends JaxrsHandler {
       owner = JSON.getString(jsonInput, ConstantsIF.OWNER);
       subject = JSON.getString(jsonInput, ConstantsIF.SUBJECT);
 
-      if (STR.isEmpty(sso_token) || STR.isEmpty(registerId) || STR.isEmpty(owner) || STR.isEmpty(subject)) {
-         this.abort(METHOD, "One or more of the input attributes is empty");
+      if (STR.isEmpty(sso_token)) {
+         msg = "Attribute '" + ConstantsIF.SSO_TOKEN + "' is empty";
+         this.setError(true);
+      } else {
+         if (STR.isEmpty(registerId)) {
+            msg = "Attribute '" + ConstantsIF.REGISTERED + "' is empty";
+            this.setError(true);
+         } else {
+            if (STR.isEmpty(owner)) {
+               msg = "Attribute '" + ConstantsIF.OWNER + "' is empty";
+               this.setError(true);
+            } else {
+               if (STR.isEmpty(subject)) {
+                  msg = "Attribute '" + ConstantsIF.SUBJECT + "' is empty";
+                  this.setError(true);
+               }
+            }
+         }
+      }
+
+      if (this.isError()) {
+         this.abort(METHOD, msg);
       }
 
       jsonHeaders = new JSONObject();
-      jsonHeaders.put(this.getConfigValue(ConfigIF.AS_COOKIE), sso_token);
+      jsonHeaders.put(this.getConfigValue(configType, ConfigIF.AS_COOKIE), sso_token);
 
       jsonData = new JSONObject();
       jsonData.put(ConstantsIF.HEADERS, jsonHeaders);
       jsonData.put(ConstantsIF.UID, registerId);
       jsonData.put(ConstantsIF.PATH,
-            this.getConfigValue(ConfigIF.AS_UMA_POLICIES_PATH).replaceAll(PROP_VAR_OWNER, owner));
+         this.getConfigValue(configType, ConfigIF.AS_UMA_POLICIES_PATH)
+            .replaceAll(PROP_VAR_OWNER, owner));
 
       operInput = new Operation(OperationIF.TYPE.READ); // GET
       operInput.setJSON(jsonData);
@@ -821,7 +875,7 @@ public class SharedWithMeHandler extends JaxrsHandler {
          }
       } else {
          _logger.log(Level.WARNING, "{0}: Could not read resource policy: {1}",
-               new Object[] { METHOD, operOutput.getStatus() });
+            new Object[]{METHOD, operOutput.getStatus()});
       }
 
       _logger.exiting(CLASS, METHOD);
