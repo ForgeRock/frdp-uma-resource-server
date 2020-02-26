@@ -39,6 +39,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Cookie;
@@ -63,7 +64,6 @@ import org.json.simple.parser.ParseException;
 public abstract class RSResource extends Resource {
 
    private final String CLASS = this.getClass().getName();
-   private JSONObject _config = null;
    private HandlerManagerIF _handlerMgr = null;
    private ConfigurationManagerIF _configMgr = null;
 
@@ -173,11 +173,12 @@ public abstract class RSResource extends Resource {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String headerName = null;
       String value = null;
+      String configType = ConstantsIF.RESOURCE;
       List<String> hdrValues = null;
 
       _logger.entering(CLASS, METHOD);
 
-      headerName = this.getConfigValueAsString(attrName, false);
+      headerName = this.getConfigValueAsString(configType, attrName, false);
 
       if (_httpHdrs != null) {
          hdrValues = _httpHdrs.getRequestHeader(headerName);
@@ -227,12 +228,13 @@ public abstract class RSResource extends Resource {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String cookieName = null;
       String value = null;
+      String configType = ConstantsIF.RESOURCE;
       Cookie cookie = null;
       Map<String, Cookie> cookieMap = null;
 
       _logger.entering(CLASS, METHOD);
 
-      cookieName = this.getConfigValueAsString(attrName, false);
+      cookieName = this.getConfigValueAsString(configType, attrName, false);
 
       if (_httpHdrs != null) {
          cookieMap = _httpHdrs.getCookies();
@@ -1298,66 +1300,6 @@ public abstract class RSResource extends Resource {
    }
 
    /**
-    * Attempt to get a String value from the configration JSON object "name" is
-    * a "dot" delimited JSON object name: "rs.headers.ssotoken" If the flag
-    * "allowEmpty" is false, abort if attribute does not exist or is empty
-    *
-    * @param name String configuration name
-    * @param allowEmpty boolean allow empty values
-    * @return String configuration value
-    */
-   protected String getConfigValueAsString(final String name, final boolean allowEmpty) {
-      String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
-      String value = null;
-
-      _logger.entering(CLASS, METHOD);
-
-      if (STR.isEmpty(name)) {
-         this.abort(METHOD, "Attribute name is empty", Status.INTERNAL_SERVER_ERROR);
-      }
-
-      value = JSON.getString(_config, name);
-
-      if (STR.isEmpty(value) && !allowEmpty) {
-         this.abort(METHOD, "Config attribute '" + name + "' is null or empty", Status.INTERNAL_SERVER_ERROR);
-      }
-
-      _logger.exiting(CLASS, METHOD);
-
-      return value;
-   }
-
-   /**
-    * Attempt to get a JSONObject value from the configuration JSON object
-    * "name" is a "dot" delimited JSON object name: "rs.connect" If the flag
-    * "allowEmpty" is false, abort if attribute does not exist or is empty
-    *
-    * @param name String configuration name
-    * @param allowEmpty boolean allow empty values
-    * @return JSONObject configuration object
-    */
-   protected JSONObject getConfigValueAsJSONObject(final String name, final boolean allowEmpty) {
-      String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
-      JSONObject value = null;
-
-      _logger.entering(CLASS, METHOD);
-
-      if (STR.isEmpty(name)) {
-         this.abort(METHOD, "Attribute name is empty", Status.INTERNAL_SERVER_ERROR);
-      }
-
-      value = JSON.getObject(_config, name);
-
-      if ((value == null || value.isEmpty()) && !allowEmpty) {
-         this.abort(METHOD, "Config object '" + name + "' is null or empty", Status.INTERNAL_SERVER_ERROR);
-      }
-
-      _logger.exiting(CLASS, METHOD);
-
-      return value;
-   }
-
-   /**
     * Load instance runtime context information
     */
    protected synchronized void load() {
@@ -1416,8 +1358,12 @@ public abstract class RSResource extends Resource {
             config.setJSON((JSONObject) obj);
             _configMgr.setConfiguration(ConstantsIF.RESOURCE, config);
          } else {
-            this.abort(METHOD, "Resource Sserver Config object is null or not a JSON object",
+            this.abort(METHOD, "Resource Server Config object is null or not a JSON object",
                Response.Status.INTERNAL_SERVER_ERROR);
+         }
+         
+         if (_logger.isLoggable(Level.INFO)) {
+            _logger.log(Level.INFO, "Loaded configuration file : " + CONFIG_FILE_RS);
          }
       }
 
@@ -1447,6 +1393,10 @@ public abstract class RSResource extends Resource {
          } else {
             this.abort(METHOD, "Content Server Config object is null or not a JSON object",
                Response.Status.INTERNAL_SERVER_ERROR);
+         }
+         
+         if (_logger.isLoggable(Level.INFO)) {
+            _logger.log(Level.INFO, "Loaded configuration file : " + CONFIG_FILE_CS);
          }
       }
 
@@ -1505,4 +1455,122 @@ public abstract class RSResource extends Resource {
 
       return;
    }
+
+   /*
+    * ===============
+    * PRIVATE METHODS
+    * ===============
+    */
+   /**
+    * Attempt to get a String value from the configuration JSON object "name" is
+    * a "dot" delimited JSON object name: "rs.headers.ssotoken" If the flag
+    * "allowEmpty" is false, abort if attribute does not exist or is empty
+    *
+    * @param configType configuration type
+    * @param name String configuration name
+    * @param allowEmpty boolean allow empty values
+    * @return String configuration value
+    */
+   private String getConfigValueAsString(final String configType, final String name, final boolean allowEmpty) {
+      String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
+      String value = null;
+      JSONObject configData = null;
+
+      _logger.entering(CLASS, METHOD);
+
+      if (STR.isEmpty(configType)) {
+         this.abort(METHOD, "Attribute 'configType' is empty", Status.INTERNAL_SERVER_ERROR);
+      }
+
+      if (STR.isEmpty(name)) {
+         this.abort(METHOD, "Attribute 'name' is empty", Status.INTERNAL_SERVER_ERROR);
+      }
+
+      configData = this.getConfiguration(configType);
+
+      value = JSON.getString(configData, name);
+
+      if (STR.isEmpty(value) && !allowEmpty) {
+         this.abort(METHOD, "Config attribute '" + name + "' is null or empty", Status.INTERNAL_SERVER_ERROR);
+      }
+
+      _logger.exiting(CLASS, METHOD);
+
+      return value;
+   }
+
+   /**
+    * Attempt to get a JSONObject value from the configuration JSON object
+    * "name" is a "dot" delimited JSON object name: "rs.connect" If the flag
+    * "allowEmpty" is false, abort if attribute does not exist or is empty
+    *
+    * @param name String configuration name
+    * @param allowEmpty boolean allow empty values
+    * @return JSONObject configuration object
+    */
+   private JSONObject getConfigValueAsJSONObject(final String configType, final String name, final boolean allowEmpty) {
+      String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
+      JSONObject value = null;
+      JSONObject configData = null;
+
+      _logger.entering(CLASS, METHOD);
+
+      if (STR.isEmpty(configType)) {
+         this.abort(METHOD, "Attribute 'configType' is empty", Status.INTERNAL_SERVER_ERROR);
+      }
+
+      if (STR.isEmpty(name)) {
+         this.abort(METHOD, "Attribute 'name' is empty", Status.INTERNAL_SERVER_ERROR);
+      }
+
+      configData = this.getConfiguration(configType);
+
+      value = JSON.getObject(configData, name);
+
+      if ((value == null || value.isEmpty()) && !allowEmpty) {
+         this.abort(METHOD, "Config object '" + name + "' is null or empty", Status.INTERNAL_SERVER_ERROR);
+      }
+
+      _logger.exiting(CLASS, METHOD);
+
+      return value;
+   }
+
+   /**
+    * Get the JSON data associated with a configuration type.
+    *
+    * @param configType the configuration type
+    * @return JSONobject JSON data
+    */
+   private JSONObject getConfiguration(final String configType) {
+      String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
+      String msg = null;
+      JSONObject json = null;
+      ConfigurationIF config = null;
+
+      _logger.entering(CLASS, METHOD);
+
+      if (!STR.isEmpty(configType)) {
+         config = _configMgr.getConfiguration(configType);
+         if (config != null) {
+            json = config.getJSON();
+            if (json == null) {
+               msg = "JSON data for configuration '" + configType + "' is null";
+            }
+         } else {
+            msg = "Configuration for type '" + configType + "' is null";
+         }
+      } else {
+         msg = "Argument 'configType' is empty";
+      }
+
+      if (msg != null) {
+         this.abort(METHOD, msg, Status.INTERNAL_SERVER_ERROR);
+      }
+
+      _logger.exiting(CLASS, METHOD);
+
+      return json;
+   }
+
 }

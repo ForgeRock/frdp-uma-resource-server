@@ -31,7 +31,7 @@
          "client": {
             "id": "UMA-Resource-Server",
             "secret": "_OAUTH2_CLIENT_PASSWORD_",
-            "redirect": "_AS_PROTOCOL_://_AS_HOSTNAME_:_AS_PORT_/resource-server/callbacks/oauth2.html"
+            "redirect": "_AS_PROTOCOL_://_AS_HOSTNAME_:_AS_PORT_/resource-server"
          }
       },
       "credential": {
