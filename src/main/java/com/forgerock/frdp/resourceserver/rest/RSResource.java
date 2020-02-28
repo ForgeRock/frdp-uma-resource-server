@@ -68,7 +68,7 @@ public abstract class RSResource extends Resource {
    private ConfigurationManagerIF _configMgr = null;
 
    protected static final String CONFIG_FILE_RS = "config/resource-server.json";
-   protected static final String CONFIG_FILE_CS = "config/content-server.json";
+   protected static final String CONFIG_FILE_CS = "config/content-service.json";
    protected static final String PUBLIC_FILE = "config/public.json";
 
    protected static final String CTX_ATTR_CONFIG_MGR = "com.forgerock.frdp.config.configmanager";
@@ -595,21 +595,73 @@ public abstract class RSResource extends Resource {
       return registerGUID;
    }
 
+//   /**
+//    * Get the JSON Content GUID related to the specified resource identifier
+//    *
+//    * @param resourceId String resource identifier
+//    * @return String content GUID
+//    */
+//   protected String getContentGUID(final String resourceId) {
+//      String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
+//      String contentGUID = null;
+//      OperationIF operResourceInput = null;
+//      OperationIF operResourceOutput = null;
+//      JSONObject jsonResourceInput = null;
+//      JSONObject jsonResourceOutput = null;
+//      JaxrsHandlerIF resourcesHandler = null;
+//
+//      _logger.entering(CLASS, METHOD);
+//
+//      if (STR.isEmpty(resourceId)) {
+//         this.abort(METHOD, "Resource Id is empty.", Status.INTERNAL_SERVER_ERROR);
+//      }
+//
+//      resourcesHandler = this.getHandler(JaxrsHandlerIF.HANDLER_RESOURCES);
+//
+//      jsonResourceInput = new JSONObject();
+//      jsonResourceInput.put(ConstantsIF.UID, resourceId);
+//
+//      operResourceInput = new Operation(OperationIF.TYPE.READ);
+//      operResourceInput.setJSON(jsonResourceInput);
+//
+//      operResourceOutput = resourcesHandler.process(operResourceInput);
+//
+//      if (operResourceOutput.getState() == STATE.SUCCESS) {
+//         jsonResourceOutput = operResourceOutput.getJSON();
+//         contentGUID = JSON.getString(jsonResourceOutput, ConstantsIF.DATA + "." + ConstantsIF.CONTENT);
+//      }
+//
+//      if (_logger.isLoggable(DEBUG_LEVEL)) {
+//         _logger.log(DEBUG_LEVEL, "resourceId=''{0}'', contentGUID=''{1}''",
+//            new Object[]{resourceId == null ? NULL : resourceId, contentGUID == null ? NULL : contentGUID});
+//      }
+//
+//      _logger.exiting(CLASS, METHOD);
+//
+//      return contentGUID;
+//   }
    /**
-    * Get the JSON Content GUID related to the specified resource identifier
+    * Get content information related to the specified resource identifier
     *
     * @param resourceId String resource identifier
-    * @return String content GUID
+    * @return JSONObject content information
     */
-   protected String getContentGUID(final String resourceId) {
+   protected JSONObject getContentInformation(final String resourceId) {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
-      String contentGUID = null;
       OperationIF operResourceInput = null;
       OperationIF operResourceOutput = null;
       JSONObject jsonResourceInput = null;
       JSONObject jsonResourceOutput = null;
+      JSONObject jsonContentInfo = null;
       JaxrsHandlerIF resourcesHandler = null;
 
+      /*
+       * content information:
+       * {
+       *     "csid": "mongo",
+       *     "uri": "https://uma.example.com:443/service/rest/content-server/content/1234-abcd"
+       * }
+       */
       _logger.entering(CLASS, METHOD);
 
       if (STR.isEmpty(resourceId)) {
@@ -628,21 +680,23 @@ public abstract class RSResource extends Resource {
 
       if (operResourceOutput.getState() == STATE.SUCCESS) {
          jsonResourceOutput = operResourceOutput.getJSON();
-         contentGUID = JSON.getString(jsonResourceOutput, ConstantsIF.DATA + "." + ConstantsIF.CONTENT);
+         jsonContentInfo = JSON.getObject(jsonResourceOutput, ConstantsIF.DATA + "." + ConstantsIF.CONTENT);
+      } else {
+         this.abort(METHOD, "Could not get content information, resourceId='" + resourceId + "'", Status.INTERNAL_SERVER_ERROR);
       }
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "resourceId=''{0}'', contentGUID=''{1}''",
-            new Object[]{resourceId == null ? NULL : resourceId, contentGUID == null ? NULL : contentGUID});
+         _logger.log(DEBUG_LEVEL, "resourceId=''{0}'', content=''{1}''",
+            new Object[]{resourceId == null ? NULL : resourceId, jsonContentInfo == null ? NULL : jsonContentInfo.toString()});
       }
 
       _logger.exiting(CLASS, METHOD);
 
-      return contentGUID;
+      return jsonContentInfo;
    }
 
    /**
-    * Ge the Resource releated to the resource uid
+    * Get the Resource related to the resource uid
     *
     * <pre>
     * JSON output ...
@@ -729,16 +783,16 @@ public abstract class RSResource extends Resource {
    }
 
    /**
-    * Ge the JSON Content releated to the resource uid
+    * Get content (JSON) related to the resource uid
     *
     * @param resourceUid String resource uid
     * @return OperationIF output
     */
    protected OperationIF getContent(final String resourceUid) {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
-      String contentUid = null;
       OperationIF operOutput = null;
       JSONObject jsonInput = null;
+      JSONObject jsonContentInfo = null;
       OperationIF operInput = null;
       JaxrsHandlerIF contentHandler = null;
 
@@ -750,12 +804,21 @@ public abstract class RSResource extends Resource {
 
       contentHandler = this.getHandler(JaxrsHandlerIF.HANDLER_CONTENT);
 
-      contentUid = this.getContentGUID(resourceUid);
+      jsonContentInfo = this.getContentInformation(resourceUid);
 
-      if (!STR.isEmpty(contentUid)) {
+      if (jsonContentInfo != null) {
          jsonInput = new JSONObject();
-         jsonInput.put(ConstantsIF.UID, contentUid);
+         jsonInput.put(ConstantsIF.UID, jsonContentInfo);
 
+         /*
+          * JSON input:
+          * {
+          *     "uid" : {
+          *         "csid": "mongo",
+          *         "uri": "https://uma.example.com:443/service/rest/content-server/content/1234-abcd"
+          *     }
+          * }
+          */
          operInput = new Operation(OperationIF.TYPE.READ);
          operInput.setJSON(jsonInput);
 
@@ -764,7 +827,7 @@ public abstract class RSResource extends Resource {
          operOutput = new Operation(OperationIF.TYPE.READ);
          operOutput.setJSON(new JSONObject());
          operOutput.setState(STATE.NOTEXIST);
-         operOutput.setStatus("Content does not exist, empty uid");
+         operOutput.setStatus("Content does not exist");
       }
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
@@ -1361,7 +1424,7 @@ public abstract class RSResource extends Resource {
             this.abort(METHOD, "Resource Server Config object is null or not a JSON object",
                Response.Status.INTERNAL_SERVER_ERROR);
          }
-         
+
          if (_logger.isLoggable(Level.INFO)) {
             _logger.log(Level.INFO, "Loaded configuration file : " + CONFIG_FILE_RS);
          }
@@ -1394,7 +1457,7 @@ public abstract class RSResource extends Resource {
             this.abort(METHOD, "Content Server Config object is null or not a JSON object",
                Response.Status.INTERNAL_SERVER_ERROR);
          }
-         
+
          if (_logger.isLoggable(Level.INFO)) {
             _logger.log(Level.INFO, "Loaded configuration file : " + CONFIG_FILE_CS);
          }

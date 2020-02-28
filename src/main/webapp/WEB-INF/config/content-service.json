@@ -1,0 +1,98 @@
+{
+    "comment": "Content Services",
+    "services": [
+        {
+            "id": "default",
+            "label": "MongoDB Content Service",
+            "description": "The reference implementation sample Content Service, using MongoDB",
+            "comment": "The default Content Service, REST interface to MongoDB",
+            "enabled": true,
+            "operations": {
+                "create": {
+                    "action": "post",
+                    "uri": "https://uma.example.com:443/content-server/rest/content-server/content",
+                    "headers": [ 
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "read": {
+                    "action": "get",
+                    "headers": [
+                        {
+                            "name": "Accept",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "replace": {
+                    "action": "put",
+                    "headers": [ 
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "delete": {
+                    "action": "delete"
+                }
+            }
+        },
+        {
+            "id": "fhir",
+            "label": "FHIR",
+            "description": "This is the sample FHIR service",
+            "comment": "Example FHIR URL https://fhir.example.com:443/fhir-request/Claim?patient=1234",
+            "enabled": true,
+            "operations": {
+                "create": {
+                    "comment": "Test the provided URL, returns error if not 200:OK",
+                    "action": "get",
+                    "headers": [
+                        {
+                            "name": "Accept",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "read": {
+                    "action": "get",
+                    "headers": [
+                        {
+                            "name": "Accept",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "replace": {
+                    "action": "reference"
+                },
+                "delete": {
+                    "action": "reference"
+                }
+            }
+        },
+        {
+            "id": "refonly",
+            "comment": "The URL is only for reference, it is NOT use to manage/access external content",
+            "enabled": true,
+            "operations": {
+                "create": {
+                    "action": "reference"
+                },
+                "read": {
+                    "action": "reference"
+                },
+                "replace": {
+                    "action": "reference"
+                },
+                "delete": {
+                    "action": "reference"
+                }
+            }
+        }
+    ]
+}

@@ -5,6 +5,7 @@
 package com.forgerock.frdp.resourceserver.handler;
 
 import com.forgerock.frdp.common.ConstantsIF;
+import com.forgerock.frdp.common.DataIF;
 import com.forgerock.frdp.config.ConfigurationIF;
 import com.forgerock.frdp.config.ConfigurationManagerIF;
 import com.forgerock.frdp.dao.Operation;
@@ -13,10 +14,14 @@ import com.forgerock.frdp.dao.mongo.MongoFactory;
 import com.forgerock.frdp.dao.rest.RestDataAccess;
 import com.forgerock.frdp.handler.HandlerManagerIF;
 import com.forgerock.frdp.resourceserver.ConfigIF;
+import com.forgerock.frdp.resourceserver.content.BasicContentService;
+import com.forgerock.frdp.resourceserver.content.ContentServiceIF;
 import com.forgerock.frdp.utils.JSON;
 import com.forgerock.frdp.utils.STR;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 /**
@@ -27,6 +32,7 @@ import org.json.simple.JSONObject;
 public class ContentHandler extends JaxrsHandler {
 
    private final String CLASS = this.getClass().getName();
+   private final Map<String, ContentServiceIF> _services = new HashMap<>();
 
    /**
     * Constructor
@@ -49,7 +55,9 @@ public class ContentHandler extends JaxrsHandler {
    }
 
    /*
-    * ================= PROTECTED METHODS =================
+    * ================= 
+    * PROTECTED METHODS 
+    * =================
     */
    /**
     * Validate the OperationIF object, overrides the subclass
@@ -278,7 +286,9 @@ public class ContentHandler extends JaxrsHandler {
    }
 
    /*
-    * =============== PRIVATE METHODS ===============
+    * =============== 
+    * PRIVATE METHODS 
+    * ===============
     */
    /**
     * Initialize the object
@@ -286,23 +296,30 @@ public class ContentHandler extends JaxrsHandler {
    private void init() {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String msg = null;
-      String configType = ConstantsIF.RESOURCE;
-      ConfigurationIF config = null;
-      JSONObject json = null;
+      ConfigurationIF configResource = null;
+      ConfigurationIF configContent = null;
+      ContentServiceIF contentService = null;
+      JSONObject jsonResource = null;
+      JSONObject jsonContent = null;
+      JSONObject jsonService = null;
+      JSONArray jsonServices = null;
       Map<String, String> map = null;
 
       _logger.entering(CLASS, METHOD);
 
-      config = _configMgr.getConfiguration(configType);
+      /*
+       * Get the "resource" JSON configuration 
+       */
+      configResource = _configMgr.getConfiguration(ConstantsIF.RESOURCE);
 
-      if (config != null) {
-         json = config.getJSON();
-         if (json == null) {
-            msg = CLASS + ": " + METHOD + ": JSON data for '" + configType + "' is null";
+      if (configResource != null) {
+         jsonResource = configResource.getJSON();
+         if (jsonResource == null) {
+            msg = CLASS + ": " + METHOD + ": JSON data for '" + ConstantsIF.RESOURCE + "' is null";
             this.setError(true);
          }
       } else {
-         msg = CLASS + ": " + METHOD + ": Configuration for '" + configType + "' is null";
+         msg = CLASS + ": " + METHOD + ": Configuration for '" + ConstantsIF.RESOURCE + "' is null";
          this.setError(true);
       }
 
@@ -310,7 +327,7 @@ public class ContentHandler extends JaxrsHandler {
        * setup the REST Data Access Object
        */
       if (!this.isError() && _ContentServerDAO == null) {
-         map = JSON.convertToParams(JSON.getObject(json, ConfigIF.CS_CONNECT));
+         map = JSON.convertToParams(JSON.getObject(jsonResource, ConfigIF.CS_CONNECT));
 
          try {
             _ContentServerDAO = new RestDataAccess(map);
@@ -324,12 +341,65 @@ public class ContentHandler extends JaxrsHandler {
        * setup the Mongo Data Access Object
        */
       if (!this.isError() && _MongoDAO == null) {
-         map = JSON.convertToParams(JSON.getObject(json, ConfigIF.RS_NOSQL));
+         map = JSON.convertToParams(JSON.getObject(jsonResource, ConfigIF.RS_NOSQL));
 
          try {
             _MongoDAO = MongoFactory.getInstance(map);
          } catch (Exception ex) {
             msg = CLASS + ": " + METHOD + ": Mongo DAO:" + ex.getMessage();
+            this.setError(true);
+         }
+      }
+
+      /*
+       * Get the "content" JSON configuration
+       */
+      if (!this.isError()) {
+         configContent = _configMgr.getConfiguration(ConstantsIF.CONTENT);
+
+         if (configContent != null) {
+            jsonContent = configContent.getJSON();
+            if (jsonContent == null) {
+               msg = CLASS + ": " + METHOD + ": JSON data for '" + ConstantsIF.CONTENT + "' is null";
+               this.setError(true);
+            }
+         } else {
+            msg = CLASS + ": " + METHOD + ": Configuration for '" + ConstantsIF.CONTENT + "' is null";
+            this.setError(true);
+         }
+      }
+
+      /*
+       * Create content services from the JSON configuration
+       */
+      if (!this.isError()) {
+         jsonServices = JSON.getArray(jsonContent, ConstantsIF.SERVICES);
+         
+         if (jsonServices != null && !jsonServices.isEmpty()) {
+            for (Object obj : jsonServices) {
+               
+               if (obj != null && obj instanceof JSONObject) {
+                  jsonService = (JSONObject) obj;
+
+                  if (JSON.getBoolean(jsonService, ConstantsIF.ENABLED)) {
+                     contentService = new BasicContentService(jsonService);
+
+                     if (!contentService.isError()) {
+                        _services.put(contentService.getId(), contentService);
+                     } else {
+                        msg = CLASS + ": " + METHOD + 
+                           "Error creating ContentService : " + contentService.getStatus();
+                        this.setError(true);
+                     }
+                  }
+               } else {
+                  msg = CLASS + ": " + METHOD + 
+                     ": Content Services instance is null or not JSONObject";
+                  this.setError(true);
+               }
+            }
+         } else {
+            msg = CLASS + ": " + METHOD + ": Content Services array is null or empty";
             this.setError(true);
          }
       }
