@@ -4,10 +4,10 @@
       "id": "UMA-Resource-Server",
       "comment": "Resource Server",
       "connect": {
-         "protocol": "https",
-         "host": "uma.example.com",
-         "port": "443",
-         "deploy": "apps/uma-rs",
+         "protocol": "_PROTOCOL_",
+         "host": "_HOSTNAME_",
+         "port": "_APP_PORT_",
+         "deploy": "resource-server",
          "endpoint": "rest"
       },
       "headers": {
@@ -16,12 +16,12 @@
       },
       "nosql": {
          "comment": "No SQL Database (MongoDB)",
-         "host": "uma.example.com",
+         "host": "_HOSTNAME_",
          "port": "27017",
          "authen": {
             "database": "resource-server",
-            "user": "rsadmin",
-            "password": "UMA-2.0"
+            "user": "resourceadmin",
+            "password": "_PASSWORD_"
          },
          "database": "resource-server",
          "collections": {
@@ -37,8 +37,8 @@
          "scopes": "uma_protection",
          "client": {
             "id": "UMA-Resource-Server",
-            "secret": "UMA-2.0",
-            "redirect": "https://uma.example.com/apps/uma-rs/callbacks/oauth2.html"
+            "secret": "_PASSWORD_",
+            "redirect": "_PROTOCOL_://_HOSTNAME_:_APP_PORT_/resource-server/callbacks/oauth2.html"
          }
       },
       "credential": {
@@ -70,14 +70,14 @@
       "comment": "Authorization Server",
       "cookie": "iPlanetDirectoryPro",
       "connect": {
-         "protocol": "https",
-         "host": "uma.example.com",
-         "port": "443",
+         "protocol": "_PROTOCOL_",
+         "host": "_HOSTNAME_",
+         "port": "_AM_PORT_",
          "path": "openam"
       },
       "admin": {
          "user": "amadmin",
-         "password": "UMA-2.0"
+         "password": "_PASSWORD_"
       },
       "authenticate": {
          "headers": {
@@ -142,10 +142,10 @@
    "cs": {
       "comment": "Content Server",
       "connect": {
-         "protocol": "https",
-         "host": "uma.example.com",
-         "port": "443",
-         "path": "services/json/rest/content-server/data"
+         "protocol": "_PROTOCOL_",
+         "host": "_HOSTNAME_",
+         "port": "_APP_PORT_",
+         "path": "content-server/rest/content-server/content"
       }
    }
 }
