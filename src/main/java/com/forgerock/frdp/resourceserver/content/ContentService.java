@@ -121,7 +121,8 @@ public abstract class ContentService extends Data implements ContentServiceIF {
       String hdrValue = null;
       JSONObject jsonOperations = null;
       JSONObject jsonOperation = null;
-      JSONArray jsonHeaders = null;
+      JSONObject jsonData = null;
+      JSONObject jsonHeaders = null;
       OperationIF operation = null;
       Map<String, String> mapHeaders = null;
 
@@ -181,9 +182,13 @@ public abstract class ContentService extends Data implements ContentServiceIF {
 
                         switch (attrValue) {
                            case ConstantsIF.POST:
+                              break;
                            case ConstantsIF.GET:
+                              break;
                            case ConstantsIF.PUT:
+                              break;
                            case ConstantsIF.DELETE:
+                              break;
                            case ConstantsIF.REFERENCE:
                               break;
                            default:
@@ -210,34 +215,15 @@ public abstract class ContentService extends Data implements ContentServiceIF {
                         }
 
                         /*
-                         * Get "headers" object, all sub-attributes
+                         * Get "headers" object
                          */
                         attrName = ConstantsIF.HEADERS;
-                        jsonHeaders = JSON.getArray(jsonOperation, attrName);
+                        jsonHeaders = JSON.getObject(jsonOperation, attrName);
 
                         if (jsonHeaders != null && !jsonHeaders.isEmpty()) {
-                           hdrName = null;
-                           hdrValue = null;
-                           mapHeaders = new HashMap<>();
-                           for (Object oHdr : jsonHeaders) {
-                              if (oHdr != null && oHdr instanceof JSONObject) {
-                                 hdrName = JSON.getString((JSONObject) oHdr, ConstantsIF.NAME);
-                                 if (!STR.isEmpty(hdrName)) {
-                                    hdrValue = JSON.getString((JSONObject) oHdr, ConstantsIF.VALUE);
-                                    if (!STR.isEmpty(hdrValue)) {
-                                       mapHeaders.put(hdrName, hdrValue);
-                                    }
-                                 }
-                              }
-                           }
-
-                           /*
-                            * If the map contains header data (name/value)
-                            * store in the operation as an Object
-                            */
-                           if (!mapHeaders.isEmpty()) {
-                              operation.setObject(mapHeaders);
-                           }
+                           jsonData = new JSONObject();
+                           jsonData.put(ConstantsIF.HEADERS, jsonHeaders);
+                           operation.setJSON(jsonData);
                         }
                      } else {
                         msg = "Attribute '" + ConstantsIF.ACTION

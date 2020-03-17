@@ -292,7 +292,7 @@ public class ResourcesResource extends RSResource {
                         }
 
                         if (bContent) {
-                           operContentOutput = this.getContent(resourceUid);
+                           operContentOutput = this.contentRead(resourceUid);
 
                            jsonContent = JSON.getObject(operContentOutput.getJSON(), ConstantsIF.DATA);
 

@@ -9,34 +9,24 @@
             "enabled": true,
             "operations": {
                 "create": {
+                    "comment": "Use 'uri' attribute and input 'data' to CREATE external content",
                     "action": "post",
-                    "uri": "https://uma.example.com:443/content-server/rest/content-server/content",
-                    "headers": [ 
-                        {
-                            "name": "Content-Type",
-                            "value": "application/json"
-                        }
-                    ]
+                    "uri": "https://idp.frdpcloud.com:443/content-server/rest/content-server/content",
+                    "headers": {
+                        "X-FRDP-FOO": "foo",
+                        "X-FRDP-BAR": "bar"
+                    }
                 },
                 "read": {
-                    "action": "get",
-                    "headers": [
-                        {
-                            "name": "Accept",
-                            "value": "application/json"
-                        }
-                    ]
+                    "comment": "Use input 'uri' to READ external content",
+                    "action": "get"
                 },
                 "replace": {
-                    "action": "put",
-                    "headers": [ 
-                        {
-                            "name": "Content-Type",
-                            "value": "application/json"
-                        }
-                    ]
+                    "comment": "Use input 'data' to REPLACE at input 'uri'",
+                    "action": "put"
                 },
                 "delete": {
+                    "comment": "Use input 'uri' to DELETE external content",
                     "action": "delete"
                 }
             }
@@ -50,27 +40,18 @@
             "operations": {
                 "create": {
                     "comment": "Test the provided URL, returns error if not 200:OK",
-                    "action": "get",
-                    "headers": [
-                        {
-                            "name": "Accept",
-                            "value": "application/json"
-                        }
-                    ]
+                    "action": "get"
                 },
                 "read": {
-                    "action": "get",
-                    "headers": [
-                        {
-                            "name": "Accept",
-                            "value": "application/json"
-                        }
-                    ]
+                    "comment": "Use input 'uri' to READ external content",
+                    "action": "get"
                 },
                 "replace": {
+                    "comment": "Use input 'uri' to REPLACE the existing 'uri'",
                     "action": "reference"
                 },
                 "delete": {
+                    "comment": "Use input 'uri' to DELETE the existing 'uri'",
                     "action": "reference"
                 }
             }
@@ -81,15 +62,19 @@
             "enabled": true,
             "operations": {
                 "create": {
+                    "comment": "Use input 'uri' to CREATE a new 'uri'",
                     "action": "reference"
                 },
                 "read": {
+                    "comment": "Use input 'uri' to READ the existing 'uri'",
                     "action": "reference"
                 },
                 "replace": {
+                    "comment": "Use input 'uri' to REPLACE the existing 'uri'",
                     "action": "reference"
                 },
                 "delete": {
+                    "comment": "Use input 'uri' to DELETE the existing 'uri'",
                     "action": "reference"
                 }
             }

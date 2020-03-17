@@ -88,7 +88,7 @@ public class RegisterHandler extends JaxrsHandler {
          case READ:
          case REPLACE:
          case DELETE: {
-            this.checkUid(jsonInput);
+            this.checkAttr(jsonInput, ConstantsIF.UID);
             break;
          }
          default:
@@ -115,7 +115,7 @@ public class RegisterHandler extends JaxrsHandler {
     *   "access_token": "..."
     * }
     * JSON output ...
-    * { "uid": "..." }
+    * { "uri": "..." }
     * </pre>
     *
     * @param operInput OperationIF input for create operation
@@ -159,7 +159,7 @@ public class RegisterHandler extends JaxrsHandler {
             operOutput.setState(STATE.SUCCESS);
          } else {
             error = true;
-            msg = "regsiterId is empty";
+            msg = CLASS + ": " + METHOD + ": UMA Registration UID is empty";
          }
       }
 
@@ -470,7 +470,7 @@ public class RegisterHandler extends JaxrsHandler {
     *   },
     *   "access_token": "..."
     * }
-    * String output ... "_id" (uid) for AM UMA Resource
+    * String output ... AM UMA Resource registration GUID
     *
     * curl example:
     * curl -request POST \
@@ -495,8 +495,10 @@ public class RegisterHandler extends JaxrsHandler {
     */
    private String createImpl(final JSONObject jsonInput) throws Exception {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
+      String uri = null;
       String uid = null;
       String access_token = null;
+      String[] path = null;
       OperationIF operInput = null;
       OperationIF operOutput = null;
       JSONObject jsonRegisterHeaders = null;
@@ -535,7 +537,9 @@ public class RegisterHandler extends JaxrsHandler {
       if (operOutput.getState() == STATE.SUCCESS) {
          jsonOutput = operOutput.getJSON();
 
-         uid = JSON.getString(jsonOutput, ConstantsIF.UID);
+         uri = JSON.getString(jsonOutput, ConstantsIF.URI);
+         path = uri.split("/");
+         uid = path[path.length - 1];
       } else {
          throw new Exception(METHOD + ": " + operOutput.getStatus());
       }

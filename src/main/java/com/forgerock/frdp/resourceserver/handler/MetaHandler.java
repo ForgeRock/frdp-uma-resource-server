@@ -77,16 +77,16 @@ public class MetaHandler extends JaxrsHandler {
 
       switch (oper.getType()) {
          case READ: {
-            this.checkUid(jsonInput);
+            this.checkAttr(jsonInput, ConstantsIF.UID);
             break;
          }
          case REPLACE: {
-            this.checkUid(jsonInput);
+            this.checkAttr(jsonInput, ConstantsIF.UID);
             this.checkMeta(jsonInput);
             break;
          }
          case DELETE: {
-            this.checkUid(jsonInput);
+            this.checkAttr(jsonInput, ConstantsIF.UID);
             break;
          }
          default:

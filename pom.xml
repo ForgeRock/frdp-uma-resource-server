@@ -24,7 +24,7 @@
         <dependency>
             <groupId>com.forgerock.frdp</groupId>
             <artifactId>frdp-dao-rest</artifactId>
-            <version>1.0.0</version>
+            <version>1.1.0</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>

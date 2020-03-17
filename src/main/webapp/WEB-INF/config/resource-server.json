@@ -9,12 +9,12 @@
       },
       "nosql": {
          "comment": "No SQL Database (MongoDB)",
-         "host": "uma.example.com",
+         "host": "idp.frdpcloud.com",
          "port": "27017",
          "authen": {
             "database": "resource-server",
             "user": "resourceadmin",
-            "password": "_NOSQL_RS_PASSWORD_"
+            "password": "password"
          },
          "database": "resource-server",
          "collections": {
@@ -30,8 +30,8 @@
          "scopes": "uma_protection",
          "client": {
             "id": "UMA-Resource-Server",
-            "secret": "_OAUTH2_CLIENT_PASSWORD_",
-            "redirect": "https://uma.example.com:443/resource-server"
+            "secret": "password",
+            "redirect": "https://idp.frdpcloud.com:443/resource-server"
          }
       },
       "credential": {
@@ -64,13 +64,13 @@
       "cookie": "iPlanetDirectoryPro",
       "connect": {
          "protocol": "https",
-         "host": "uma.example.com",
+         "host": "idp.frdpcloud.com",
          "port": "443",
          "path": "openam"
       },
       "admin": {
          "user": "amadmin",
-         "password": "_AS_ADMIN_PASSWORD_"
+         "password": "Frdp-2010"
       },
       "authenticate": {
          "headers": {
@@ -130,15 +130,6 @@
             "queryfilter": "!%20resourceOwnerId%20eq%20%22__owner__%22",
             "sortkeys": "name"
          }
-      }
-   },
-   "cs": {
-      "comment": "Content Server",
-      "connect": {
-         "protocol": "https",
-         "host": "uma.example.com",
-         "port": "443",
-         "path": "content-server/rest/content-server/content"
       }
    }
 }

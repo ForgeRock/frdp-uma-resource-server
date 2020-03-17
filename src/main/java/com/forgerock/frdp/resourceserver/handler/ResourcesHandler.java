@@ -74,7 +74,7 @@ public class ResourcesHandler extends JaxrsHandler {
          case READ:
          case REPLACE:
          case DELETE: {
-            this.checkUid(jsonInput);
+            this.checkAttr(jsonInput, ConstantsIF.UID);
             break;
          }
          default:

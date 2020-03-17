@@ -34,7 +34,6 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
 
    protected DataAccessIF _MongoDAO = null;
    protected DataAccessIF _AuthzServerDAO = null;
-   protected DataAccessIF _ContentServerDAO = null;
 
    protected ConfigurationManagerIF _configMgr = null;
    private HandlerManagerIF _handlerMgr = null;
@@ -277,22 +276,51 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
       return value;
    }
 
+//   /**
+//    * Check for "uid" attribute in the JSON data
+//    *
+//    * @param json JSONObject JSON data
+//    * @throws Exception could not verify the uid
+//    */
+//   protected void checkUid(JSONObject json) throws Exception {
+//      String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
+//      String uid = null;
+//
+//      _logger.entering(CLASS, METHOD);
+//
+//      uid = JSON.getString(json, ConstantsIF.UID);
+//
+//      if (STR.isEmpty(uid)) {
+//         throw new Exception("Required attribute '" + ConstantsIF.UID + "' is missing or empty");
+//      }
+//
+//      _logger.exiting(CLASS, METHOD);
+//
+//      return;
+//   }
+
    /**
-    * Check for "uid" attribute in the JSON data
+    * Check for the specified attribute in the JSON data.
     *
     * @param json JSONObject JSON data
-    * @throws Exception could not verify the uid
+    * @param attrName String attribute name
+    * @throws Exception could not verify the attribute name in the JSON object
     */
-   protected void checkUid(JSONObject json) throws Exception {
+   protected void checkAttr(final JSONObject json, final String attrName) throws Exception {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
-      String uid = null;
 
       _logger.entering(CLASS, METHOD);
+      
+      if (STR.isEmpty(attrName)) {
+         this.abort(METHOD, "Attribute name is empty");
+      }
+      
+      if (json == null || json.isEmpty()) {
+         this.abort(METHOD, "JSON object is null or empty");
+      }
 
-      uid = JSON.getString(json, ConstantsIF.UID);
-
-      if (STR.isEmpty(uid)) {
-         throw new Exception("Required attribute '" + ConstantsIF.UID + "' is missing or empty");
+      if (STR.isEmpty(JSON.getString(json, attrName))) {
+         throw new Exception("Attribute '" + attrName + "' is missing or empty");
       }
 
       _logger.exiting(CLASS, METHOD);

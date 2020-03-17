@@ -79,7 +79,7 @@ public class AMSessionHandler extends JaxrsHandler {
             break;
          }
          case READ: {
-            this.checkUid(jsonInput);
+            this.checkAttr(jsonInput, ConstantsIF.UID);
             break;
          }
          default:
