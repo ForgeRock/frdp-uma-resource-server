@@ -80,6 +80,7 @@ public class ContentResource extends RSResource {
       Response response = null;
       JSONObject jsonContent = null;
       JSONParser parser = null;
+      OperationIF operContent = null;
 
       _logger.entering(CLASS, METHOD);
 
@@ -89,20 +90,32 @@ public class ContentResource extends RSResource {
       }
 
       if (STR.isEmpty(data)) {
-         this.abort(METHOD, "Payload string is empty", Response.Status.BAD_REQUEST);
+         this.abort(CLASS + ": " + METHOD, "Payload string is empty", 
+            Response.Status.BAD_REQUEST);
       }
 
       this.load();
-
+            
       this.checkAuthenUserIsOwner(_resourceUid);
+
+      /*
+       * Check to see if content already exists
+       */
+
+      operContent = this.contentRead(_resourceUid);
+      
+      if (operContent.getState() != STATE.NOTEXIST) {
+         this.abort(CLASS + ": " + METHOD, "Content already exists", 
+            Response.Status.BAD_REQUEST);
+      }
 
       parser = this.getParserFromCtx(_servletCtx);
 
       try {
          jsonContent = (JSONObject) parser.parse(data);
       } catch (Exception ex) {
-         this.abort(METHOD, "Could not parser String to JSON: '" + data + "', "
-            + ex.getMessage(),
+         this.abort(CLASS + ": " + METHOD, "Could not parser String to JSON: '" 
+            + data + "', " + ex.getMessage(),
             Response.Status.BAD_REQUEST);
       }
 
@@ -140,16 +153,6 @@ public class ContentResource extends RSResource {
 
       operOutput = this.contentRead(_resourceUid);
       
-      /*
-       * Wrap JSON output in a "data" object, expected by getResponseFromJSON
-       * {                          |   {
-       *     "data" : {             |       "data": {
-       *         "id": "default",   |           "id": "default",
-       *         "data" : { ... }   |           "uri": "http://..."
-       *     }                      |       }
-       * }                          |   }
-       */
-
       jsonOutput = operOutput.getJSON();
       
       if (jsonOutput == null) {
@@ -157,6 +160,15 @@ public class ContentResource extends RSResource {
             Response.Status.BAD_REQUEST);
       }
       
+      /*
+       * Wrap JSON output in a "data" object, expected by getResponseFromJSON
+       * {                          |   {
+       *     "data" : {             |       "data": {
+       *         ...                |           "uri": "http://..."
+       *     }                      |       }
+       * }                          |   }
+       */
+
       jsonData = new JSONObject();
       jsonData.put(ConstantsIF.DATA, jsonOutput);
       

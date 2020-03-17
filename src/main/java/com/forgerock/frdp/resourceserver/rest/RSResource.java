@@ -1461,6 +1461,8 @@ public abstract class RSResource extends Resource {
       OperationIF operInput = null;
       OperationIF operOutput = null;
       JSONObject jsonContentInfo = null;
+      JSONObject jsonOutput = null;
+      JSONObject jsonData = null;
       JaxrsHandlerIF contentHandler = null;
 
       _logger.entering(CLASS, METHOD);
@@ -1472,7 +1474,7 @@ public abstract class RSResource extends Resource {
       }
 
       if (STR.isEmpty(resourceUid)) {
-         this.abort(METHOD, "Resource Id is empty", Status.BAD_REQUEST);
+         this.abort(CLASS + ": " + METHOD, "Resource Id is empty", Status.BAD_REQUEST);
       }
 
       contentHandler = this.getHandler(JaxrsHandlerIF.HANDLER_CONTENT);
@@ -1499,6 +1501,36 @@ public abstract class RSResource extends Resource {
           * }                       | }
           */
          operOutput = contentHandler.process(operInput);
+
+         jsonOutput = operOutput.getJSON();
+
+         if (jsonOutput == null) {
+            this.abort(CLASS + ": " + METHOD, "Resource Id is empty", Status.BAD_REQUEST);
+         }
+
+         if (jsonOutput.containsKey(ConstantsIF.DATA)) {
+            /*
+             * replace operation JSON with only the 'data' object
+             */
+            jsonData = JSON.getObject(jsonOutput, ConstantsIF.DATA);
+
+            if (jsonData != null) {
+               operOutput.setJSON(jsonData);
+            } else {
+               operOutput.setJSON(new JSONObject());
+            }
+         } else if (jsonOutput.containsKey(ConstantsIF.URI)) {
+            /*
+             * replace operation JSON with 'uri' attribute
+             */
+            jsonData = new JSONObject();
+            jsonData.put(ConstantsIF.URI,JSON.getString(jsonOutput, ConstantsIF.URI));
+
+            operOutput.setJSON(jsonData);
+         } else {
+            this.abort(CLASS + ": " + METHOD, "JSON data must have either 'data' or 'uri'", 
+               Status.BAD_REQUEST);
+         }
       } else {
          operOutput = new Operation(OperationIF.TYPE.READ);
          operOutput.setJSON(new JSONObject());
@@ -1529,7 +1561,7 @@ public abstract class RSResource extends Resource {
     *     ...               |      "uri": "http://..."
     * }                     |  }
     * </pre>
-    * 
+    *
     * @param resourceUid
     * @param jsonContent
     * @return
@@ -1840,12 +1872,12 @@ public abstract class RSResource extends Resource {
       _logger.entering(CLASS, METHOD);
 
       if (STR.isEmpty(configType)) {
-         this.abort(METHOD, "Attribute 'configType' is empty", 
+         this.abort(METHOD, "Attribute 'configType' is empty",
             Status.INTERNAL_SERVER_ERROR);
       }
 
       if (STR.isEmpty(name)) {
-         this.abort(METHOD, "Attribute 'name' is empty", 
+         this.abort(METHOD, "Attribute 'name' is empty",
             Status.INTERNAL_SERVER_ERROR);
       }
 
@@ -1854,7 +1886,7 @@ public abstract class RSResource extends Resource {
       value = JSON.getString(configData, name);
 
       if (STR.isEmpty(value) && !allowEmpty) {
-         this.abort(METHOD, "Config attribute '" + name + "' is null or empty", 
+         this.abort(METHOD, "Config attribute '" + name + "' is null or empty",
             Status.INTERNAL_SERVER_ERROR);
       }
 

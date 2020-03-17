@@ -243,10 +243,7 @@ public class ResourcesResource extends RSResource {
     *     "owner": "bjensen",
     *     "access": "shared",
     *     "meta": { ... },
-    *     "content": {
-    *         "id": "default",
-    *         ...
-    *     },
+    *     "content": { ... },
     *     "register": {
     *         ... ,
     *         "policy": { ... }
@@ -305,10 +302,7 @@ public class ResourcesResource extends RSResource {
        *     "data": { 
        *         "owner": "...", 
        *         "meta": { ... }, 
-       *         "content": {
-       *             "id": "default,
-       *             "uri": "http://..."
-       *         }, 
+       *         "content": { ... },
        *         "register": "..." 
        *      },
        *     "timestamps": { ... }
@@ -345,8 +339,7 @@ public class ResourcesResource extends RSResource {
                   /*
                    * JSON content output options:
                    * {                       | {
-                   *     "id": "default",    |     "id": "default",
-                   *     "data": { ... }     |     "uri": "http://..."
+                   *     ...                 |     "uri": "http://..."
                    * }                       | }
                    */
                   if (operContentOutput != null) {
