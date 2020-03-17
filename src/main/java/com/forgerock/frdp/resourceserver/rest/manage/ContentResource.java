@@ -231,7 +231,7 @@ public class ContentResource extends RSResource {
    }
 
    /**
-    * Delete JSON content
+    * Delete JSON content.
     *
     * @return Response HTTP response object
     */
@@ -240,10 +240,7 @@ public class ContentResource extends RSResource {
    public Response delete() {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       Response response = null;
-      JSONObject jsonInput = null;
-      OperationIF operInput = null;
       OperationIF operOutput = null;
-      JaxrsHandlerIF contentHandler = null;
 
       _logger.entering(CLASS, METHOD);
 
@@ -260,15 +257,7 @@ public class ContentResource extends RSResource {
 
       this.checkAuthenUserIsOwner(_resourceUid);
 
-      contentHandler = this.getHandler(JaxrsHandlerIF.HANDLER_CONTENT);
-
-      jsonInput = new JSONObject();
-      jsonInput.put(ConstantsIF.UID, _resourceUid);
-
-      operInput = new Operation(OperationIF.TYPE.DELETE);
-      operInput.setJSON(jsonInput);
-
-      operOutput = contentHandler.process(operInput);
+      operOutput = this.contentDelete(_resourceUid);
 
       response = this.getResponseFromJSON(_uriInfo, operOutput);
 

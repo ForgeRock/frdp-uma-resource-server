@@ -1589,13 +1589,7 @@ public abstract class RSResource extends Resource {
    /**
     * Delete the content.
     *
-    * JSON object ...
-    * <pre>
-    * {
-    *     "id": "default",
-    *     "uri": "https://..."
-    * }
-    * </pre>
+    * Delete the content related to the resource.
     *
     * @param resourceUid String Resource identifier
     * @return OperationIF operation response
@@ -1753,7 +1747,7 @@ public abstract class RSResource extends Resource {
 
       jsonInput = operInput.getJSON();
 
-      if (jsonInput == null || jsonInput.isEmpty()) {
+      if (jsonInput == null) {
          this.abort(METHOD, "Input JSON is null or empty",
             Status.INTERNAL_SERVER_ERROR);
       }
