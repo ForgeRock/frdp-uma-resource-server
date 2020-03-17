@@ -175,12 +175,8 @@ public class ContentResource extends RSResource {
     * REPLACE: possible input formats:
     * <pre>
     * {                          | {
-    *    "id": "default",        |    "id": "refonly",
-    *    "uri": "http://..."     |    "uri": "http://..."
-    *    "data": {               | }
-    *       ...                  |
-    *    }                       |
-    * }                          |
+    *    ...                     |    "uri": "http://..."
+    * }                          | }
     * </pre>
     * @param data String JSON payload
     * @return Response HTTP response object
@@ -224,7 +220,7 @@ public class ContentResource extends RSResource {
             + data + "', " + ex.getMessage(),
             Response.Status.BAD_REQUEST);
       }
-
+      
       operOutput = this.contentReplace(_resourceUid, jsonContent);
 
       response = this.getResponseFromJSON(_uriInfo, operOutput);

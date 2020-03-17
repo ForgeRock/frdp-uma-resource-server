@@ -1524,6 +1524,12 @@ public abstract class RSResource extends Resource {
     * If there's existing "content information" stored in the resource data
     * (JSON) perform the REPLACE operation.
     *
+    * <pre>
+    * {                     |  {
+    *     ...               |      "uri": "http://..."
+    * }                     |  }
+    * </pre>
+    * 
     * @param resourceUid
     * @param jsonContent
     * @return
@@ -1555,14 +1561,6 @@ public abstract class RSResource extends Resource {
       if (jsonContentInfo != null && !jsonContentInfo.isEmpty()) {
          jsonContentInfo.put(ConstantsIF.DATA, jsonContent);
 
-         /*
-          * JSON input:
-          * {
-          *     "id": "default",
-          *     "uri": "https://uma.example.com:443/service/rest/content-server/content/1234-abcd"
-          *     "data": { ... }
-          * }
-          */
          operInput = new Operation(OperationIF.TYPE.REPLACE);
          operInput.setJSON(jsonContentInfo);
 
