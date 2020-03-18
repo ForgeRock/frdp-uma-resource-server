@@ -1409,6 +1409,7 @@ public abstract class RSResource extends Resource {
       OperationIF operInput = null;
       OperationIF operOutput = null;
       JaxrsHandlerIF contentHandler = null;
+      Status status = null;
 
       _logger.entering(CLASS, METHOD);
 
@@ -1420,7 +1421,7 @@ public abstract class RSResource extends Resource {
       }
 
       if (STR.isEmpty(resourceUid)) {
-         this.abort(METHOD, "Resource identifier is empty", Status.BAD_REQUEST);
+         this.abort(CLASS + ": " + METHOD, "Resource identifier is empty", Status.BAD_REQUEST);
       }
 
       contentHandler = this.getHandler(JaxrsHandlerIF.HANDLER_CONTENT);
@@ -1431,9 +1432,9 @@ public abstract class RSResource extends Resource {
       operOutput = contentHandler.process(operInput);
 
       if (operOutput.getState() != STATE.SUCCESS) {
-         this.abort(METHOD, "Could not create Content: "
+         this.abort(CLASS + ": " + METHOD, "Could not create Content: "
             + operOutput.getState().toString() + ", "
-            + operOutput.getStatus(), Status.INTERNAL_SERVER_ERROR);
+            + operOutput.getStatus(), this.getStatusFromState(operOutput.getState()));
       }
 
       this.setContentInformation(resourceUid, operOutput);
@@ -1524,11 +1525,11 @@ public abstract class RSResource extends Resource {
              * replace operation JSON with 'uri' attribute
              */
             jsonData = new JSONObject();
-            jsonData.put(ConstantsIF.URI,JSON.getString(jsonOutput, ConstantsIF.URI));
+            jsonData.put(ConstantsIF.URI, JSON.getString(jsonOutput, ConstantsIF.URI));
 
             operOutput.setJSON(jsonData);
          } else {
-            this.abort(CLASS + ": " + METHOD, "JSON data must have either 'data' or 'uri'", 
+            this.abort(CLASS + ": " + METHOD, "JSON data must have either 'data' or 'uri'",
                Status.BAD_REQUEST);
          }
       } else {
@@ -1648,18 +1649,24 @@ public abstract class RSResource extends Resource {
 
       jsonContentInfo = this.getContentInformation(resourceUid);
 
-      operInput = new Operation(OperationIF.TYPE.DELETE);
-      operInput.setJSON(jsonContentInfo);
+      if (jsonContentInfo != null && !jsonContentInfo.isEmpty()) {
+         operInput = new Operation(OperationIF.TYPE.DELETE);
+         operInput.setJSON(jsonContentInfo);
 
-      operOutput = contentHandler.process(operInput);
+         operOutput = contentHandler.process(operInput);
 
-      if (operOutput.getState() != STATE.SUCCESS) {
-         this.abort(METHOD, ": Could not delete content: "
-            + operOutput.getState().toString() + ", "
-            + operOutput.getStatus(), Status.INTERNAL_SERVER_ERROR);
+         if (operOutput.getState() != STATE.SUCCESS) {
+            this.abort(CLASS + ": " + METHOD, ": Could not delete content: "
+               + operOutput.getState().toString() + ", "
+               + operOutput.getStatus(), Status.INTERNAL_SERVER_ERROR);
+         }
+
+         this.setContentInformation(resourceUid, operOutput);
+      } else {
+         operOutput = new Operation(OperationIF.TYPE.DELETE);
+         operOutput.setState(STATE.WARNING);
+         operOutput.setStatus("No content to delete");
       }
-
-      this.setContentInformation(resourceUid, operOutput);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "resourceUid=''{0}'', operOutput=''{1}''",

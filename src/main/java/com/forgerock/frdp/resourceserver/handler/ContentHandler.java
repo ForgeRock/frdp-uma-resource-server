@@ -166,7 +166,9 @@ public class ContentHandler extends JaxrsHandler {
          }
       } else {
          operOutput = new Operation(operInput.getType());
-         msg = "Operation output is null";
+         if (msg == null) {
+            msg = "Operation output is null";
+         }
       }
 
       if (msg != null) {
@@ -694,21 +696,24 @@ public class ContentHandler extends JaxrsHandler {
                    */
                   operDAOOutput = _RestDAO.execute(operDAOInput);
 
-                  if (operDAOOutput.isError()) {
-                     this.abort(METHOD, operDAOOutput.getState().toString()
-                        + ": " + operDAOOutput.getStatus());
-                  }
-
-                  /* 
-                   * add the "id", Content Service identifier
-                   */
                   jsonDAOOutput.put(ConstantsIF.ID, csId);
                   jsonDAOOutput.put(ConstantsIF.URI, inputURI);
 
-                  operOutput = new Operation(operInput.getType());
-                  operOutput.setState(STATE.SUCCESS);
-                  operOutput.setStatus("URI was found");
-                  operOutput.setJSON(jsonDAOOutput);
+                  if (operDAOOutput.isError()) {
+                     /*
+                      * URI failed
+                      */
+                     operOutput = operDAOOutput;
+                     operOutput.setJSON(jsonDAOOutput);
+                  } else {
+                     /* 
+                      * URI is valid, add the "id" ... Content Service identifier
+                      */
+                     operOutput = new Operation(operInput.getType());
+                     operOutput.setState(STATE.SUCCESS);
+                     operOutput.setStatus("URI was found");
+                     operOutput.setJSON(jsonDAOOutput);
+                  }
 
                   break;
                }
