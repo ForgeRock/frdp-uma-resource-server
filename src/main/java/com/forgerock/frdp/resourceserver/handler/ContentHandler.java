@@ -745,6 +745,7 @@ public class ContentHandler extends JaxrsHandler {
       String inputURI = null;
       String dataURI = null;
       String action = null;
+      String contentName = null;
       JSONObject jsonInput = null;
       JSONObject jsonSrvcOper = null;
       JSONObject jsonData = null;
@@ -803,6 +804,8 @@ public class ContentHandler extends JaxrsHandler {
          service = _services.get(csId);
 
          if (service != null && !service.isError()) {
+
+            contentName = service.getParam(ConstantsIF.CONTENT);
 
             if (service.hasOperation(operInput.getType())) {
                operService = service.getOperation(operInput.getType());
@@ -896,13 +899,12 @@ public class ContentHandler extends JaxrsHandler {
                            + action + "', DAO output has empty JSON");
                      }
                   }
-                  
+
                   /* 
                    * add the "id", Content Service identifier
                    */
-
                   jsonDAOOutput.put(ConstantsIF.ID, csId);
-                  
+
                   operOutput = new Operation(operInput.getType());
                   operOutput.setState(STATE.SUCCESS);
                   operOutput.setStatus("URI was created");
@@ -943,7 +945,6 @@ public class ContentHandler extends JaxrsHandler {
                   /* 
                    * add the "id", Content Service identifier
                    */
-
                   jsonDAOOutput.put(ConstantsIF.ID, csId);
                   jsonDAOOutput.put(ConstantsIF.URI, inputURI);
 
@@ -971,7 +972,6 @@ public class ContentHandler extends JaxrsHandler {
                   /* 
                    * add the "id", Content Service identifier
                    */
-
                   jsonDAOOutput.put(ConstantsIF.ID, csId);
                   jsonDAOOutput.put(ConstantsIF.URI, inputURI);
 
@@ -983,7 +983,7 @@ public class ContentHandler extends JaxrsHandler {
                   break;
                }
                default: {
-                  this.abort(CLASS + ": " + METHOD, "Content Service '" 
+                  this.abort(CLASS + ": " + METHOD, "Content Service '"
                      + csId + "', operation '"
                      + operInput.getType().toString() + "' has an invalid action '"
                      + action + "'");
@@ -998,7 +998,7 @@ public class ContentHandler extends JaxrsHandler {
             inputURI = JSON.getString(jsonInput, ConstantsIF.URI);
 
             if (STR.isEmpty(inputURI)) {
-               this.abort(CLASS + ": " + METHOD, "Content Service '" 
+               this.abort(CLASS + ": " + METHOD, "Content Service '"
                   + csId + "', operation '"
                   + operInput.getType().toString() + "', action '"
                   + action + "', Required input attribute 'uri' is empty");
@@ -1035,27 +1035,33 @@ public class ContentHandler extends JaxrsHandler {
                   }
 
                   jsonData = operDAOOutput.getJSON();
-                  
-                  if(jsonData == null) {
-                     this.abort(CLASS + ": " + METHOD, "JSON output is null, " 
+
+                  if (jsonData == null) {
+                     this.abort(CLASS + ": " + METHOD, "JSON output is null, "
                         + operDAOOutput.toString());
                   }
+
+                  jsonDAOOutput.put(ConstantsIF.ID, csId);
+
                   /*
+                   * Output may need to be un-wrapped from a 'content' object
                    * JSON output: 
                    * {
                    *   "id": "default",
                    *   "data": { ... }
                    * }
                    */
+                  if (STR.isEmpty(contentName)) {
+                     jsonDAOOutput.put(ConstantsIF.DATA, jsonData);
+                  } else {
+                     jsonDAOOutput.put(ConstantsIF.DATA, JSON.getObject(jsonData, contentName));
+                  }
 
-                  jsonDAOOutput.put(ConstantsIF.ID, csId);
-                  jsonDAOOutput.put(ConstantsIF.DATA, JSON.getObject(jsonData, ConstantsIF.DATA));
-                  
                   operOutput = new Operation(operInput.getType());
                   operOutput.setState(STATE.SUCCESS);
                   operOutput.setStatus("Found JSON data");
                   operOutput.setJSON(jsonDAOOutput);
-                  
+
                   break;
                }
                case ConstantsIF.REFERENCE: {
@@ -1160,7 +1166,7 @@ public class ContentHandler extends JaxrsHandler {
                         + action + "', Required input attribute 'uri', from 'data' object, is empty");
                   }
 
-                 /*
+                  /*
                    * JSON output:
                    * {
                    *   "id": "default",

@@ -132,6 +132,7 @@ public abstract class ContentService extends Data implements ContentServiceIF {
        *     "id": "xxx",
        *     "label": "...",
        *     "description": "...",
+       *     "object": "data",
        *     "operations": {
        *         "create": { // "create|read|replace|delete"
        *             "action": "post|get|put|delete|reference",
@@ -158,6 +159,12 @@ public abstract class ContentService extends Data implements ContentServiceIF {
             }
 
             attrName = ConstantsIF.DESCRIPTION;
+            attrValue = JSON.getString(configuration, attrName);
+            if (!STR.isEmpty(attrValue)) {
+               this.setParam(attrName, attrValue);
+            }
+
+            attrName = ConstantsIF.CONTENT;
             attrValue = JSON.getString(configuration, attrName);
             if (!STR.isEmpty(attrValue)) {
                this.setParam(attrName, attrValue);
