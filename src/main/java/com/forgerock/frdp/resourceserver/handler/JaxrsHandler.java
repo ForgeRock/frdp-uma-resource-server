@@ -276,29 +276,6 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
       return value;
    }
 
-//   /**
-//    * Check for "uid" attribute in the JSON data
-//    *
-//    * @param json JSONObject JSON data
-//    * @throws Exception could not verify the uid
-//    */
-//   protected void checkUid(JSONObject json) throws Exception {
-//      String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
-//      String uid = null;
-//
-//      _logger.entering(CLASS, METHOD);
-//
-//      uid = JSON.getString(json, ConstantsIF.UID);
-//
-//      if (STR.isEmpty(uid)) {
-//         throw new Exception("Required attribute '" + ConstantsIF.UID + "' is missing or empty");
-//      }
-//
-//      _logger.exiting(CLASS, METHOD);
-//
-//      return;
-//   }
-
    /**
     * Check for the specified attribute in the JSON data.
     *
@@ -647,5 +624,4 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
 
       return operOutput;
    }
-
 }

@@ -5,9 +5,7 @@
 package com.forgerock.frdp.resourceserver.rest.manage;
 
 import com.forgerock.frdp.common.ConstantsIF;
-import com.forgerock.frdp.dao.Operation;
 import com.forgerock.frdp.dao.OperationIF;
-import com.forgerock.frdp.resourceserver.handler.JaxrsHandlerIF;
 import com.forgerock.frdp.resourceserver.rest.RSResource;
 import com.forgerock.frdp.utils.STR;
 import javax.servlet.ServletContext;

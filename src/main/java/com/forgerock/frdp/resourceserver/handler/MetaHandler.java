@@ -234,7 +234,8 @@ public class MetaHandler extends JaxrsHandler {
       }
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "output=''{0}''", new Object[]{operOutput != null ? operOutput.toString() : NULL});
+         _logger.log(DEBUG_LEVEL, "output=''{0}''",
+            new Object[]{operOutput != null ? operOutput.toString() : NULL});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -282,7 +283,8 @@ public class MetaHandler extends JaxrsHandler {
       }
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "output=''{0}''", new Object[]{operOutput != null ? operOutput.toString() : NULL});
+         _logger.log(DEBUG_LEVEL, "output=''{0}''",
+            new Object[]{operOutput != null ? operOutput.toString() : NULL});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -456,11 +458,13 @@ public class MetaHandler extends JaxrsHandler {
 
             if (replaceOutput.isError()) {
                throw new Exception(
-                  METHOD + ": " + replaceOutput.getState().toString() + ": " + replaceOutput.getStatus());
+                  METHOD + ": " + replaceOutput.getState().toString() + ": " 
+                     + replaceOutput.getStatus());
             }
          }
       } else {
-         throw new Exception(METHOD + ": " + readOutput == null ? "Output from DAO.execute() is null"
+         throw new Exception(METHOD + ": " 
+            + readOutput == null ? "Output from DAO.execute() is null"
             : readOutput.getState().toString() + ": " + readOutput.getStatus());
       }
 
@@ -490,7 +494,8 @@ public class MetaHandler extends JaxrsHandler {
       _logger.entering(CLASS, METHOD);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "resourceUid=''{0}''", new Object[]{resourceUid != null ? resourceUid : NULL});
+         _logger.log(DEBUG_LEVEL, "resourceUid=''{0}''", 
+            new Object[]{resourceUid != null ? resourceUid : NULL});
       }
 
       jsonInput = new JSONObject();
