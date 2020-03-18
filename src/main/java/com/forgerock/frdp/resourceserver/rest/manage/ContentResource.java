@@ -78,6 +78,7 @@ public class ContentResource extends RSResource {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       Response response = null;
       JSONObject jsonContent = null;
+      JSONObject jsonOptions = null;
       JSONParser parser = null;
       OperationIF operContent = null;
 
@@ -100,7 +101,7 @@ public class ContentResource extends RSResource {
       /*
        * Check to see if content already exists
        */
-      operContent = this.contentRead(_resourceUid);
+      operContent = this.contentRead(_resourceUid, jsonOptions);
 
       if (operContent.getState() != STATE.NOTEXIST) {
          this.abort(CLASS + ": " + METHOD, "Content already exists",
@@ -143,26 +144,38 @@ public class ContentResource extends RSResource {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       JSONObject jsonOutput = null;
       JSONObject jsonData = null;
+      JSONObject jsonOptions = null;
       Response response = null;
       OperationIF operOutput = null;
 
       _logger.entering(CLASS, METHOD);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "Get content for resource: ''{0}''",
-            (_resourceUid == null ? NULL : _resourceUid));
+         _logger.log(DEBUG_LEVEL, "Get content for resource: ''{0}'', content: ''{1}''",
+            new Object[]{_resourceUid == null ? NULL : _resourceUid,
+               content == null ? NULL : content});
       }
 
       this.load();
 
       this.checkAuthenUserIsOwner(_resourceUid);
 
-      operOutput = this.contentRead(_resourceUid);
+      if (!STR.isEmpty(content)) {
+         jsonOptions = new JSONObject();
+         
+         if (content.equalsIgnoreCase(ConstantsIF.REFERENCE)) {
+            jsonOptions.put(ConstantsIF.CONTENT, ConstantsIF.REFERENCE);
+         } else { // default: "data"
+            jsonOptions.put(ConstantsIF.CONTENT, ConstantsIF.DATA);
+         }
+      }
+
+      operOutput = this.contentRead(_resourceUid, jsonOptions);
 
       jsonOutput = operOutput.getJSON();
 
       if (jsonOutput == null) {
-         this.abort(CLASS + ": " + METHOD, "JSON output is null",
+         this.abort(CLASS + ": " + METHOD + ": " + CLASS + ": " + METHOD, "JSON output is null",
             Response.Status.BAD_REQUEST);
       }
 
@@ -267,7 +280,7 @@ public class ContentResource extends RSResource {
       }
 
       if (STR.isEmpty(_resourceUid)) {
-         this.abort(METHOD, "Path resource is empty", Response.Status.BAD_REQUEST);
+         this.abort(CLASS + ": " + METHOD, "Path resource is empty", Response.Status.BAD_REQUEST);
       }
 
       this.load();

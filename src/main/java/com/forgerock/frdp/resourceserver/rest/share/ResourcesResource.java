@@ -178,6 +178,7 @@ public class ResourcesResource extends RSResource {
       JSONObject jsonScopes = null;
       JSONObject jsonPermTicketData = null;
       JSONObject jsonPermTicketHdrs = null;
+      JSONObject jsonOptions = null;
       JSONArray jsonScopesRequest = null;
       JSONArray jsonScopesToken = null;
       JSONArray jsonScopesPolicy = null;
@@ -292,7 +293,7 @@ public class ResourcesResource extends RSResource {
                         }
 
                         if (bContent) {
-                           operContentOutput = this.contentRead(resourceUid);
+                           operContentOutput = this.contentRead(resourceUid, jsonOptions);
 
                            jsonContent = JSON.getObject(operContentOutput.getJSON(), ConstantsIF.DATA);
 

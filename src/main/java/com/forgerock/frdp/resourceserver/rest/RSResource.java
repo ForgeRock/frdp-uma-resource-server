@@ -1455,10 +1455,12 @@ public abstract class RSResource extends Resource {
     * Get content (JSON) related to the resource uid.
     *
     * @param resourceUid String resource uid
+    * @param jsonOptions Display mode for content: "data" | "reference"
     * @return OperationIF output
     */
-   protected OperationIF contentRead(final String resourceUid) {
+   protected OperationIF contentRead(final String resourceUid, final JSONObject jsonOptions) {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
+      String mode = null; // default = "data", or "reference"
       OperationIF operInput = null;
       OperationIF operOutput = null;
       JSONObject jsonContentInfo = null;
@@ -1478,59 +1480,70 @@ public abstract class RSResource extends Resource {
          this.abort(CLASS + ": " + METHOD, "Resource Id is empty", Status.BAD_REQUEST);
       }
 
+      if (jsonOptions != null && !jsonOptions.isEmpty()) {
+         mode = JSON.getString(jsonOptions, ConstantsIF.CONTENT);
+      }
+
       contentHandler = this.getHandler(JaxrsHandlerIF.HANDLER_CONTENT);
 
       jsonContentInfo = this.getContentInformation(resourceUid);
 
       if (jsonContentInfo != null && !jsonContentInfo.isEmpty()) {
 
-         /*
-          * JSON resource content info input:
-          * {
-          *     "id": "default",
-          *     "uri": "https://uma.example.com:443/service/rest/content-server/content/1234-abcd"
-          * }
-          */
-         operInput = new Operation(OperationIF.TYPE.READ);
-         operInput.setJSON(jsonContentInfo);
-
-         /*
-          * JSON content output options:
-          * {                       | {
-          *     "id": "default",    |     "id": "default",
-          *     "data": { ... }     |     "uri": "http://..."
-          * }                       | }
-          */
-         operOutput = contentHandler.process(operInput);
-
-         jsonOutput = operOutput.getJSON();
-
-         if (jsonOutput == null) {
-            this.abort(CLASS + ": " + METHOD, "Resource Id is empty", Status.BAD_REQUEST);
-         }
-
-         if (jsonOutput.containsKey(ConstantsIF.DATA)) {
+         if (!STR.isEmpty(mode) && mode.equalsIgnoreCase(ConstantsIF.REFERENCE)) {
+            operOutput = new Operation(OperationIF.TYPE.READ);
+            operOutput.setJSON(jsonContentInfo);
+            operOutput.setState(STATE.SUCCESS);
+            operOutput.setStatus("Content reference");
+         } else {
             /*
-             * replace operation JSON with only the 'data' object
+             * JSON resource content info input:
+             * {
+             *     "id": "default",
+             *     "uri": "https://uma.example.com:443/service/rest/content-server/content/1234-abcd"
+             * }
              */
-            jsonData = JSON.getObject(jsonOutput, ConstantsIF.DATA);
+            operInput = new Operation(OperationIF.TYPE.READ);
+            operInput.setJSON(jsonContentInfo);
 
-            if (jsonData != null) {
+            /*
+             * JSON content output options:
+             * {                       | {
+             *     "id": "default",    |     "id": "default",
+             *     "data": { ... }     |     "uri": "http://..."
+             * }                       | }
+             */
+            operOutput = contentHandler.process(operInput);
+
+            jsonOutput = operOutput.getJSON();
+
+            if (jsonOutput == null) {
+               this.abort(CLASS + ": " + METHOD, "Resource Id is empty", Status.BAD_REQUEST);
+            }
+
+            if (jsonOutput.containsKey(ConstantsIF.DATA)) {
+               /*
+                * replace operation JSON with only the 'data' object
+                */
+               jsonData = JSON.getObject(jsonOutput, ConstantsIF.DATA);
+
+               if (jsonData != null) {
+                  operOutput.setJSON(jsonData);
+               } else {
+                  operOutput.setJSON(new JSONObject());
+               }
+            } else if (jsonOutput.containsKey(ConstantsIF.URI)) {
+               /*
+                * replace operation JSON with 'uri' attribute
+                */
+               jsonData = new JSONObject();
+               jsonData.put(ConstantsIF.URI, JSON.getString(jsonOutput, ConstantsIF.URI));
+
                operOutput.setJSON(jsonData);
             } else {
-               operOutput.setJSON(new JSONObject());
+               this.abort(CLASS + ": " + METHOD, "JSON data must have either 'data' or 'uri'",
+                  Status.BAD_REQUEST);
             }
-         } else if (jsonOutput.containsKey(ConstantsIF.URI)) {
-            /*
-             * replace operation JSON with 'uri' attribute
-             */
-            jsonData = new JSONObject();
-            jsonData.put(ConstantsIF.URI, JSON.getString(jsonOutput, ConstantsIF.URI));
-
-            operOutput.setJSON(jsonData);
-         } else {
-            this.abort(CLASS + ": " + METHOD, "JSON data must have either 'data' or 'uri'",
-               Status.BAD_REQUEST);
          }
       } else {
          operOutput = new Operation(OperationIF.TYPE.READ);

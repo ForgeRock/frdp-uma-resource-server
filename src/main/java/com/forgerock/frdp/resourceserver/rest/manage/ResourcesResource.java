@@ -19,6 +19,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -252,12 +253,14 @@ public class ResourcesResource extends RSResource {
     * </pre>
     *
     * @param resourceUid String resource identifier from the URI path
+    * @param content Display mode for content: "data" | "reference"
     * @return Response HTTP response object
     */
    @GET
    @Path("{" + ConstantsIF.RESOURCE + "}")
    @Produces(MediaType.APPLICATION_JSON)
-   public Response read(@PathParam(ConstantsIF.RESOURCE) String resourceUid) {
+   public Response read(@PathParam(ConstantsIF.RESOURCE) String resourceUid,
+      @QueryParam(ConstantsIF.CONTENT) String content) {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String access = null;
       String userId = null;
@@ -270,6 +273,7 @@ public class ResourcesResource extends RSResource {
       JSONObject jsonContent = null;
       JSONObject jsonRegister = null;
       JSONObject jsonPolicy = null;
+      JSONObject jsonOptions = null;
       OperationIF operResourceOutput = null;
       OperationIF operMetaOutput = null;
       OperationIF operContentOutput = null;
@@ -291,6 +295,16 @@ public class ResourcesResource extends RSResource {
          _logger.log(DEBUG_LEVEL, "resourceUid=''{0}'', userId=''{1}'''",
             new Object[]{resourceUid == null ? NULL : resourceUid,
                userId == null ? NULL : userId});
+      }
+      
+      if (!STR.isEmpty(content)) {
+         jsonOptions = new JSONObject();
+         
+         if (content.equalsIgnoreCase(ConstantsIF.REFERENCE)) {
+            jsonOptions.put(ConstantsIF.CONTENT, ConstantsIF.REFERENCE);
+         } else { // default: "data"
+            jsonOptions.put(ConstantsIF.CONTENT, ConstantsIF.DATA);
+         }
       }
 
       operResourceOutput = this.getResource(resourceUid);
@@ -334,7 +348,7 @@ public class ResourcesResource extends RSResource {
                csUri = JSON.getString(jsonData, ConstantsIF.CONTENT + "." + ConstantsIF.URI);
 
                if (!STR.isEmpty(csId) && !STR.isEmpty(csUri)) {
-                  operContentOutput = this.contentRead(resourceUid);
+                  operContentOutput = this.contentRead(resourceUid, jsonOptions);
 
                   /*
                    * JSON content output options:
