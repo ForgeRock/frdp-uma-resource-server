@@ -2,10 +2,11 @@
  * Copyright (c) 2018-2020, ForgeRock, Inc., All rights reserved
  * Use subject to license terms.
  */
-
 package com.forgerock.frdp.resourceserver.handler.uma;
 
 import com.forgerock.frdp.common.ConstantsIF;
+import com.forgerock.frdp.config.ConfigurationIF;
+import com.forgerock.frdp.config.ConfigurationManagerIF;
 import com.forgerock.frdp.dao.Operation;
 import com.forgerock.frdp.dao.OperationIF;
 import com.forgerock.frdp.dao.mongo.MongoFactory;
@@ -15,6 +16,8 @@ import com.forgerock.frdp.resourceserver.dao.AMRestDataAccess;
 import com.forgerock.frdp.resourceserver.handler.JaxrsHandler;
 import com.forgerock.frdp.utils.JSON;
 import com.forgerock.frdp.utils.STR;
+
+import java.util.Map;
 import java.util.logging.Level;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -24,7 +27,7 @@ import org.json.simple.JSONObject;
  * indicate resources that are discoverable by a UMA Requesting Party (RqP).
  * This feature IS NOT part of the UMA 2.0 specification, this is "value add"
  * functionality of the Resource Server (RS).
- * 
+ *
  * @author Scott Fehrman, ForgeRock, Inc.
  */
 public class DiscoverHandler extends JaxrsHandler {
@@ -34,14 +37,14 @@ public class DiscoverHandler extends JaxrsHandler {
 
    /**
     * Constructor
-    * 
-    * @param config     JSONObject containing configuration data
+    *
+    * @param configMgr ConfigurationManagerIF management of configurations
     * @param handlerMgr HandlerManagerIF provides management of Handlers
     */
-   public DiscoverHandler(final JSONObject config, final HandlerManagerIF handlerMgr) {
-      super(config, handlerMgr);
+   public DiscoverHandler(final ConfigurationManagerIF configMgr, final HandlerManagerIF handlerMgr) {
+      super(configMgr, handlerMgr);
 
-      String METHOD = "DiscoverHandler(config, handlerMgr)";
+      String METHOD = "DiscoverHandler(configMgr, handlerMgr)";
 
       _logger.entering(CLASS, METHOD);
 
@@ -55,12 +58,11 @@ public class DiscoverHandler extends JaxrsHandler {
    /*
     * ================= PROTECTED METHODS =================
     */
-
    /**
     * Override the "validate" interface, used to check the operation input
-    * 
-    * @param oper OperationaIF operation input
-    * @exception Exception
+    *
+    * @param oper OperationIF operation input
+    * @exception Exception could not validate the operation
     */
    @Override
    protected void validate(final OperationIF oper) throws Exception {
@@ -79,10 +81,10 @@ public class DiscoverHandler extends JaxrsHandler {
       }
 
       switch (oper.getType()) {
-      case SEARCH: // GET
-         break;
-      default:
-         throw new Exception("Unsupported operation type: '" + oper.getType().toString() + "'");
+         case SEARCH: // GET
+            break;
+         default:
+            throw new Exception("Unsupported operation type: '" + oper.getType().toString() + "'");
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -92,12 +94,12 @@ public class DiscoverHandler extends JaxrsHandler {
 
    /**
     * Override interface to support the "search" operation
-    * 
+    *
     * <pre>
     * Get the collection of "discoverable" resources for the owner
     *
     * JSON input ... search for pending requests
-    * { 
+    * {
     *   "owner": "bjensen",
     *   "access_token": "..." // PAT for the owner
     * }
@@ -118,7 +120,7 @@ public class DiscoverHandler extends JaxrsHandler {
     *   }
     * }
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input for search operation
     * @return OperationIF output from search operation
     */
@@ -131,8 +133,8 @@ public class DiscoverHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       try {
@@ -152,54 +154,70 @@ public class DiscoverHandler extends JaxrsHandler {
    /*
     * =============== PRIVATE METHODS ===============
     */
-
    /**
     * Initialize object instance
     */
    private void init() {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
+      String configType = ConstantsIF.RESOURCE;
+      String msg = null;
+      String type = ConstantsIF.RESOURCE;
+      ConfigurationIF config = null;
+      JSONObject json = null;
+      Map<String, String> map = null;
 
       _logger.entering(CLASS, METHOD);
+
+      config = _configMgr.getConfiguration(type);
+
+      if (config != null) {
+         json = config.getJSON();
+         if (json == null) {
+            msg = CLASS + ": " + METHOD + ": JSON data for '" + type + "' is null";
+            this.setError(true);
+         }
+      } else {
+         msg = CLASS + ": " + METHOD + ": Configuration for '" + type + "' is null";
+         this.setError(true);
+      }
 
       /*
        * setup the Mongo Data Access Object
        */
-
-      if (_MongoDAO == null) {
+      if (!this.isError() && _MongoDAO == null) {
+         map = JSON.convertToParams(JSON.getObject(json, ConfigIF.RS_NOSQL));
          try {
-            _MongoDAO = MongoFactory.getInstance(JSON.convertToParams(JSON.getObject(_config, ConfigIF.RS_NOSQL)));
+            _MongoDAO = MongoFactory.getInstance(map);
          } catch (Exception ex) {
+            msg = CLASS + ": " + METHOD + ": Mongo DAO:" + ex.getMessage();
             this.setError(true);
-            this.setState(STATE.ERROR);
-            this.setStatus(CLASS + ": " + METHOD + ": Mongo DAO:" + ex.getMessage());
-            _logger.severe(this.getStatus());
          }
       }
 
       if (!this.isError() && _AuthzServerDAO == null) {
          try {
-            _AuthzServerDAO = new AMRestDataAccess(JSON.convertToParams(JSON.getObject(_config, ConfigIF.AS_CONNECT)));
+            _AuthzServerDAO = new AMRestDataAccess(JSON.convertToParams(JSON.getObject(json, ConfigIF.AS_CONNECT)));
          } catch (Exception ex) {
+            msg = CLASS + ": " + METHOD + ": REST DAO: " + ex.getMessage();
             this.setError(true);
-            this.setState(STATE.ERROR);
-            this.setStatus(CLASS + ": " + METHOD + ": REST DAO: " + ex.getMessage());
-            _logger.severe(this.getStatus());
          }
       }
 
       if (!this.isError()) {
          try {
-            _uma_resourceset_path = this.getConfigValue(ConfigIF.AS_UMA_RESOURCE_SET_PATH);
+            _uma_resourceset_path = this.getConfigValue(configType, ConfigIF.AS_UMA_RESOURCE_SET_PATH);
          } catch (Exception ex) {
+            msg = CLASS + ": " + METHOD + ": _path : " + ex.getMessage();
             this.setError(true);
-            this.setState(STATE.ERROR);
-            this.setStatus(CLASS + ": " + METHOD + ": _path : " + ex.getMessage());
-            _logger.log(Level.SEVERE, this.getStatus());
          }
       }
 
       if (!this.isError()) {
          this.setState(STATE.READY);
+      } else {
+         this.setState(STATE.ERROR);
+         this.setStatus(msg);
+         _logger.log(Level.SEVERE, this.getStatus());
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -209,12 +227,12 @@ public class DiscoverHandler extends JaxrsHandler {
 
    /**
     * Implementation of the "search" operation.
-    * 
+    *
     * <pre>
-    * Get the "discoverable" resources for the given Resource Owner 
+    * Get the "discoverable" resources for the given Resource Owner
     *
     * JSON input ... search for pending requests
-    * { 
+    * {
     *   "owner": "bjensen", // Resource Owner (RO)
     *   "access_token": "...", // Protection API Token (PAT) for the RO
     *   "query": { // OPTIONAL ... used to filter the results
@@ -240,7 +258,7 @@ public class DiscoverHandler extends JaxrsHandler {
     *   }
     * }
     * </pre>
-    * 
+    *
     * @param operInput OperatrionIF input
     * @return OperationIF output
     * @throws Exception
@@ -281,7 +299,7 @@ public class DiscoverHandler extends JaxrsHandler {
 
          try {
             this.setDatabaseAndCollection(operMongoInput, ConfigIF.RS_NOSQL_DATABASE,
-                  ConfigIF.RS_NOSQL_COLLECTIONS_RESOURCES_NAME);
+               ConfigIF.RS_NOSQL_COLLECTIONS_RESOURCES_NAME);
          } catch (Exception ex) {
             this.setError(true);
             operOutput = new Operation(OperationIF.TYPE.SEARCH);
@@ -289,7 +307,7 @@ public class DiscoverHandler extends JaxrsHandler {
             operOutput.setState(STATE.ERROR);
             operOutput.setStatus(METHOD + ": " + ex.getMessage());
 
-            _logger.log(Level.SEVERE, "{0}: {1}", new Object[] { METHOD, ex.getMessage() });
+            _logger.log(Level.SEVERE, "{0}: {1}", new Object[]{METHOD, ex.getMessage()});
          }
 
          if (!this.isError()) {
@@ -313,7 +331,7 @@ public class DiscoverHandler extends JaxrsHandler {
 
          jsonOutput = new JSONObject();
          jsonOutput.put(ConstantsIF.DATA,
-               this.filter(this.getDiscoverable(jsonData, access_token), JSON.getObject(jsonInput, ConstantsIF.QUERY)));
+            this.filter(this.getDiscoverable(jsonData, access_token), JSON.getObject(jsonInput, ConstantsIF.QUERY)));
 
          operOutput.setJSON(jsonOutput);
       } else {
@@ -326,11 +344,11 @@ public class DiscoverHandler extends JaxrsHandler {
    }
 
    /**
-    * Post processes the default search results. The JSON Array (results) contains
-    * a simpler object with attributes and removes internal reference keys. The
-    * resource must be: discoverable attribute == true and register attribute !=
-    * NULL
-    * 
+    * Post processes the default search results. The JSON Array (results)
+    * contains a simpler object with attributes and removes internal reference
+    * keys. The resource must be: discoverable attribute == true and register
+    * attribute != NULL
+    *
     * <pre>
     * JSON input ...
     * {
@@ -371,8 +389,8 @@ public class DiscoverHandler extends JaxrsHandler {
     *   ]
     * }
     * </pre>
-    * 
-    * @param jsonInput    JSONObject input
+    *
+    * @param jsonInput JSONObject input
     * @param access_token String single sign on access token
     * @return JSONObject output
     */
@@ -400,7 +418,7 @@ public class DiscoverHandler extends JaxrsHandler {
                   jsonResultInput = (JSONObject) obj;
 
                   if (JSON.getBoolean(jsonResultInput,
-                        ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.DISCOVERABLE)) {
+                     ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.DISCOVERABLE)) {
                      registerId = JSON.getString(jsonResultInput, ConstantsIF.DATA + "." + ConstantsIF.REGISTER);
 
                      if (!STR.isEmpty(registerId)) {
@@ -408,24 +426,24 @@ public class DiscoverHandler extends JaxrsHandler {
 
                         jsonResultOutput.put(ConstantsIF.ID, JSON.getString(jsonResultInput, ConstantsIF.UID));
                         jsonResultOutput.put(ConstantsIF.OWNER,
-                              JSON.getString(jsonResultInput, ConstantsIF.DATA + "." + ConstantsIF.OWNER));
+                           JSON.getString(jsonResultInput, ConstantsIF.DATA + "." + ConstantsIF.OWNER));
                         jsonResultOutput.put(ConstantsIF.NAME, JSON.getString(jsonResultInput,
-                              ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.NAME));
+                           ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.NAME));
                         jsonResultOutput.put(ConstantsIF.DESCRIPTION, JSON.getString(jsonResultInput,
-                              ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.DESCRIPTION));
+                           ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.DESCRIPTION));
                         jsonResultOutput.put(ConstantsIF.LABEL, JSON.getString(jsonResultInput,
-                              ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.LABEL));
+                           ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.LABEL));
                         jsonResultOutput.put(ConstantsIF.TYPE, JSON.getString(jsonResultInput,
-                              ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.TYPE));
+                           ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.TYPE));
                         /*
                          * Get the UMA registration data
                          */
                         jsonRegistration = this.getRegistration(registerId, access_token);
 
                         jsonResultOutput.put(ConstantsIF.SCOPES,
-                              JSON.getArray(jsonRegistration, ConstantsIF.RESOURCE_SCOPES));
+                           JSON.getArray(jsonRegistration, ConstantsIF.RESOURCE_SCOPES));
                         jsonResultOutput.put(ConstantsIF.ICON_URI,
-                              JSON.getString(jsonRegistration, ConstantsIF.ICON_URI));
+                           JSON.getString(jsonRegistration, ConstantsIF.ICON_URI));
 
                         arrayResultsOutput.add(jsonResultOutput);
                      }
@@ -444,8 +462,9 @@ public class DiscoverHandler extends JaxrsHandler {
    }
 
    /**
-    * Get "register" data from the Auhorization Server. The registered UMA resource
-    * has some attributes that are sourced from the Authorization Server (AS).
+    * Get "register" data from the Auhorization Server. The registered UMA
+    * resource has some attributes that are sourced from the Authorization
+    * Server (AS).
     *
     * <pre>
     * JSON input ...
@@ -453,7 +472,7 @@ public class DiscoverHandler extends JaxrsHandler {
     *   "uid" : "...", // Register Id
     *   "access_token": "..."
     * }
-    * JSON output ... 
+    * JSON output ...
     * {
     *   "resource_scopes": ["scope1","scope2","scope3"],
     *   "name": "...",
@@ -477,7 +496,7 @@ public class DiscoverHandler extends JaxrsHandler {
     * }
     * </pre>
     *
-    * @param registerId   String UMA registered resource identifier
+    * @param registerId String UMA registered resource identifier
     * @param access_token String single sign on token
     * @return JOSNObject resource attributes
     */
@@ -548,10 +567,10 @@ public class DiscoverHandler extends JaxrsHandler {
     * }
     *
     * </pre>
-    * 
-    * @param jsonInput  JSONObject original results data
-    * @param jsonFilter JSONObject containing filter attribute name and attribute
-    *                   value
+    *
+    * @param jsonInput JSONObject original results data
+    * @param jsonFilter JSONObject containing filter attribute name and
+    * attribute value
     * @return JSONObject modified results data
     */
    private JSONObject filter(final JSONObject jsonInput, final JSONObject jsonFilter) {

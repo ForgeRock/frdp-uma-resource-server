@@ -3,25 +3,18 @@
    "rs": {
       "id": "UMA-Resource-Server",
       "comment": "Resource Server",
-      "connect": {
-         "protocol": "_PROTOCOL_",
-         "host": "_HOSTNAME_",
-         "port": "_APP_PORT_",
-         "deploy": "resource-server",
-         "endpoint": "rest"
-      },
       "headers": {
          "ssotoken": "X-FRDP-SSOToken",
          "rpt": "X-FRDP-RPT"
       },
       "nosql": {
          "comment": "No SQL Database (MongoDB)",
-         "host": "_HOSTNAME_",
+         "host": "uma.example.com",
          "port": "27017",
          "authen": {
             "database": "resource-server",
             "user": "resourceadmin",
-            "password": "_PASSWORD_"
+            "password": "password"
          },
          "database": "resource-server",
          "collections": {
@@ -37,8 +30,8 @@
          "scopes": "uma_protection",
          "client": {
             "id": "UMA-Resource-Server",
-            "secret": "_PASSWORD_",
-            "redirect": "_PROTOCOL_://_HOSTNAME_:_APP_PORT_/resource-server/callbacks/oauth2.html"
+            "secret": "password",
+            "redirect": "https://uma.example.com:443/resource-server"
          }
       },
       "credential": {
@@ -48,7 +41,7 @@
                "id": "uma_pat"
             },
             "sso": {
-               "comment": "AM SSO Sesssion Token",
+               "comment": "AM SSO Session Token",
                "id": "sso_session"
             }
          }
@@ -70,14 +63,14 @@
       "comment": "Authorization Server",
       "cookie": "iPlanetDirectoryPro",
       "connect": {
-         "protocol": "_PROTOCOL_",
-         "host": "_HOSTNAME_",
-         "port": "_AM_PORT_",
+         "protocol": "https",
+         "host": "uma.example.com",
+         "port": "443",
          "path": "openam"
       },
       "admin": {
          "user": "amadmin",
-         "password": "_PASSWORD_"
+         "password": "password"
       },
       "authenticate": {
          "headers": {
@@ -137,15 +130,6 @@
             "queryfilter": "!%20resourceOwnerId%20eq%20%22__owner__%22",
             "sortkeys": "name"
          }
-      }
-   },
-   "cs": {
-      "comment": "Content Server",
-      "connect": {
-         "protocol": "_PROTOCOL_",
-         "host": "_HOSTNAME_",
-         "port": "_APP_PORT_",
-         "path": "content-server/rest/content-server/content"
       }
    }
 }
