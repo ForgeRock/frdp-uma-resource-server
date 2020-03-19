@@ -9,7 +9,7 @@
       },
       "nosql": {
          "comment": "No SQL Database (MongoDB)",
-         "host": "uma.example.com",
+         "host": "mongo.example.com",
          "port": "27017",
          "authen": {
             "database": "resource-server",
@@ -31,7 +31,7 @@
          "client": {
             "id": "UMA-Resource-Server",
             "secret": "password",
-            "redirect": "https://uma.example.com:443/resource-server"
+            "redirect": "https://rs.example.com:443/resource-server"
          }
       },
       "credential": {
@@ -64,7 +64,7 @@
       "cookie": "iPlanetDirectoryPro",
       "connect": {
          "protocol": "https",
-         "host": "uma.example.com",
+         "host": "as.example.com",
          "port": "443",
          "path": "openam"
       },

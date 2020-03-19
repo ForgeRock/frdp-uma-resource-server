@@ -12,7 +12,7 @@
                 "create": {
                     "comment": "Use 'uri' attribute and input 'data' to CREATE external content",
                     "action": "post",
-                    "uri": "https://uma.example.com:443/content-server/rest/content-server/content"
+                    "uri": "https://cs.example.com:443/content-server/rest/content-server/content"
                 },
                 "read": {
                     "comment": "Use input 'uri' to READ external content",

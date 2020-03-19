@@ -274,7 +274,7 @@ JSON Object ... `rs.nosql`:
 {
    "nosql": {
       "comment": "No SQL Database (MongoDB)",
-      "host": "uma.example.com",
+      "host": "mongo.example.com",
       "port": "27017",
       "authen": {
          "database": "resource-server",
@@ -318,7 +318,7 @@ JSON Object ... `as.connect`
 {
    "connect": {
       "protocol": "https",
-      "host": "uma.example.com",
+      "host": "as.example.com",
       "port": "443",
       "path": "openam"
    }
@@ -356,7 +356,7 @@ JSON Object ... `operations.create`
    "create": {
       "comment": "Use 'uri' attribute and input 'data' to CREATE external content",
       "action": "post",
-      "uri": "https://uma.example.com:443/content-server/rest/content-server/content"
+      "uri": "https://cs.example.com:443/content-server/rest/content-server/content"
    }
 }
 ```
