@@ -295,7 +295,7 @@ public class ResourcesResource extends RSResource {
                         if (bContent) {
                            operContentOutput = this.contentRead(resourceUid, jsonOptions);
 
-                           jsonContent = JSON.getObject(operContentOutput.getJSON(), ConstantsIF.DATA);
+                           jsonContent = operContentOutput.getJSON();
 
                            if (jsonContent == null || jsonContent.isEmpty()) {
                               jsonContent = new JSONObject();
