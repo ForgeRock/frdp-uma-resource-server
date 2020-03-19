@@ -176,7 +176,7 @@ The response is a JSON payload containing the objects, based on the specified `s
 
 # Shared With Me
 
-## NOTICE:  This use case is **not** part of the UMA 2.0 specification.  
+## NOTICE: This use case is **not** part of the UMA 2.0 specification.  
 
 This use case leverages the ForgeRock Access Manager APIs to obtain a collection of `resources` that have been "shared" to the **Requesting Party (RqP)** from any **Resource Owner (RO)**.
 

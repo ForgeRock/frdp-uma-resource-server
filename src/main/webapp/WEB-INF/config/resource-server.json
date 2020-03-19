@@ -9,7 +9,7 @@
       },
       "nosql": {
          "comment": "No SQL Database (MongoDB)",
-         "host": "idp.frdpcloud.com",
+         "host": "uma.example.com",
          "port": "27017",
          "authen": {
             "database": "resource-server",
@@ -31,7 +31,7 @@
          "client": {
             "id": "UMA-Resource-Server",
             "secret": "password",
-            "redirect": "https://idp.frdpcloud.com:443/resource-server"
+            "redirect": "https://uma.example.com:443/resource-server"
          }
       },
       "credential": {
@@ -64,13 +64,13 @@
       "cookie": "iPlanetDirectoryPro",
       "connect": {
          "protocol": "https",
-         "host": "idp.frdpcloud.com",
+         "host": "uma.example.com",
          "port": "443",
          "path": "openam"
       },
       "admin": {
          "user": "amadmin",
-         "password": "Frdp-2010"
+         "password": "password"
       },
       "authenticate": {
          "headers": {
