@@ -43,25 +43,23 @@ The following items must be completed, in the following order:
 
 ## Clean, Compile, Install:
 
-Run *Maven* (`mvn`) processes to clean, compile and install the package:
+Run *Maven* (`mvn`) processes to clean, compile and package the war file:
 
 ```
-mvn clean
-mvn compile 
-mvn package
+mvn clean compile package
 ```
 
 The *package* process creates a deployable war file, in the current directory: `./target/resource-server.war`: 
 
 ```
 ls -la ./target
-total 24104
-drwxr-xr-x   6 scott.fehrman  staff       192 Jan  6 20:15 .
-drwxr-xr-x  14 scott.fehrman  staff       448 Jan  6 20:15 ..
-drwxr-xr-x   3 scott.fehrman  staff        96 Jan  6 20:15 classes
-drwxr-xr-x   3 scott.fehrman  staff        96 Jan  6 20:15 maven-archiver
-drwxr-xr-x   5 scott.fehrman  staff       160 Jan  6 20:15 resource-server
--rw-r--r--   1 scott.fehrman  staff  12340457 Jan  6 20:15 resource-server.war
+total 12232
+drwxrwxr-x. 5 forgerock forgerock       89 Mar 26 17:29 .
+drwxrwxr-x. 7 forgerock forgerock     4096 Mar 26 17:29 ..
+drwxrwxr-x. 3 forgerock forgerock       16 Mar 26 17:29 classes
+drwxrwxr-x. 2 forgerock forgerock       27 Mar 26 17:29 maven-archiver
+drwxrwxr-x. 4 forgerock forgerock       95 Mar 26 17:29 resource-server
+-rw-rw-r--. 1 forgerock forgerock 12519090 Mar 26 17:29 resource-server.war
 ```
 
 # Settings
