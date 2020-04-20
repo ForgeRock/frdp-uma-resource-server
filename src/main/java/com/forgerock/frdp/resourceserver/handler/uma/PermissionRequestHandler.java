@@ -2,10 +2,11 @@
  * Copyright (c) 2018-2020, ForgeRock, Inc., All rights reserved
  * Use subject to license terms.
  */
-
 package com.forgerock.frdp.resourceserver.handler.uma;
 
 import com.forgerock.frdp.common.ConstantsIF;
+import com.forgerock.frdp.config.ConfigurationIF;
+import com.forgerock.frdp.config.ConfigurationManagerIF;
 import com.forgerock.frdp.dao.Operation;
 import com.forgerock.frdp.dao.OperationIF;
 import com.forgerock.frdp.handler.HandlerManagerIF;
@@ -14,13 +15,15 @@ import com.forgerock.frdp.resourceserver.dao.AMRestDataAccess;
 import com.forgerock.frdp.resourceserver.handler.JaxrsHandler;
 import com.forgerock.frdp.utils.JSON;
 import com.forgerock.frdp.utils.STR;
+import java.util.Map;
 import java.util.logging.Level;
 import org.json.simple.JSONObject;
 
 /**
- * Permission Request Handler.  Contacts the Authorization Server (AS) to get a Permission Ticket
- * for the given resource, requesting party, client, and scopes
- * 
+ * Permission Request Handler. Contacts the Authorization Server (AS) to get a
+ * Permission Ticket for the given resource, requesting party, client, and
+ * scopes
+ *
  * @author Scott Fehrman, ForgeRock, Inc.
  */
 public class PermissionRequestHandler extends JaxrsHandler {
@@ -30,13 +33,13 @@ public class PermissionRequestHandler extends JaxrsHandler {
    /**
     * Constructor
     *
-    * @param config     JSONObject containing configuration data
+    * @param configMgr ConfigurationManagerIF management of configurations
     * @param handlerMgr HandlerManagerIF provides management of Handlers
     */
-   public PermissionRequestHandler(final JSONObject config, final HandlerManagerIF handlerMgr) {
-      super(config, handlerMgr);
+   public PermissionRequestHandler(final ConfigurationManagerIF configMgr, final HandlerManagerIF handlerMgr) {
+      super(configMgr, handlerMgr);
 
-      String METHOD = "PermissionRequestHandler(config, handlerMgr)";
+      String METHOD = "PermissionRequestHandler(configMgr, handlerMgr)";
 
       _logger.entering(CLASS, METHOD);
 
@@ -50,17 +53,17 @@ public class PermissionRequestHandler extends JaxrsHandler {
    /*
     * ================= PROTECTED METHODS =================
     */
-
    /**
     * Override the "validate" interface, used to check the operation input
-    * 
-    * @param oper OperationaIF operation input
-    * @exception Exception
+    *
+    * @param oper OperationIF operation input
+    * @exception Exception could not validate the operation
     */
    @Override
    protected void validate(final OperationIF oper) throws Exception {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String path = null;
+      String configType = ConstantsIF.RESOURCE;
       JSONObject jsonInput = null;
 
       _logger.entering(CLASS, METHOD);
@@ -80,9 +83,9 @@ public class PermissionRequestHandler extends JaxrsHandler {
       path = JSON.getString(jsonInput, ConstantsIF.PATH);
 
       if (STR.isEmpty(path)) {
-         jsonInput.put(ConstantsIF.PATH, this.getConfigValue(ConfigIF.AS_UMA_PERMISSION_REQUEST_PATH));
+         jsonInput.put(ConstantsIF.PATH, this.getConfigValue(configType, ConfigIF.AS_UMA_PERMISSION_REQUEST_PATH));
       } else {
-         jsonInput.put(ConstantsIF.PATH, this.getConfigValue(ConfigIF.AS_UMA_PATH) + "/" + path);
+         jsonInput.put(ConstantsIF.PATH, this.getConfigValue(configType, ConfigIF.AS_UMA_PATH) + "/" + path);
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -92,7 +95,7 @@ public class PermissionRequestHandler extends JaxrsHandler {
 
    /**
     * Override interface to support the "create" operation
-    * 
+    *
     * @param operInput OperationIF input for create operation
     * @return OperationIF output from create operation
     */
@@ -106,8 +109,8 @@ public class PermissionRequestHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       operOutput = this.createImpl(operInput);
@@ -120,32 +123,51 @@ public class PermissionRequestHandler extends JaxrsHandler {
    /*
     * =============== PRIVATE METHODS ===============
     */
-
    /**
     * Initialize object instance
     */
    private void init() {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
+      String msg = null;
+      String type = ConstantsIF.RESOURCE;
+      ConfigurationIF config = null;
+      JSONObject json = null;
+      Map<String, String> map = null;
 
       _logger.entering(CLASS, METHOD);
+
+      config = _configMgr.getConfiguration(type);
+
+      if (config != null) {
+         json = config.getJSON();
+         if (json == null) {
+            msg = CLASS + ": " + METHOD + ": JSON data for '" + type + "' is null";
+            this.setError(true);
+         }
+      } else {
+         msg = CLASS + ": " + METHOD + ": Configuration for '" + type + "' is null";
+         this.setError(true);
+      }
 
       /*
        * setup the REST Data Access Object, AM Authorization Server
        */
-
       if (_AuthzServerDAO == null) {
+         map = JSON.convertToParams(JSON.getObject(json, ConfigIF.AS_CONNECT));
          try {
-            _AuthzServerDAO = new AMRestDataAccess(JSON.convertToParams(JSON.getObject(_config, ConfigIF.AS_CONNECT)));
+            _AuthzServerDAO = new AMRestDataAccess(map);
          } catch (Exception ex) {
+            msg = CLASS + ": " + METHOD + ": REST AMDAO: " + ex.getMessage();
             this.setError(true);
-            this.setState(STATE.ERROR);
-            this.setStatus(CLASS + ": " + METHOD + ": REST AMDAO: " + ex.getMessage());
-            _logger.log(Level.SEVERE, this.getStatus());
          }
       }
 
       if (!this.isError()) {
          this.setState(STATE.READY);
+      } else {
+         this.setState(STATE.ERROR);
+         this.setStatus(msg);
+         _logger.log(Level.SEVERE, this.getStatus());
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -154,8 +176,8 @@ public class PermissionRequestHandler extends JaxrsHandler {
    }
 
    /**
-    * Implementation of the "create" opertaion.
-    * 
+    * Implementation of the "create" operation.
+    *
     * <pre>
     * Override the "operation output":
     * Add the "as_uri" attribute to the JSON data
@@ -165,7 +187,7 @@ public class PermissionRequestHandler extends JaxrsHandler {
     * - Else:
     *   Set State to "WARNING" ... will map to 403 Forbidden
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input
     * @return OperationIF output
     */
@@ -174,6 +196,7 @@ public class PermissionRequestHandler extends JaxrsHandler {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String msg = null;
       String host = null;
+      String configType = ConstantsIF.RESOURCE;
       OperationIF operOutput = null;
       JSONObject jsonOutput = null;
       JSONObject jsonData = null;
@@ -182,7 +205,7 @@ public class PermissionRequestHandler extends JaxrsHandler {
       _logger.entering(CLASS, METHOD);
 
       try {
-         host = this.getConfigValue(ConfigIF.AS_CONNECT_HOST);
+         host = this.getConfigValue(configType, ConfigIF.AS_CONNECT_HOST);
       } catch (Exception ex) {
          msg = METHOD + ": Could not set 'host': " + ex.getMessage();
          error = true;

@@ -1,23 +1,26 @@
 /*
- * Copyright (c) 2018-2019, ForgeRock, Inc., All rights reserved
+ * Copyright (c) 2018-2020, ForgeRock, Inc., All rights reserved
  * Use subject to license terms.
  */
-
 package com.forgerock.frdp.resourceserver.handler;
 
 import com.forgerock.frdp.common.ConstantsIF;
+import com.forgerock.frdp.config.ConfigurationIF;
+import com.forgerock.frdp.config.ConfigurationManagerIF;
 import com.forgerock.frdp.dao.OperationIF;
 import com.forgerock.frdp.handler.HandlerManagerIF;
 import com.forgerock.frdp.resourceserver.ConfigIF;
 import com.forgerock.frdp.resourceserver.dao.AMRestDataAccess;
 import com.forgerock.frdp.utils.JSON;
 import com.forgerock.frdp.utils.STR;
+
+import java.util.Map;
 import java.util.logging.Level;
 import org.json.simple.JSONObject;
 
 /**
- * Access Manager Outh2 Handler, extends JaxRS Handler
- * 
+ * Access Manager OAuth2 Handler, extends JaxRS Handler
+ *
  * @author Scott Fehrman, ForgeRock, Inc.
  */
 public class AMOAuth2Handler extends JaxrsHandler {
@@ -26,14 +29,14 @@ public class AMOAuth2Handler extends JaxrsHandler {
 
    /**
     * Constructor
-    * 
-    * @param config     JSONObject configuration data
+    *
+    * @param configMgr ConfigurationManagerIF management of configurations
     * @param handlerMgr HandlerManagerIF handler manager
     */
-   public AMOAuth2Handler(final JSONObject config, final HandlerManagerIF handlerMgr) {
-      super(config, handlerMgr);
+   public AMOAuth2Handler(final ConfigurationManagerIF configMgr, final HandlerManagerIF handlerMgr) {
+      super(configMgr, handlerMgr);
 
-      String METHOD = "AMOAuth2Handler(config, handlerMgr)";
+      String METHOD = "AMOAuth2Handler(configMgr, handlerMgr)";
 
       _logger.entering(CLASS, METHOD);
 
@@ -48,10 +51,10 @@ public class AMOAuth2Handler extends JaxrsHandler {
     * ================= PROTECTED METHODS =================
     */
    /**
-    * Validate the OperationIF object, overides the subclass
-    * 
+    * Validate the OperationIF object, overrides the subclass
+    *
     * @param oper OperationIF
-    * @throws Exception
+    * @throws Exception could not validate the operation
     */
    @Override
    protected void validate(final OperationIF oper) throws Exception {
@@ -74,9 +77,10 @@ public class AMOAuth2Handler extends JaxrsHandler {
       path = JSON.getString(jsonInput, ConstantsIF.PATH);
 
       if (STR.isEmpty(path)) {
-         jsonInput.put(ConstantsIF.PATH, this.getConfigValue(ConfigIF.AS_OAUTH2_PATH));
+         jsonInput.put(ConstantsIF.PATH, this.getConfigValue(ConstantsIF.RESOURCE, ConfigIF.AS_OAUTH2_PATH));
       } else {
-         jsonInput.put(ConstantsIF.PATH, this.getConfigValue(ConfigIF.AS_OAUTH2_PATH) + "/" + path);
+         jsonInput.put(ConstantsIF.PATH,
+            this.getConfigValue(ConstantsIF.RESOURCE, ConfigIF.AS_OAUTH2_PATH) + "/" + path);
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -85,8 +89,8 @@ public class AMOAuth2Handler extends JaxrsHandler {
    }
 
    /**
-    * Enable  "read" operation
-    * 
+    * Enable "read" operation
+    *
     * @param operInput OperationIF input object
     * @return OperationIF output object
     */
@@ -100,8 +104,8 @@ public class AMOAuth2Handler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       operOutput = this.readImpl(operInput);
@@ -114,10 +118,9 @@ public class AMOAuth2Handler extends JaxrsHandler {
    /*
     * =============== PRIVATE METHODS ===============
     */
-
    /**
     * Read implementation
-    * 
+    *
     * <pre>
     * JSON output ...
     * {
@@ -126,7 +129,7 @@ public class AMOAuth2Handler extends JaxrsHandler {
     *   }
     * }
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input
     * @return OperationIF output
     */
@@ -154,25 +157,48 @@ public class AMOAuth2Handler extends JaxrsHandler {
     */
    private void init() {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
+      String msg = null;
+      String type = ConstantsIF.RESOURCE;
+      ConfigurationIF config = null;
+      JSONObject json = null;
+      Map<String, String> map = null;
 
       _logger.entering(CLASS, METHOD);
 
       /*
        * setup the REST Data Access Object, AM Authorization Server
+       * get Configuration from the Config Manager, get JSON from Configuration
+       * convert the JSON data to parameters
        */
-      if (_AuthzServerDAO == null) {
-         try {
-            _AuthzServerDAO = new AMRestDataAccess(JSON.convertToParams(JSON.getObject(_config, ConfigIF.AS_CONNECT)));
-         } catch (Exception ex) {
+      config = _configMgr.getConfiguration(type);
+
+      if (config != null) {
+         json = config.getJSON();
+         if (json == null) {
+            msg = CLASS + ": " + METHOD + ": JSON data for '" + type + "' is null";
             this.setError(true);
-            this.setState(STATE.ERROR);
-            this.setStatus(CLASS + ": " + METHOD + ": REST DAO: " + ex.getMessage());
-            _logger.log(Level.SEVERE, this.getStatus());
+         }
+      } else {
+         msg = CLASS + ": " + METHOD + ": Configuration for '" + type + "' is null";
+         this.setError(true);
+      }
+
+      if (!this.isError() && _AuthzServerDAO == null) {
+         map = JSON.convertToParams(JSON.getObject(json, ConfigIF.AS_CONNECT));
+         try {
+            _AuthzServerDAO = new AMRestDataAccess(map);
+         } catch (Exception ex) {
+            msg = CLASS + ": " + METHOD + ": REST DAO: " + ex.getMessage();
+            this.setError(true);
          }
       }
 
       if (!this.isError()) {
          this.setState(STATE.READY);
+      } else {
+         this.setState(STATE.ERROR);
+         this.setStatus(msg);
+         _logger.log(Level.SEVERE, msg);
       }
 
       _logger.exiting(CLASS, METHOD);

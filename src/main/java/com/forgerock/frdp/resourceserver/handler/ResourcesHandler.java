@@ -2,10 +2,11 @@
  * Copyright (c) 2018-2020, ForgeRock, Inc., All rights reserved
  * Use subject to license terms.
  */
-
 package com.forgerock.frdp.resourceserver.handler;
 
 import com.forgerock.frdp.common.ConstantsIF;
+import com.forgerock.frdp.config.ConfigurationIF;
+import com.forgerock.frdp.config.ConfigurationManagerIF;
 import com.forgerock.frdp.dao.Operation;
 import com.forgerock.frdp.dao.OperationIF;
 import com.forgerock.frdp.dao.mongo.MongoFactory;
@@ -26,14 +27,14 @@ public class ResourcesHandler extends JaxrsHandler {
 
    /**
     * Constructor
-    * 
-    * @param config     JSONObject containing configuration data
+    *
+    * @param configMgr ConfigurationManagerIF management of configurations
     * @param handlerMgr HandlerManagerIF provides management of Handlers
     */
-   public ResourcesHandler(final JSONObject config, final HandlerManagerIF handlerMgr) {
-      super(config, handlerMgr);
+   public ResourcesHandler(final ConfigurationManagerIF configMgr, final HandlerManagerIF handlerMgr) {
+      super(configMgr, handlerMgr);
 
-      String METHOD = "ResourcesHandler(config, handlerMgr)";
+      String METHOD = "ResourcesHandler(configMgr, handlerMgr)";
 
       _logger.entering(CLASS, METHOD);
 
@@ -47,12 +48,11 @@ public class ResourcesHandler extends JaxrsHandler {
    /*
     * ================= PROTECTED METHODS =================
     */
-
    /**
     * Override the "validate" interface, used to check the operation input
-    * 
+    *
     * @param oper OperationaIF operation input
-    * @exception Exception
+    * @exception Exception could not validate the operation
     */
    @Override
    protected void validate(final OperationIF oper) throws Exception {
@@ -71,14 +71,14 @@ public class ResourcesHandler extends JaxrsHandler {
       }
 
       switch (oper.getType()) {
-      case READ:
-      case REPLACE:
-      case DELETE: {
-         this.checkUid(jsonInput);
-         break;
-      }
-      default:
-         break;
+         case READ:
+         case REPLACE:
+         case DELETE: {
+            this.checkAttr(jsonInput, ConstantsIF.UID);
+            break;
+         }
+         default:
+            break;
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -88,7 +88,7 @@ public class ResourcesHandler extends JaxrsHandler {
 
    /**
     * Override interface to support the "create" operation
-    * 
+    *
     * <pre>
     * JSON input ...
     * {
@@ -100,7 +100,7 @@ public class ResourcesHandler extends JaxrsHandler {
     * JSON output ...
     * { "uid": "..." }
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input for create operation
     * @return OperationIF output from create operation
     */
@@ -114,15 +114,15 @@ public class ResourcesHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       operOutput = new Operation(OperationIF.TYPE.CREATE);
 
       try {
          this.setDatabaseAndCollection(operInput, ConfigIF.RS_NOSQL_DATABASE,
-               ConfigIF.RS_NOSQL_COLLECTIONS_RESOURCES_NAME);
+            ConfigIF.RS_NOSQL_COLLECTIONS_RESOURCES_NAME);
       } catch (Exception ex) {
          error = true;
          operOutput.setError(true);
@@ -136,8 +136,8 @@ public class ResourcesHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "output=''{0}'', json=''{1}''",
-               new Object[] { operOutput != null ? operOutput.toString() : NULL,
-                     operOutput.getJSON() != null ? operOutput.getJSON().toString() : NULL });
+            new Object[]{operOutput != null ? operOutput.toString() : NULL,
+               operOutput.getJSON() != null ? operOutput.getJSON().toString() : NULL});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -147,7 +147,7 @@ public class ResourcesHandler extends JaxrsHandler {
 
    /**
     * Override interface to support the "search" operation
-    * 
+    *
     * <pre>
     * {
     *   "query": {
@@ -173,7 +173,7 @@ public class ResourcesHandler extends JaxrsHandler {
     *   }
     * }
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input for search operation
     * @return OperationIF output from search operation
     */
@@ -188,15 +188,15 @@ public class ResourcesHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       operOutput = new Operation(OperationIF.TYPE.SEARCH);
 
       try {
          this.setDatabaseAndCollection(operInput, ConfigIF.RS_NOSQL_DATABASE,
-               ConfigIF.RS_NOSQL_COLLECTIONS_RESOURCES_NAME);
+            ConfigIF.RS_NOSQL_COLLECTIONS_RESOURCES_NAME);
       } catch (Exception ex) {
          error = true;
          operOutput.setError(true);
@@ -215,8 +215,8 @@ public class ResourcesHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "output=''{0}'', json=''{1}''",
-               new Object[] { operOutput != null ? operOutput.toString() : NULL,
-                     operOutput.getJSON() != null ? operOutput.getJSON().toString() : NULL });
+            new Object[]{operOutput != null ? operOutput.toString() : NULL,
+               operOutput.getJSON() != null ? operOutput.getJSON().toString() : NULL});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -226,7 +226,7 @@ public class ResourcesHandler extends JaxrsHandler {
 
    /**
     * Override interface to support the "read" operation
-    * 
+    *
     * <pre>
     * JSON input ...
     * { "uid": "..." }
@@ -248,7 +248,7 @@ public class ResourcesHandler extends JaxrsHandler {
     *   }
     * }
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input for read operation
     * @return OperationIF output from read operation
     */
@@ -262,15 +262,15 @@ public class ResourcesHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       operOutput = new Operation(OperationIF.TYPE.READ);
 
       try {
          this.setDatabaseAndCollection(operInput, ConfigIF.RS_NOSQL_DATABASE,
-               ConfigIF.RS_NOSQL_COLLECTIONS_RESOURCES_NAME);
+            ConfigIF.RS_NOSQL_COLLECTIONS_RESOURCES_NAME);
       } catch (Exception ex) {
          error = true;
          operOutput.setError(true);
@@ -284,8 +284,8 @@ public class ResourcesHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "output=''{0}'', json=''{1}''",
-               new Object[] { operOutput != null ? operOutput.toString() : NULL,
-                     operOutput.getJSON() != null ? operOutput.getJSON().toString() : NULL });
+            new Object[]{operOutput != null ? operOutput.toString() : NULL,
+               operOutput.getJSON() != null ? operOutput.getJSON().toString() : NULL});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -298,14 +298,14 @@ public class ResourcesHandler extends JaxrsHandler {
     *
     * <pre>
     * JSON input ...
-    * { 
+    * {
     *   "uid": "...",
     *   "data": {
     *     ...
     *   }
     * }
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input for replace operation
     * @return OperationIF output from replace operation
     */
@@ -319,15 +319,15 @@ public class ResourcesHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       operOutput = new Operation(OperationIF.TYPE.REPLACE);
 
       try {
          this.setDatabaseAndCollection(operInput, ConfigIF.RS_NOSQL_DATABASE,
-               ConfigIF.RS_NOSQL_COLLECTIONS_RESOURCES_NAME);
+            ConfigIF.RS_NOSQL_COLLECTIONS_RESOURCES_NAME);
       } catch (Exception ex) {
          error = true;
          operOutput.setError(true);
@@ -341,8 +341,8 @@ public class ResourcesHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "output=''{0}'', json=''{1}''",
-               new Object[] { operOutput != null ? operOutput.toString() : NULL,
-                     operOutput.getJSON() != null ? operOutput.getJSON().toString() : NULL });
+            new Object[]{operOutput != null ? operOutput.toString() : NULL,
+               operOutput.getJSON() != null ? operOutput.getJSON().toString() : NULL});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -359,7 +359,7 @@ public class ResourcesHandler extends JaxrsHandler {
     *   "uid": "..."
     * }
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input for delete operation
     * @return OperationIF output from delete operation
     */
@@ -373,15 +373,15 @@ public class ResourcesHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       operOutput = new Operation(OperationIF.TYPE.DELETE);
 
       try {
          this.setDatabaseAndCollection(operInput, ConfigIF.RS_NOSQL_DATABASE,
-               ConfigIF.RS_NOSQL_COLLECTIONS_RESOURCES_NAME);
+            ConfigIF.RS_NOSQL_COLLECTIONS_RESOURCES_NAME);
       } catch (Exception ex) {
          error = true;
          operOutput.setError(true);
@@ -395,8 +395,8 @@ public class ResourcesHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "output=''{0}'', json=''{1}''",
-               new Object[] { operOutput != null ? operOutput.toString() : NULL,
-                     operOutput.getJSON() != null ? operOutput.getJSON().toString() : NULL });
+            new Object[]{operOutput != null ? operOutput.toString() : NULL,
+               operOutput.getJSON() != null ? operOutput.getJSON().toString() : NULL});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -412,28 +412,50 @@ public class ResourcesHandler extends JaxrsHandler {
     */
    private void init() {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
+      String msg = null;
+      String type = ConstantsIF.RESOURCE;
+      ConfigurationIF config = null;
+      JSONObject json = null;
       Map<String, String> map = null;
 
       _logger.entering(CLASS, METHOD);
 
       /*
+       * Get JSON data from the Config object via the Config Manager
+       */
+      config = _configMgr.getConfiguration(type);
+
+      if (config != null) {
+         json = config.getJSON();
+         if (json == null) {
+            msg = CLASS + ": " + METHOD + ": JSON data for '" + type + "' is null";
+            this.setError(true);
+         }
+      } else {
+         msg = CLASS + ": " + METHOD + ": Configuration for '" + type + "' is null";
+         this.setError(true);
+      }
+
+      /*
        * setup the Mongo Data Access Object
        */
       if (_MongoDAO == null) {
-         map = JSON.convertToParams(JSON.getObject(_config, ConfigIF.RS_NOSQL));
+         map = JSON.convertToParams(JSON.getObject(json, ConfigIF.RS_NOSQL));
 
          try {
             _MongoDAO = MongoFactory.getInstance(map);
          } catch (Exception ex) {
+            msg = CLASS + ": " + METHOD + ": Mongo DAO:" + ex.getMessage();
             this.setError(true);
-            this.setState(STATE.ERROR);
-            this.setStatus(CLASS + ": " + METHOD + ": Mongo DAO:" + ex.getMessage());
-            _logger.severe(this.getStatus());
          }
       }
 
       if (!this.isError()) {
          this.setState(STATE.READY);
+      } else {
+         this.setState(STATE.ERROR);
+         this.setStatus(msg);
+         _logger.severe(this.getStatus());
       }
 
       _logger.exiting(CLASS, METHOD);
