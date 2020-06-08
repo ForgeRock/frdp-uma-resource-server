@@ -148,9 +148,9 @@ The response is a JSON payload containing the objects, based on the specified `s
 {
     "meta": {
         "owner": "dcrane",
-        "name": "IRA-456",
+        "name": "SAVE-456",
         "description": "Self managed IRS for Tom",
-        "label": "Spouse IRA",
+        "label": "Spouse savings",
         "type": "finance-investment",
         "icon_uri": "https://img.icons8.com/doodle/48/000000/money.png"
     },
@@ -255,7 +255,7 @@ The response is a JSON structure.  The `results` JSON object contains details fo
             "label": "Joint Savings",
             "type": "finance-investment",
             "icon_uri": "https://img.icons8.com/doodle/48/000000/money.png",
-            "name": "IRA-456",
+            "name": "SAVE-456",
             "scopes": [ "content", "meta", "print", "download" ],
             "id": "3caf168c-6dcd-413d-b739-59ea18e46530",
             "policy": [ "meta", "content" ]
@@ -349,10 +349,10 @@ The response is a JSON structure.  The `results` JSON object contains details fo
     "results": [
         {
             "owner": "dcrane",
-            "name": "IRA-456",
-            "description": "Self managed IRA for Tom",
+            "name": "SAVE-456",
+            "description": "Self managed savings for Tom",
             "id": "89ac3ed6-ba80-493c-b118-0a4b27cab102",
-            "label": "Spouse IRA",
+            "label": "Spouse savings",
             "scopes": [ "content", "meta", "print", "download" ],
             "type": "finance-investment",
             "icon_uri": "https://img.icons8.com/doodle/48/000000/money-bag--v1.png"

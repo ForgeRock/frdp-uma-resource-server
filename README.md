@@ -387,3 +387,6 @@ Use the provided Postman [collections](/testing) to test the Use Cases:
 - [UMA Resource Owner](/testing/RO/README.md)
 - [UMA Requesting Party](/testing/RqP/README.md)
 
+## Ready-2-Run environment
+
+If you want to get started *quickly* with UMA ... take a look this [Containers for UMA](https://github.com/ForgeRock/frdp-containers-uma) GitHub project.  It uses Docker and Docker-Compose to assemble *this* project in about 5 minutes.  There's a [YouTube video](https://www.youtube.com/watch?v=9kPqt5gfI4g) of the project which covers the setup procedure, building of containers, and running of the use cases.
