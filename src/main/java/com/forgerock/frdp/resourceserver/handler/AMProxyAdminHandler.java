@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2019, ForgeRock, Inc., All rights reserved
+ * Copyright (c) 2019-2020, ForgeRock, Inc., All rights reserved
  * Use subject to license terms.
  */
-
 package com.forgerock.frdp.resourceserver.handler;
 
 import com.forgerock.frdp.common.ConstantsIF;
+import com.forgerock.frdp.config.ConfigurationManagerIF;
 import com.forgerock.frdp.dao.Operation;
 import com.forgerock.frdp.dao.OperationIF;
 import com.forgerock.frdp.handler.HandlerManagerIF;
@@ -17,7 +17,7 @@ import org.json.simple.JSONObject;
 
 /**
  * This Handler provides a SSO Session token for a proxy admin (amadmin)
- * 
+ *
  * <pre>
  * Check the MongoDB for an existing token
  * If exists, validate it,
@@ -26,7 +26,7 @@ import org.json.simple.JSONObject;
  * Create session and store in MongoDB
  * Return new token
  * </pre>
- * 
+ *
  * @author Scott Fehrman, ForgeRock Inc.
  */
 public class AMProxyAdminHandler extends CredentialHandler {
@@ -34,15 +34,15 @@ public class AMProxyAdminHandler extends CredentialHandler {
    private final String CLASS = this.getClass().getName();
 
    /**
-    * Contructor
-    * 
-    * @param config     JSONObject configuration data
+    * Constructor
+    *
+    * @param configMgr ConfigurationManagerIF management of configurations
     * @param handlerMgr HandlerManagerIF handler manager
     */
-   public AMProxyAdminHandler(final JSONObject config, final HandlerManagerIF handlerMgr) {
-      super(config, handlerMgr);
+   public AMProxyAdminHandler(final ConfigurationManagerIF configMgr, final HandlerManagerIF handlerMgr) {
+      super(configMgr, handlerMgr);
 
-      String METHOD = "AMProxyAdminHandler(config, handlerMgr)";
+      String METHOD = "AMProxyAdminHandler(configMgr, handlerMgr)";
 
       _logger.entering(CLASS, METHOD);
 
@@ -56,12 +56,11 @@ public class AMProxyAdminHandler extends CredentialHandler {
    /*
     * ================= PROTECTED METHODS =================
     */
-
    /**
-    * Validate the OperationIF object, overides the subclass
-    * 
+    * Validate the OperationIF object, overrides the subclass
+    *
     * @param oper OperationIF
-    * @throws Exception
+    * @throws Exception could not validate the operation
     */
    @Override
    protected void validate(final OperationIF oper) throws Exception {
@@ -80,11 +79,11 @@ public class AMProxyAdminHandler extends CredentialHandler {
 
    /**
     * Support the "read" operation
-    * 
+    *
     * <pre>
     * No inputs
     * Output is JSON for the session ...
-    * 
+    *
     * {
     *   "data": {
     *     "tokenId": "...*...*",
@@ -93,7 +92,7 @@ public class AMProxyAdminHandler extends CredentialHandler {
     *   }
     * }
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input object
     * @return OperationIF output object
     */
@@ -123,12 +122,12 @@ public class AMProxyAdminHandler extends CredentialHandler {
             operOutput.setJSON(jsonOutput);
             operOutput.setState(STATE.SUCCESS);
             operOutput.setStatus("valid session for : "
-                  + JSON.getObject(operReadOutput.getJSON(), ConstantsIF.DATA + "." + ConstantsIF.OWNER));
+               + JSON.getObject(operReadOutput.getJSON(), ConstantsIF.DATA + "." + ConstantsIF.OWNER));
          } else {
             error = true;
             msg = operReadOutput.getStatus();
 
-            _logger.log(Level.WARNING, "{0}: {1}: {2}", new Object[] { CLASS, METHOD, operReadOutput.getStatus() });
+            _logger.log(Level.WARNING, "{0}: {1}: {2}", new Object[]{CLASS, METHOD, operReadOutput.getStatus()});
          }
       }
 
@@ -142,13 +141,14 @@ public class AMProxyAdminHandler extends CredentialHandler {
 
       return operOutput;
    }
+
    /*
     * =============== PRIVATE METHODS ===============
     */
 
    /**
     * Read implementation
-    * 
+    *
     * <pre>
     * Get the credential record, for the "admin" proxy user
     * Validate the SSO session, using the "tokenId"
@@ -168,7 +168,7 @@ public class AMProxyAdminHandler extends CredentialHandler {
     *   }
     * }
     * </pre>
-    * 
+    *
     * @param operInput
     * @return
     */
@@ -179,6 +179,7 @@ public class AMProxyAdminHandler extends CredentialHandler {
       String owner = null;
       String category = null;
       String credUid = null;
+      String configType = ConstantsIF.RESOURCE;
       StringBuilder buf = new StringBuilder(METHOD);
       OperationIF operOutput = null;
       OperationIF operCredInput = null;
@@ -192,8 +193,8 @@ public class AMProxyAdminHandler extends CredentialHandler {
       operOutput = new Operation(OperationIF.TYPE.READ);
 
       try {
-         owner = this.getConfigValue(ConfigIF.AS_ADMIN_USER);
-         category = this.getConfigValue(ConfigIF.RS_CREDENTIAL_CATEGORIES_SSO_ID);
+         owner = this.getConfigValue(configType, ConfigIF.AS_ADMIN_USER);
+         category = this.getConfigValue(configType, ConfigIF.RS_CREDENTIAL_CATEGORIES_SSO_ID);
          credUid = this.getCredentialUid(owner, category);
       } catch (Exception ex) {
          error = true;
@@ -209,7 +210,7 @@ public class AMProxyAdminHandler extends CredentialHandler {
 
          try {
             this.setDatabaseAndCollection(operCredInput, ConfigIF.RS_NOSQL_DATABASE,
-                  ConfigIF.RS_NOSQL_COLLECTIONS_CREDENTIALS_NAME);
+               ConfigIF.RS_NOSQL_COLLECTIONS_CREDENTIALS_NAME);
          } catch (Exception ex) {
             error = true;
             buf.append(": ").append(ex.getMessage());
@@ -272,7 +273,7 @@ public class AMProxyAdminHandler extends CredentialHandler {
 
    /**
     * Validate the AM Single Sign On token
-    * 
+    *
     * <pre>
     * JSON input ...
     * {
@@ -298,7 +299,7 @@ public class AMProxyAdminHandler extends CredentialHandler {
     *   "valid":false
     * }
     * </pre>
-    * 
+    *
     * @param jsonInput
     * @return
     * @throws Exception
@@ -314,11 +315,11 @@ public class AMProxyAdminHandler extends CredentialHandler {
       _logger.entering(CLASS, METHOD);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "input=''{0}''", new Object[] { jsonInput != null ? jsonInput.toString() : NULL });
+         _logger.log(DEBUG_LEVEL, "input=''{0}''", new Object[]{jsonInput != null ? jsonInput.toString() : NULL});
       }
 
       sso_token = JSON.getString(jsonInput,
-            ConstantsIF.DATA + "." + ConstantsIF.CREDENTIAL + "." + ConstantsIF.TOKENID);
+         ConstantsIF.DATA + "." + ConstantsIF.CREDENTIAL + "." + ConstantsIF.TOKENID);
 
       if (STR.isEmpty(sso_token)) {
          buf.append("JSON input has en empty '" + ConstantsIF.TOKENID + "' value");
@@ -339,7 +340,7 @@ public class AMProxyAdminHandler extends CredentialHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "output=''{0}''",
-               new Object[] { jsonValidateOutput != null ? jsonValidateOutput.toString() : NULL });
+            new Object[]{jsonValidateOutput != null ? jsonValidateOutput.toString() : NULL});
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -365,7 +366,7 @@ public class AMProxyAdminHandler extends CredentialHandler {
     *     }
     *   }
     * }
-    * 
+    *
     * Create a sso session (and token) for the admin user
     * JSON input ...
     * {
@@ -387,6 +388,7 @@ public class AMProxyAdminHandler extends CredentialHandler {
     */
    private JSONObject getToken(final String credUid, final JSONObject jsonInput) throws Exception {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
+      String configType = ConstantsIF.RESOURCE;
       JSONObject jsonGetInput = null;
       JSONObject jsonGetOutput = null;
       JSONObject jsonCredInput = null;
@@ -398,8 +400,8 @@ public class AMProxyAdminHandler extends CredentialHandler {
       _logger.entering(CLASS, METHOD);
 
       jsonGetInput = new JSONObject();
-      jsonGetInput.put(ConstantsIF.USER, this.getConfigValue(ConfigIF.AS_ADMIN_USER));
-      jsonGetInput.put(ConstantsIF.PASSWORD, this.getConfigValue(ConfigIF.AS_ADMIN_PASSWORD));
+      jsonGetInput.put(ConstantsIF.USER, this.getConfigValue(configType, ConfigIF.AS_ADMIN_USER));
+      jsonGetInput.put(ConstantsIF.PASSWORD, this.getConfigValue(configType, ConfigIF.AS_ADMIN_PASSWORD));
 
       jsonGetOutput = this.getSession(jsonGetInput);
 
@@ -409,8 +411,8 @@ public class AMProxyAdminHandler extends CredentialHandler {
 
       jsonData = new JSONObject();
 
-      jsonData.put(ConstantsIF.OWNER, this.getConfigValue(ConfigIF.AS_ADMIN_USER));
-      jsonData.put(ConstantsIF.CATEGORY, this.getConfigValue(ConfigIF.RS_CREDENTIAL_CATEGORIES_SSO_ID));
+      jsonData.put(ConstantsIF.OWNER, this.getConfigValue(configType, ConfigIF.AS_ADMIN_USER));
+      jsonData.put(ConstantsIF.CATEGORY, this.getConfigValue(configType, ConfigIF.RS_CREDENTIAL_CATEGORIES_SSO_ID));
       jsonData.put(ConstantsIF.CREDENTIAL, jsonGetOutput);
 
       jsonCredInput = new JSONObject();
@@ -424,7 +426,7 @@ public class AMProxyAdminHandler extends CredentialHandler {
          operCredInput = new Operation(OperationIF.TYPE.CREATE);
 
          this.setDatabaseAndCollection(operCredInput, ConfigIF.RS_NOSQL_DATABASE,
-               ConfigIF.RS_NOSQL_COLLECTIONS_CREDENTIALS_NAME);
+            ConfigIF.RS_NOSQL_COLLECTIONS_CREDENTIALS_NAME);
 
          operCredInput.setJSON(jsonCredInput);
 
@@ -434,7 +436,7 @@ public class AMProxyAdminHandler extends CredentialHandler {
          operCredInput = new Operation(OperationIF.TYPE.REPLACE);
 
          this.setDatabaseAndCollection(operCredInput, ConfigIF.RS_NOSQL_DATABASE,
-               ConfigIF.RS_NOSQL_COLLECTIONS_CREDENTIALS_NAME);
+            ConfigIF.RS_NOSQL_COLLECTIONS_CREDENTIALS_NAME);
 
          jsonCredInput.put(ConstantsIF.UID, credUid);
 
@@ -445,7 +447,7 @@ public class AMProxyAdminHandler extends CredentialHandler {
 
       if (operCredOutput.isError() || operCredOutput.getState() != STATE.SUCCESS) {
          throw new Exception(METHOD + ": Mongo DAO error: " + operCredOutput.getState().toString() + ": "
-               + operCredOutput.getStatus());
+            + operCredOutput.getStatus());
       }
 
       jsonOutput = jsonCredInput;

@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2018-2019, ForgeRock, Inc., All rights reserved
+ * Copyright (c) 2018-2020, ForgeRock, Inc., All rights reserved
  * Use subject to license terms.
  */
-
 package com.forgerock.frdp.resourceserver.handler;
 
 import com.forgerock.frdp.common.ConstantsIF;
+import com.forgerock.frdp.config.ConfigurationIF;
+import com.forgerock.frdp.config.ConfigurationManagerIF;
 import com.forgerock.frdp.dao.Operation;
 import com.forgerock.frdp.dao.OperationIF;
 import com.forgerock.frdp.handler.HandlerManagerIF;
@@ -13,23 +14,30 @@ import com.forgerock.frdp.resourceserver.ConfigIF;
 import com.forgerock.frdp.resourceserver.dao.AMRestDataAccess;
 import com.forgerock.frdp.utils.JSON;
 import com.forgerock.frdp.utils.STR;
+
+import java.util.Map;
 import java.util.logging.Level;
 import org.json.simple.JSONObject;
 
 /**
  * Access Manager Session Handler
- * 
+ *
  * @author Scott Fehrman, ForgeRock, Inc.
  */
-
 public class AMSessionHandler extends JaxrsHandler {
 
    private final String CLASS = this.getClass().getName();
 
-   public AMSessionHandler(final JSONObject config, final HandlerManagerIF handlerMgr) {
-      super(config, handlerMgr);
+   /**
+    * Constructor
+    *
+    * @param configMgr ConfigurationManagerIF management of configurations
+    * @param handlerMgr HandlerManagerIF handler manager
+    */
+   public AMSessionHandler(final ConfigurationManagerIF configMgr, final HandlerManagerIF handlerMgr) {
+      super(configMgr, handlerMgr);
 
-      String METHOD = "AMSessionHandler(config, handlerMgr)";
+      String METHOD = "AMSessionHandler(configMgr, handlerMgr)";
 
       _logger.entering(CLASS, METHOD);
 
@@ -43,12 +51,11 @@ public class AMSessionHandler extends JaxrsHandler {
    /*
     * ================= PROTECTED METHODS =================
     */
-
    /**
-    * Validate the OperationIF object, overides the subclass
-    * 
+    * Validate the OperationIF object, overrides the subclass
+    *
     * @param oper OperationIF
-    * @throws Exception
+    * @throws Exception could not validate operation
     */
    @Override
    protected void validate(final OperationIF oper) throws Exception {
@@ -67,16 +74,16 @@ public class AMSessionHandler extends JaxrsHandler {
       }
 
       switch (oper.getType()) {
-      case CREATE: {
-         this.checkUserPassword(jsonInput);
-         break;
-      }
-      case READ: {
-         this.checkUid(jsonInput);
-         break;
-      }
-      default:
-         break;
+         case CREATE: {
+            this.checkUserPassword(jsonInput);
+            break;
+         }
+         case READ: {
+            this.checkAttr(jsonInput, ConstantsIF.UID);
+            break;
+         }
+         default:
+            break;
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -100,7 +107,7 @@ public class AMSessionHandler extends JaxrsHandler {
     *   "realm": "/"
     * }
     * </pre>
-    * 
+    *
     * @param operInput OperationIF input
     * @return OperationIF
     */
@@ -113,8 +120,8 @@ public class AMSessionHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       try {
@@ -166,8 +173,8 @@ public class AMSessionHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-               new Object[] { operInput != null ? operInput.toString() : NULL,
-                     operInput.getJSON() != null ? operInput.getJSON().toString() : NULL });
+            new Object[]{operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
       }
 
       try {
@@ -192,31 +199,52 @@ public class AMSessionHandler extends JaxrsHandler {
    /*
     * =============== PRIVATE METHODS ===============
     */
-
    /**
-    * iInitialize the object
+    * Initialize the object
     */
    private void init() {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
+      String msg = null;
+      String configType = ConstantsIF.RESOURCE;
+      ConfigurationIF config = null;
+      JSONObject json = null;
+      Map<String, String> map = null;
 
       _logger.entering(CLASS, METHOD);
+
+      config = _configMgr.getConfiguration(configType);
+
+      if (config != null) {
+         json = config.getJSON();
+         if (json == null) {
+            msg = CLASS + ": " + METHOD + ": JSON data for '" + configType + "' is null";
+            this.setError(true);
+         }
+      } else {
+         msg = CLASS + ": " + METHOD + ": Configuration for '" + configType + "' is null";
+         this.setError(true);
+      }
 
       /*
        * setup the REST Data Access Object, AM Authorization Server
        */
-      if (_AuthzServerDAO == null) {
+      if (!this.isError() && _AuthzServerDAO == null) {
+         map = JSON.convertToParams(JSON.getObject(json, ConfigIF.AS_CONNECT));
+
          try {
-            _AuthzServerDAO = new AMRestDataAccess(JSON.convertToParams(JSON.getObject(_config, ConfigIF.AS_CONNECT)));
+            _AuthzServerDAO = new AMRestDataAccess(map);
          } catch (Exception ex) {
+            msg = CLASS + ": " + METHOD + ": REST DAO: " + ex.getMessage();
             this.setError(true);
-            this.setState(STATE.ERROR);
-            this.setStatus(CLASS + ": " + METHOD + ": REST DAO: " + ex.getMessage());
-            _logger.log(Level.SEVERE, this.getStatus());
          }
       }
 
       if (!this.isError()) {
          this.setState(STATE.READY);
+      } else {
+         this.setState(STATE.ERROR);
+         this.setStatus(msg);
+         _logger.log(Level.SEVERE, this.getStatus());
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -235,6 +263,7 @@ public class AMSessionHandler extends JaxrsHandler {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String user = null;
       String password = null;
+      String configType = ConstantsIF.RESOURCE;
       JSONObject jsonInput = null;
       JSONObject jsonData = null;
       JSONObject jsonHeaders = null;
@@ -258,13 +287,13 @@ public class AMSessionHandler extends JaxrsHandler {
 
       jsonHeaders = new JSONObject();
 
-      jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(ConfigIF.AS_AUTHENTICATE_ACCEPT));
-      jsonHeaders.put(this.getConfigValue(ConfigIF.AS_AUTHENTICATE_HEADERS_USER), user);
-      jsonHeaders.put(this.getConfigValue(ConfigIF.AS_AUTHENTICATE_HEADERS_PASSWORD), password);
+      jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(configType, ConfigIF.AS_AUTHENTICATE_ACCEPT));
+      jsonHeaders.put(this.getConfigValue(configType, ConfigIF.AS_AUTHENTICATE_HEADERS_USER), user);
+      jsonHeaders.put(this.getConfigValue(configType, ConfigIF.AS_AUTHENTICATE_HEADERS_PASSWORD), password);
 
       jsonCreate = new JSONObject();
 
-      jsonCreate.put(ConstantsIF.PATH, this.getConfigValue(ConfigIF.AS_AUTHENTICATE_PATH));
+      jsonCreate.put(ConstantsIF.PATH, this.getConfigValue(configType, ConfigIF.AS_AUTHENTICATE_PATH));
       jsonCreate.put(ConstantsIF.HEADERS, jsonHeaders);
 
       /*
@@ -293,8 +322,8 @@ public class AMSessionHandler extends JaxrsHandler {
          operOutput.setJSON(operASOutput.getJSON());
       } else {
          throw new Exception("Authorization Server DAO is not ready, " + (_AuthzServerDAO == null ? NULL
-               : "state='" + _AuthzServerDAO.getState().toString() + "', status='" + _AuthzServerDAO.getStatus()
-                     + "'"));
+            : "state='" + _AuthzServerDAO.getState().toString() + "', status='" + _AuthzServerDAO.getStatus()
+            + "'"));
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -320,7 +349,7 @@ public class AMSessionHandler extends JaxrsHandler {
     * -or-
     * { "valid":false }
     * </pre>
-    * 
+    *
     * @param operInput
     * @return
     * @throws Exception
@@ -331,6 +360,7 @@ public class AMSessionHandler extends JaxrsHandler {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String msg = null;
       String uid = null;
+      String configType = ConstantsIF.RESOURCE;
       OperationIF operASInput = null;
       OperationIF operASOutput = null;
       JSONObject jsonData = null;
@@ -347,31 +377,31 @@ public class AMSessionHandler extends JaxrsHandler {
       uid = JSON.getString(operInput.getJSON(), ConstantsIF.UID);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "tokenId=''{0}''", new Object[] { uid != null ? uid : NULL });
+         _logger.log(DEBUG_LEVEL, "tokenId=''{0}''", new Object[]{uid != null ? uid : NULL});
       }
 
       if (!STR.isEmpty(uid)) {
 
          // Build JSON structure to validate SSO session
          // {
-         // "path" : "json/realms/root/sessions", "data" : { "tokenId": "..." },
-         // "headers": { "Accept-API-Version": "resource=2.1, protocol=1.0" },
-         // "queryParams": { "_action": "validate" },
-         // "cookies": { "iPlanetDirectoryPro": "$tokenId" }
+         //     "path" : "json/realms/root/sessions", 
+         //     "data" : { "tokenId": "..." },
+         //     "headers": { "Accept-API-Version": "resource=2.1, protocol=1.0" },
+         //     "queryParams": { "_action": "validate" },
+         //     "cookies": { "iPlanetDirectoryPro": "$tokenId" }
          // }
-
          jsonData = new JSONObject();
          jsonData.put(ConstantsIF.TOKENID, uid);
 
          jsonHeaders = new JSONObject();
-         jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(ConfigIF.AS_SESSIONS_ACCEPT));
-         jsonHeaders.put(this.getConfigValue(ConfigIF.AS_COOKIE), uid);
+         jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(configType, ConfigIF.AS_SESSIONS_ACCEPT));
+         jsonHeaders.put(this.getConfigValue(configType, ConfigIF.AS_COOKIE), uid);
 
          jsonQueryParams = new JSONObject();
          jsonQueryParams.put("_action", ConstantsIF.VALIDATE);
 
          jsonInput = new JSONObject();
-         jsonInput.put(ConstantsIF.PATH, this.getConfigValue(ConfigIF.AS_SESSIONS_PATH));
+         jsonInput.put(ConstantsIF.PATH, this.getConfigValue(configType, ConfigIF.AS_SESSIONS_PATH));
          jsonInput.put(ConstantsIF.DATA, jsonData);
          jsonInput.put(ConstantsIF.HEADERS, jsonHeaders);
          jsonInput.put(ConstantsIF.QUERY_PARAMS, jsonQueryParams);

@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "433095d3-342b-4292-af98-7d5c4f43cc59",
+		"_postman_id": "abf04e08-fc0f-4344-816e-04c426b5ed3b",
 		"name": "UMA Resource Owner",
 		"description": "UMA Resource Owner",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -108,10 +108,10 @@
 			"protocolProfileBehavior": {}
 		},
 		{
-			"name": "Manage Resource",
+			"name": "Resource",
 			"item": [
 				{
-					"name": "Create",
+					"name": "Create content-default",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -126,7 +126,73 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\t\"meta\": {\n\t\t\"discoverable\": false,\n    \t\"name\": \"IRA-456\",\n\t\t\"type\": \"finance-investment\",\n\t\t\"label\": \"Spouse IRA\",\n\t\t\"description\": \"Self managed IRA for Tom\"\n\t},\n\t\"content\": {\n\t\t\"object\": {\n\t\t\t\"foo\": \"bar\"\n\t\t},\n\t\t\"array\": [ \"item1\", \"item2\", \"item3\"],\n\t\t\"aString\": \"some string value\",\n\t\t\"aNumber\": 007,\n\t\t\"aBoolean\": true\n\t},\n\t\"register\": {\n\t\t\"resource_scopes\": [ \"content\", \"meta\", \"print\", \"download\"],\n\t\t\"icon_uri\": \"https://img.icons8.com/doodle/48/000000/money.png\",\n\t\t\"policy\": {\n\t\t\t\"permissions\": [\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"aadams\",\n\t\t\t\t\t\"scopes\": [\"content\", \"meta\"]\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"myoshida\",\n\t\t\t\t\t\"scopes\": [\"content\"]\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"bjensen\",\n\t\t\t\t\t\"scopes\": [\"content\", \"meta\", \"print\"]\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t}\n}"
+							"raw": "{\n\t\"meta\": {\n\t\t\"discoverable\": false,\n    \t\"name\": \"SAVE-456\",\n\t\t\"type\": \"finance-investment\",\n\t\t\"label\": \"Spouse Saving\",\n\t\t\"description\": \"Self managed saving for Tom\"\n\t},\n\t\"content\": {\n\t\t\"id\": \"default\",\n\t\t\"data\": {\n\t\t    \"object\": {\n\t\t\t    \"foo\": \"bar\"\n\t    \t},\n\t\t    \"array\": [ \"item1\", \"item2\", \"item3\"],\n\t\t    \"aString\": \"some string value\",\n\t\t    \"aNumber\": 007,\n\t\t    \"aBoolean\": true\n\t\t}\n\t},\n\t\"register\": {\n\t\t\"resource_scopes\": [ \"content\", \"meta\", \"print\", \"download\"],\n\t\t\"icon_uri\": \"https://img.icons8.com/doodle/48/000000/money.png\",\n\t\t\"policy\": {\n\t\t\t\"permissions\": [\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"aadams\",\n\t\t\t\t\t\"scopes\": [\"content\", \"meta\"]\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"myoshida\",\n\t\t\t\t\t\"scopes\": [\"content\"]\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"bjensen\",\n\t\t\t\t\t\"scopes\": [\"content\", \"meta\", \"print\"]\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t}\n}"
+						},
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources"
+							]
+						},
+						"description": "Create a new resource using the JSON payload.  The payload can include some or all of the following sections:  \n\n- meta: required\n- content: optional\n- registration (UMA): optional\n    - policy: optional\n\n```json\n{\n\t\"meta\": {\n\t\t\n\t},\n\t\"content\": {\n\t\t\n\t},\n\t\"register\": {\n\t\t\"policy\": {\n\t\t\t\n\t\t}\n\t}\n}\n```\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Create content-refonly",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{ROtokenId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"meta\": {\n\t\t\"discoverable\": false,\n    \t\"name\": \"SAVE-456\",\n\t\t\"type\": \"finance-investment\",\n\t\t\"label\": \"Spouse Saving\",\n\t\t\"description\": \"Self managed savings for Tom\"\n\t},\n\t\"content\": {\n\t\t\"id\": \"refonly\",\n\t\t\"uri\": \"http://foo.example.com/bar\"\n\t},\n\t\"register\": {\n\t\t\"resource_scopes\": [ \"content\", \"meta\", \"print\", \"download\"],\n\t\t\"icon_uri\": \"https://img.icons8.com/doodle/48/000000/money.png\",\n\t\t\"policy\": {\n\t\t\t\"permissions\": [\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"aadams\",\n\t\t\t\t\t\"scopes\": [\"content\", \"meta\"]\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"myoshida\",\n\t\t\t\t\t\"scopes\": [\"content\"]\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"bjensen\",\n\t\t\t\t\t\"scopes\": [\"content\", \"meta\", \"print\"]\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t}\n}"
+						},
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources"
+							]
+						},
+						"description": "Create a new resource using the JSON payload.  The payload can include some or all of the following sections:  \n\n- meta: required\n- content: optional\n- registration (UMA): optional\n    - policy: optional\n\n```json\n{\n\t\"meta\": {\n\t\t\n\t},\n\t\"content\": {\n\t\t\n\t},\n\t\"register\": {\n\t\t\"policy\": {\n\t\t\t\n\t\t}\n\t}\n}\n```\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Create content-fhir",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{ROtokenId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"meta\": {\n\t\t\"discoverable\": false,\n    \t\"name\": \"16687\",\n\t\t\"type\": \"fhir-patient\",\n\t\t\"label\": \"Patient\",\n\t\t\"description\": \"FHIR request for patient\"\n\t},\n\t\"content\": {\n\t\t\"id\": \"fhir\",\n\t\t\"uri\": \"https://thinkon.smilecdr.com/fhir-request/Patient/16687\"\n\t},\n\t\"register\": {\n\t\t\"resource_scopes\": [ \"content\", \"meta\", \"print\", \"download\"],\n\t\t\"icon_uri\": \"https://img.icons8.com/doodle/48/000000/money.png\",\n\t\t\"policy\": {\n\t\t\t\"permissions\": [\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"aadams\",\n\t\t\t\t\t\"scopes\": [\"content\", \"meta\"]\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"myoshida\",\n\t\t\t\t\t\"scopes\": [\"content\"]\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"bjensen\",\n\t\t\t\t\t\"scopes\": [\"content\", \"meta\", \"print\"]\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t}\n}"
 						},
 						"url": {
 							"raw": "{{FQDN-rs}}/rest/manage/resources",
@@ -263,10 +329,548 @@
 			"protocolProfileBehavior": {}
 		},
 		{
+			"name": "Meta Data",
+			"item": [
+				{
+					"name": "Read",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{ROtokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/meta",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"meta"
+							]
+						},
+						"description": "Get only the \"meta data\" associated with a resource."
+					},
+					"response": []
+				},
+				{
+					"name": "Replace",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{ROtokenId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"discoverable\": true,\n    \"name\": \"Savings001\",\n    \"description\": \"Savings account with spouse\",\n    \"label\": \"Joint Savings\",\n    \"type\": \"finance-savings\"\n}"
+						},
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/meta",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"meta"
+							]
+						},
+						"description": "Replace only the \"meta data\" associated with the reosurce."
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Content",
+			"item": [
+				{
+					"name": "Create default",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{ROtokenId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"id\": \"default\",\n    \"data\": {\n        \"type\": \"content create\",\n        \"results\": \"maybe\",\n        \"quantity\": 1,\n        \"active\": true\n    }\n}"
+						},
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"content"
+							]
+						},
+						"description": "Replace the content (JSON) in the Content Server"
+					},
+					"response": []
+				},
+				{
+					"name": "Create refonly",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{ROtokenId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"id\": \"refonly\",\n    \"uri\": \"http://yadda.example.com/yadda\"\n}"
+						},
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"content"
+							]
+						},
+						"description": "Replace the content (JSON) in the Content Server"
+					},
+					"response": []
+				},
+				{
+					"name": "Create fhir",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{ROtokenId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"id\": \"fhir\",\n    \"uri\": \"https://thinkon.smilecdr.com/fhir-request/Claim/10883\"\n}"
+						},
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"content"
+							]
+						},
+						"description": "Replace the content (JSON) in the Content Server"
+					},
+					"response": []
+				},
+				{
+					"name": "Read",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{ROtokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"content"
+							]
+						},
+						"description": "Read the content (JSON) from the Content Server"
+					},
+					"response": []
+				},
+				{
+					"name": "Replace default",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{ROtokenId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"test\",\n    \"results\": \"negative\",\n    \"quantity\": 456,\n    \"active\": false\n}"
+						},
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"content"
+							]
+						},
+						"description": "Replace the content (JSON) in the Content Server"
+					},
+					"response": []
+				},
+				{
+					"name": "Replace refonly",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{ROtokenId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"uri\": \"http://bar.example.com/foo\"\n}"
+						},
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"content"
+							]
+						},
+						"description": "Replace the content (JSON) in the Content Server"
+					},
+					"response": []
+				},
+				{
+					"name": "Replace fhir",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{ROtokenId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"uri\": \"https://thinkon.smilecdr.com/fhir-request/Observation?patient=11022\"\n}"
+						},
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"content"
+							]
+						},
+						"description": "Replace the content (JSON) in the Content Server"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{ROtokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"content"
+							]
+						},
+						"description": "Delete the content (JSON) from the Content Server"
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Registration",
+			"item": [
+				{
+					"name": "Read",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{ROtokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"register"
+							],
+							"query": [
+								{
+									"key": "expand",
+									"value": "policy",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Read the UMA registration attributes"
+					},
+					"response": []
+				},
+				{
+					"name": "Replace",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{ROtokenId}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"resource_scopes\": [\n        \"content\",\n        \"meta\",\n        \"print\",\n        \"download\"\n    ],\n    \"icon_uri\": \"https://img.icons8.com/doodle/48/000000/money-bag--v1.png\"\n}"
+						},
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"register"
+							]
+						},
+						"description": "Replace the UMA registration attributes."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{ROtokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"register"
+							]
+						},
+						"description": "Delete the UMA registration attributes.  Actaully de-registers the resource from the Authorization Server."
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Policy",
+			"item": [
+				{
+					"name": "Read",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{ROtokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register/policy",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"register",
+								"policy"
+							]
+						},
+						"description": "Read the policies / permissions associated with the registered resource."
+					},
+					"response": []
+				},
+				{
+					"name": "Replace",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{ROtokenId}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n   \"permissions\": [\n      {\n         \"subject\": \"aadams\",\n         \"scopes\": [ \"content\", \"meta\" ]\n      },\n      {\n         \"subject\": \"myoshida\",\n         \"scopes\": [ \"content\", \"meta\" ]\n      }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register/policy",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"register",
+								"policy"
+							]
+						},
+						"description": "Replace the policies / permissions associated with the registered resource."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "x-frdp-ssotoken",
+								"value": "{{ROtokenId}}"
+							}
+						],
+						"url": {
+							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register/policy",
+							"host": [
+								"{{FQDN-rs}}"
+							],
+							"path": [
+								"rest",
+								"manage",
+								"resources",
+								"{{resourceId}}",
+								"register",
+								"policy"
+							]
+						},
+						"description": "Delete all the policies / permissions associated with a registered resource."
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
 			"name": "Pending Requests",
 			"item": [
 				{
-					"name": "Request Search",
+					"name": "Search",
 					"event": [
 						{
 							"listen": "test",
@@ -308,7 +912,7 @@
 					"response": []
 				},
 				{
-					"name": "Request Read",
+					"name": "Read",
 					"request": {
 						"method": "GET",
 						"header": [
@@ -338,7 +942,7 @@
 					"response": []
 				},
 				{
-					"name": "Request Approve Deny",
+					"name": "Approve Deny",
 					"request": {
 						"method": "PUT",
 						"header": [
@@ -379,345 +983,6 @@
 			"name": "Extra",
 			"item": [
 				{
-					"name": "Meta Read",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{ROtokenId}}"
-							}
-						],
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/meta",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"meta"
-							]
-						},
-						"description": "Get only the \"meta data\" associated with a resource."
-					},
-					"response": []
-				},
-				{
-					"name": "Meta Replace",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{ROtokenId}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"discoverable\": true,\n    \"name\": \"Savings001\",\n    \"description\": \"Savings account with spouse\",\n    \"label\": \"Joint Savings\",\n    \"type\": \"finance-savings\"\n}"
-						},
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/meta",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"meta"
-							]
-						},
-						"description": "Replace only the \"meta data\" associated with the reosurce."
-					},
-					"response": []
-				},
-				{
-					"name": "Content Read",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{ROtokenId}}"
-							}
-						],
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"content"
-							]
-						},
-						"description": "Read the content (JSON) from the Content Server"
-					},
-					"response": []
-				},
-				{
-					"name": "Content Replace",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{ROtokenId}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n   \"type\": \"test\",\n   \"results\": \"negative\",\n   \"quantity\": 123,\n   \"active\": false\n}"
-						},
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"content"
-							]
-						},
-						"description": "Replace the content (JSON) in the Content Server"
-					},
-					"response": []
-				},
-				{
-					"name": "Content Delete",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{ROtokenId}}"
-							}
-						],
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"content"
-							]
-						},
-						"description": "Delete the content (JSON) from the Content Server"
-					},
-					"response": []
-				},
-				{
-					"name": "Register Read",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{ROtokenId}}"
-							}
-						],
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"register"
-							],
-							"query": [
-								{
-									"key": "expand",
-									"value": "policy",
-									"disabled": true
-								}
-							]
-						},
-						"description": "Read the UMA registration attributes"
-					},
-					"response": []
-				},
-				{
-					"name": "Register Replace",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{ROtokenId}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"resource_scopes\": [\n        \"content\",\n        \"meta\",\n        \"print\",\n        \"download\"\n    ],\n    \"icon_uri\": \"https://img.icons8.com/doodle/48/000000/money-bag--v1.png\"\n}"
-						},
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"register"
-							]
-						},
-						"description": "Replace the UMA registration attributes."
-					},
-					"response": []
-				},
-				{
-					"name": "Register Delete",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{ROtokenId}}"
-							}
-						],
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"register"
-							]
-						},
-						"description": "Delete the UMA registration attributes.  Actaully de-registers the resource from the Authorization Server."
-					},
-					"response": []
-				},
-				{
-					"name": "Policy Read",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{ROtokenId}}"
-							}
-						],
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register/policy",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"register",
-								"policy"
-							]
-						},
-						"description": "Read the policies / permissions associated with the registered resource."
-					},
-					"response": []
-				},
-				{
-					"name": "Policy Replace",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{ROtokenId}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n   \"permissions\": [\n      {\n         \"subject\": \"aadams\",\n         \"scopes\": [ \"content\", \"meta\" ]\n      },\n      {\n         \"subject\": \"myoshida\",\n         \"scopes\": [ \"content\", \"meta\" ]\n      }\n    ]\n}"
-						},
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register/policy",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"register",
-								"policy"
-							]
-						},
-						"description": "Replace the policies / permissions associated with the registered resource."
-					},
-					"response": []
-				},
-				{
-					"name": "Policy Delete",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "x-frdp-ssotoken",
-								"value": "{{ROtokenId}}"
-							}
-						],
-						"url": {
-							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/register/policy",
-							"host": [
-								"{{FQDN-rs}}"
-							],
-							"path": [
-								"rest",
-								"manage",
-								"resources",
-								"{{resourceId}}",
-								"register",
-								"policy"
-							]
-						},
-						"description": "Delete all the policies / permissions associated with a registered resource."
-					},
-					"response": []
-				},
-				{
 					"name": "Subjects Search",
 					"request": {
 						"method": "GET",
@@ -745,6 +1010,26 @@
 						"description": "This is a VALUE ADD capability of the Resource Server and is NOT part of the UMA specification.\n\nGet a list of Subjects (Requesting Parties) that have access to any of the Resource Owner's resources."
 					},
 					"response": []
+				},
+				{
+					"name": "well-known",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{FQDN-openam}}/uma/.well-known/uma2-configuration",
+							"host": [
+								"{{FQDN-openam}}"
+							],
+							"path": [
+								"uma",
+								".well-known",
+								"uma2-configuration"
+							]
+						},
+						"description": "Get the UMA configuration data from the \"well known\" end point."
+					},
+					"response": []
 				}
 			],
 			"event": [
@@ -770,26 +1055,6 @@
 				}
 			],
 			"protocolProfileBehavior": {}
-		},
-		{
-			"name": "well-known",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{FQDN-openam}}/uma/.well-known/uma2-configuration",
-					"host": [
-						"{{FQDN-openam}}"
-					],
-					"path": [
-						"uma",
-						".well-known",
-						"uma2-configuration"
-					]
-				},
-				"description": "Get the UMA configuration data from the \"well known\" end point."
-			},
-			"response": []
 		}
 	],
 	"event": [

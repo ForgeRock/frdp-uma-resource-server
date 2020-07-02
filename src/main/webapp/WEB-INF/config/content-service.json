@@ -1,0 +1,80 @@
+{
+    "comment": "Content Services",
+    "services": [
+        {
+            "id": "default",
+            "label": "MongoDB Content Service",
+            "description": "The reference implementation sample Content Service, using MongoDB",
+            "comment": "The default Content Service, REST interface to MongoDB",
+            "enabled": true,
+            "content": "data",
+            "operations": {
+                "create": {
+                    "comment": "Use 'uri' attribute and input 'data' to CREATE external content",
+                    "action": "post",
+                    "uri": "https://cs.example.com:443/content-server/rest/content-server/content"
+                },
+                "read": {
+                    "comment": "Use input 'uri' to READ external content",
+                    "action": "get"
+                },
+                "replace": {
+                    "comment": "Use input 'data' to REPLACE at input 'uri'",
+                    "action": "put"
+                },
+                "delete": {
+                    "comment": "Use input 'uri' to DELETE external content",
+                    "action": "delete"
+                }
+            }
+        },
+        {
+            "id": "fhir",
+            "label": "FHIR",
+            "description": "This is the sample FHIR service",
+            "comment": "Example FHIR URL https://fhir.example.com:443/fhir-request/Claim?patient=1234",
+            "enabled": true,
+            "operations": {
+                "create": {
+                    "comment": "Test the provided URL, returns error if not 200:OK",
+                    "action": "get"
+                },
+                "read": {
+                    "comment": "Use input 'uri' to READ external content",
+                    "action": "get"
+                },
+                "replace": {
+                    "comment": "Use input 'uri' to REPLACE the existing 'uri'",
+                    "action": "reference"
+                },
+                "delete": {
+                    "comment": "Use input 'uri' to DELETE the existing 'uri'",
+                    "action": "reference"
+                }
+            }
+        },
+        {
+            "id": "refonly",
+            "comment": "The URL is only for reference, it is NOT use to manage/access external content",
+            "enabled": true,
+            "operations": {
+                "create": {
+                    "comment": "Use input 'uri' to CREATE a new 'uri'",
+                    "action": "reference"
+                },
+                "read": {
+                    "comment": "Use input 'uri' to READ the existing 'uri'",
+                    "action": "reference"
+                },
+                "replace": {
+                    "comment": "Use input 'uri' to REPLACE the existing 'uri'",
+                    "action": "reference"
+                },
+                "delete": {
+                    "comment": "Use input 'uri' to DELETE the existing 'uri'",
+                    "action": "reference"
+                }
+            }
+        }
+    ]
+}

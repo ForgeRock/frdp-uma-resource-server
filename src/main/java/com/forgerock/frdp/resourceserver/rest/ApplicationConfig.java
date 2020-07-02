@@ -57,7 +57,6 @@ public class ApplicationConfig extends Application {
       resources.add(com.forgerock.frdp.resourceserver.rest.share.ResourcesResource.class);
       resources.add(com.forgerock.frdp.resourceserver.rest.share.ShareResource.class);
       resources.add(com.forgerock.frdp.resourceserver.rest.share.WithMeResource.class);
-      resources.add(org.glassfish.jersey.server.wadl.internal.WadlResource.class);
    }
 
 }

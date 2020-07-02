@@ -86,14 +86,14 @@ The `uid` value **MUST** be `dcrane`, the **Resource Owner (RO)**
 
 A `resource` can be created by explicitly executing the REST/JSON interface for each state.  The create process also supports a one-step procedure for all states.  This example will cover setting all states in one process.
 
-1. Open the **UMA Resource Owner** Postman Collection
+1. Open the **`UMA Resource Owner`** Postman Collection
 
-1. Open the **Manage Resource** Folder
+1. Open the **`Resource`** Folder
 
-1. Select the **Create** command\
+1. Select the **`Create content-default`** command\
 This is a `POST` method that uses Header variables: `X-frdp-ssotoken` that is set to the `ROtokenId` value
 
-1. Click **Send** \
+1. Click **`Send`** \
 The `resource` is created in the **Resource Server (RS)**.\
 The `content` was added to the **Content Server (CS)**.\
 The `resource` was registered with the **Authorization Server (AS)**.\
@@ -103,14 +103,14 @@ The `policy` was applied with the **Authorization Server (AS)**.
 
 Run the *search* command to get a collection of resources.  You **must** run this operation, the first element in the collection is used for the other operations.
 
-1. Open the **UMA Resource Owner** Postman Collection
+1. Open the **`UMA Resource Owner`** Postman Collection
 
-1. Open the **Manage Resource** Folder
+1. Open the **`Resource`** Folder
 
-1. Select the **Search** command\
+1. Select the **`Search`** command\
 This is a `GET` method that uses Header variables: `X-frdp-ssotoken` that is set to the `ROtokenId` value
 
-1. Click **Send**\
+1. Click **`Send`**\
 The response is a JSON payload that contains an array of `resource` identifiers.\
 The first item in the array `results` will be used for other commands.
 
@@ -125,14 +125,14 @@ The first item in the array `results` will be used for other commands.
 
 Run the *read* command to get a specific resource.
 
-1. Open the **UMA Resource Owner** Postman Collection
+1. Open the **`UMA Resource Owner`** Postman Collection
 
-1. Open the **Manage Resource** Folder
+1. Open the **`Resource`** Folder
 
-1. Select the **Read** command\
+1. Select the **`Read`** command\
 This is a `GET` method that uses Header variables: `X-frdp-ssotoken` that is set to the `ROtokenId` value
 
-1. Click **Send**\
+1. Click **`Send`**\
 The response is a JSON payload that contains all the objects for the `resource`
 
 ```json
@@ -141,9 +141,9 @@ The response is a JSON payload that contains all the objects for the `resource`
     "access": "shared",
     "meta": {
         "discoverable": false,
-        "name": "IRA-456",
-        "description": "Self managed IRA for Tom",
-        "label": "Spouse IRA",
+        "name": "SAVE-456",
+        "description": "Self managed savings for Tom",
+        "label": "Spouse savings",
         "type": "finance-investment"
     },
     "content": {
@@ -186,20 +186,20 @@ Run the *delete* command to remove the resource. The following steps will be com
 - Delete the `content`, from the **Content Server (CS)**
 - Delete the `resource`, from the **Resource Server (RS)**
 
-1. Open the **UMA Resource Owner** Postman Collection
+1. Open the **`UMA Resource Owner`** Postman Collection
 
-1. Open the **Manage Resource** Folder
+1. Open the **`Resource`** Folder
 
-1. Select the **Delete** command\
+1. Select the **`Delete`** command\
 This is a `DELETE` method that uses Header variables: `X-frdp-ssotoken` that is set to the `ROtokenId` value
 
-1. Click **Send**
+1. Click **`Send`**
 
 # People
 
 ## NOTICE:  This use case is **not** part of the UMA 2.0 specification.  
 
-This use case leverages the ForgeRock Access Manager APIs for obtaining information about which "People", **Requesting Parties (RqP)**, have access to resources that are owned for a given **Resource Owner (RO)**.
+This use case leverages the ForgeRock Access Manager APIs for obtaining information about which "People", **Requesting Parties (RqP)**, have access to resources that are owned by a given **Resource Owner (RO)**.
 
 ## Scenario
 
@@ -242,7 +242,7 @@ The response is a JSON payload containing a collection of *People* that have acc
             "subject": "aadams",
             "resources": [
                 {
-                    "name": "IRA-456",
+                    "name": "SAVE-456",
                     "scopes": [ "meta", "content" ],
                     "id": "3caf168c-6dcd-413d-b739-59ea18e46530"
                 }
@@ -252,7 +252,7 @@ The response is a JSON payload containing a collection of *People* that have acc
             "subject": "bjensen",
             "resources": [
                 {
-                    "name": "IRA-456",
+                    "name": "SAVE-456",
                     "scopes": [ "meta", "content" ],
                     "id": "3caf168c-6dcd-413d-b739-59ea18e46530"
                 }
@@ -262,7 +262,7 @@ The response is a JSON payload containing a collection of *People* that have acc
             "subject": "myoshida",
             "resources": [
                 {
-                    "name": "IRA-456",
+                    "name": "SAVE-456",
                     "scopes": [ "meta", "content" ],
                     "id": "3caf168c-6dcd-413d-b739-59ea18e46530"
                 }
@@ -280,9 +280,9 @@ This use case leverages the ForgeRock Access Manager APIs for processing UMA acc
 
 ## Scenario
 
-You may have a situation where the **Resource Owner (RO)** creates and registers a UMA resource.  But, the `resource` has not been shared with the **Requesting Party(RqP)**.  The **RqP** follows the [UMA flow](../Rqp/README.md) to access the `resource` ... the protocol step to get the **Requesting Party Token (RPT)** will fail with an error message.  The message indicates that a request has been submitted.
+You may have a situation where the **Resource Owner (RO)** creates and registers a UMA resource.  But, the `resource` has not been shared with the **Requesting Party(RqP)**.  The **RqP** follows the [UMA flow](../Rqp/README.md) to access the `resource` ... the protocol step, to get the **Requesting Party Token (RPT)**, will fail with an error message.  The message indicates that a request has been submitted.
 
-When the **Authorization Server (AS)**, ForgeRock Access Manager, is unable to create a **Requesting Party Token (RPT)** because the **RO** has not configured a *policy* which grants access to the **RqP** with the specified `scopes` for the specific `resource` ... the ForgeRock Access Manager will create an access request for the **RO**.  The **RO** can either `allow` or `deny` the access request for the `resource`.  If the **RO** allows the request, the ForgeRock Access Manager will create a policy granting access to the **RqP** for the `resource` with the specified `scopes`.
+When the **Authorization Server (AS)**, ForgeRock Access Manager, is unable to create a **Requesting Party Token (RPT)** ... because the **RO** has not configured a *policy* which grants access to the **RqP** with the specified `scopes` for the specific `resource` ... the ForgeRock Access Manager will create an access request for the **RO**.  The **RO** can either `allow` or `deny` the access request for the `resource`.  If the **RO** allows the request, the ForgeRock Access Manager will create a policy granting access to the **RqP** for the `resource` with the specified `scopes`.
 
 ## Procedure
 
@@ -311,7 +311,7 @@ Click **Send**
 1. Select the **Validate** command \
 Click **Send** 
 
-1. Open the **Manage Resource** Folder
+1. Open the **Resource** Folder
 
 1. Select the **Delete** command *(removes the existing `resource`, if it exists)* \
 Click **Send**
@@ -396,7 +396,7 @@ The first `requestId` is saved as a Postman Environment Variable
 1. Select the ** Request Read** command \
 Click **Send** \
 The details of the request are returned as JSON ... \
-`{"resource":"IRA-456","permissions":["meta","content"],"_id":"ac0bb370-c1b9-4a09-aeef-3d0a78b410a20","user":"bjensen","when":1579717632556}`
+`{"resource":"SAVE-456","permissions":["meta","content"],"_id":"ac0bb370-c1b9-4a09-aeef-3d0a78b410a20","user":"bjensen","when":1579717632556}`
 
 1. Select the **Request Approve Deny** command \
 Click **Send** \

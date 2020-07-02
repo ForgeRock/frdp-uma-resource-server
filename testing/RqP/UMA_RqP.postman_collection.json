@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "0b5acb4c-58d4-468c-a91c-fe9db5086f42",
+		"_postman_id": "50cd1540-03c9-40e9-b73b-ecb3cc03ebbb",
 		"name": "UMA Requesting Party",
 		"description": "UMA Requesting Party",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -386,11 +386,12 @@
 							]
 						},
 						"url": {
-							"raw": "{{asURI}}/access_token",
+							"raw": "{{FQDN-openam}}/oauth2/access_token",
 							"host": [
-								"{{asURI}}"
+								"{{FQDN-openam}}"
 							],
 							"path": [
+								"oauth2",
 								"access_token"
 							]
 						},

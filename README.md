@@ -43,25 +43,23 @@ The following items must be completed, in the following order:
 
 ## Clean, Compile, Install:
 
-Run *Maven* (`mvn`) processes to clean, compile and install the package:
+Run *Maven* (`mvn`) processes to clean, compile and package the war file:
 
 ```
-mvn clean
-mvn compile 
-mvn package
+mvn clean compile package
 ```
 
 The *package* process creates a deployable war file, in the current directory: `./target/resource-server.war`: 
 
 ```
 ls -la ./target
-total 24104
-drwxr-xr-x   6 scott.fehrman  staff       192 Jan  6 20:15 .
-drwxr-xr-x  14 scott.fehrman  staff       448 Jan  6 20:15 ..
-drwxr-xr-x   3 scott.fehrman  staff        96 Jan  6 20:15 classes
-drwxr-xr-x   3 scott.fehrman  staff        96 Jan  6 20:15 maven-archiver
-drwxr-xr-x   5 scott.fehrman  staff       160 Jan  6 20:15 resource-server
--rw-r--r--   1 scott.fehrman  staff  12340457 Jan  6 20:15 resource-server.war
+total 12232
+drwxrwxr-x. 5 forgerock forgerock       89 Mar 26 17:29 .
+drwxrwxr-x. 7 forgerock forgerock     4096 Mar 26 17:29 ..
+drwxrwxr-x. 3 forgerock forgerock       16 Mar 26 17:29 classes
+drwxrwxr-x. 2 forgerock forgerock       27 Mar 26 17:29 maven-archiver
+drwxrwxr-x. 4 forgerock forgerock       95 Mar 26 17:29 resource-server
+-rw-rw-r--. 1 forgerock forgerock 12519090 Mar 26 17:29 resource-server.war
 ```
 
 # Settings
@@ -257,9 +255,9 @@ Copy the `resource-server.war` file to the `webapps` folder in the Tomcat server
 cp ./target/resource-server.war TOMCAT_INSTALLATION/webapps
 ```
 
-## Configure
+## Configure `resource-server.json`
 
-The deployed application needs to be configured.  Edit the `resource-server.json` file and change /check the values.
+The deployed Resource Server application needs to be configured.  Edit the `resource-server.json` file and change / check the values.
 
 ```bash
 cd TOMCAT_INSTALLATION/webapps/resource-server/WEB-INF/config
@@ -267,130 +265,106 @@ vi resource-server.json
 ```
 Edit the following sections of the JSON file:
 
-### Resource Server (RS) Connection: `rs.connect`
+### Resource Server (RS): No SQL Database (MongoDB): 
+JSON Object ... `rs.nosql`:
 
 ```json
-   "rs": {
-      ...
-      "connect": {
-         "protocol": "_PROTOCOL_",
-         "host": "_HOSTNAME_",
-         "port": "_PORT_",
-         "deploy": "resource-server",
-         "endpoint": "rest"
-      },
-      ...
+{
+   "nosql": {
+      "comment": "No SQL Database (MongoDB)",
+      "host": "mongo.example.com",
+      "port": "27017",
+      "authen": {
+         "database": "resource-server",
+         "user": "resourceadmin",
+         "password": "password"
+      }
    }
-```
-- Set **protocol**: `http` or `https`
-- Set **host**: Fully Qualified Domain Name (FQDN) of installation
-- Set **port**: Port for Tomcat instance that has the Resource Server installed: `443`
-
-### Resource Server (RS): No SQL Database (MongoDB): `rs.nosql`
-
-```json
-   "rs": {
-      ...
-      "nosql": {
-         "comment": "No SQL Database (MongoDB)",
-         "host": "_HOSTNAME_",
-         "port": "27017",
-         "authen": {
-            "database": "resource-server",
-            "user": "resourceadmin",
-            "password": "_PASSWORD_"
-         },
-         ...
-      },
-      ...
-   }
+}
 ```
 
-- Set **host**: Fully Qualified Domain Name (FQDN) of installation
-- Set **password**: Password for the MongoDB resource-server database: `password`
+- Set `host`: Fully Qualified Domain Name (FQDN) of installation
+- Set `port`: Port for MongoDB service, default is *27017*
+- Set `password`: Password for MongoDB resource-server, *resourceadmin* user
 
-### Resource Server (RS): OAuth 2.0 Client: `rs.oauth2.client`
+### Resource Server (RS): OAuth 2.0 Client: 
+JSON Object ... `rs.oauth2.client`
 
 ```json
-   "rs": {
-      ...
-      "oauth2": {
-         "scopes": "uma_protection",
-         "client": {
-            "id": "UMA-Resource-Server",
-            "secret": "_PASSWORD_",
-            "redirect": "_PROTOCOL_://_HOSTNAME_:_APP_PORT_/resource-server"
-         }
-      },
-      ...
+{
+   "client": {
+      "id": "UMA-Resource-Server",
+      "secret": "password",
+      "redirect": "https://uma.example.com:443/resource-server"
    }
+}
 ```
 
 - Set **secret**: Password for the OAuth 2.0 Client: `password`
-- Set **redirect PROTOCOL**: `http` or `https`
-- Set **redirect HOSTNAME**: Fully Qualified Domain Name (FQDN) of installation
-- Set **redirect APP_PORT**: Port for Tomcat instance that has the Resource Server installed: `443`
+- Set **redirect**: This value **MUST** match the redirect when configuring the OAuth 2.0 client
 
-#### NOTICE:  
+#### NOTICE:  The `client` attributes MUST match the values used when the Access Manager OAuth 2.0 Client `UMA-Resource-Server` configuration:
 
-The `client` attributes MUST match the values used when the Access Manager OAuth 2.0 Client `UMA-Resource-Server` configuration:
 - `id`
 - `secret`
-- `redriect`
+- `redirect`
 
-### Authorization Server (AS) Connection: `as.connect`
+### Authorization Server (AS) Connection: 
+JSON Object ... `as.connect`
 
 ```json
-   "as": {
-      ...
-      "connect": {
-         "protocol": "_PROTOCOL_",
-         "host": "_HOSTNAME_",
-         "port": "_PORT_",
-         "path": "openam"
-      },
-      ...
+{
+   "connect": {
+      "protocol": "https",
+      "host": "as.example.com",
+      "port": "443",
+      "path": "openam"
    }
+}
 ```
 
 - Set **protocol**: `http` or `https`
 - Set **host**: Fully Qualified Domain Name (FQDN) of installation
-- Set **port**: Port for Tomcat instance that has the Access Manager installed: `443`
+- Set **port**: Port that has the Access Manager installed: `443`
 
-### Authorization Server (AS) admin credentials: `as.admin`
+### Authorization Server (AS) admin credentials: 
+JSON Object ... `as.admin`
 
 ```json
-   "as": {
-      ...
-      "admin": {
-         "user": "amadmin",
-         "password": "_PASSWORD_"
-      },
-      ...
+{
+   "admin": {
+      "user": "amadmin",
+      "password": "password"
    }
+}
 ```
 
 - Set **password**: Password for the Access Manager administrator account: `password`
 
-### Content Server (CS) Connection: `cs.connect`
+## Configure `content-services.json`
+
+The deployed Resource Server application needs to be configured.  The Resource Server uses a separate file for the configuration of *content services*.  These instruction will cover the configuration of the `default` Content Service.  Edit the `content-services.json` file and change / check the values.
+
+There's an *array* of `services` we will change the service that has an `id` value of *default*
+
+JSON Object ... `operations.create`
 
 ```json
-   "cs": {
-      ...
-      "connect": {
-         "protocol": "_PROTOCOL_",
-         "host": "_HOSTNAME_",
-         "port": "_PORT_",
-         "path": "content-server/rest/content-server/content"
-      }
+{
+   "create": {
+      "comment": "Use 'uri' attribute and input 'data' to CREATE external content",
+      "action": "post",
+      "uri": "https://cs.example.com:443/content-server/rest/content-server/content"
    }
+}
 ```
 
-- Set **protocol**: `http` or `https`
-- Set **host**: Fully Qualified Domain Name (FQDN) of installation
-- Set **port**: Port for Tomcat instance that has the Content Server installed: `443`
+- Set **uri**: This is the full FQDN path for where content is created, via HTTP POST
 
-Restart the Tomcat server running the **Resource Server** (`resource-server`)
+### Note: 
+- See the [Configurable Content Service project](https://github.com/ForgeRock/frdp-uma-resource-server/wiki/Project:-Configurable-Content-Service) for details on configuring the **Content Service**
+
+## Restart the Tomcat server running the **Resource Server** (`resource-server`)
 
 # Testing
 
@@ -413,3 +387,6 @@ Use the provided Postman [collections](/testing) to test the Use Cases:
 - [UMA Resource Owner](/testing/RO/README.md)
 - [UMA Requesting Party](/testing/RqP/README.md)
 
+## Ready-2-Run environment
+
+If you want to get started *quickly* with UMA ... take a look this [Containers for UMA](https://github.com/ForgeRock/frdp-containers-uma) GitHub project.  It uses Docker and Docker-Compose to assemble *this* project in about 5 minutes.  There's a [YouTube video](https://www.youtube.com/watch?v=9kPqt5gfI4g) of the project which covers the setup procedure, building of containers, and running of the use cases.

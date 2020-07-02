@@ -1,8 +1,7 @@
 /*
- * Copyright (c) 2018-2019, ForgeRock, Inc., All rights reserved
+ * Copyright (c) 2018-2020, ForgeRock, Inc., All rights reserved
  * Use subject to license terms.
  */
-
 package com.forgerock.frdp.resourceserver.dao;
 
 import com.forgerock.frdp.common.ConstantsIF;
@@ -22,6 +21,7 @@ import org.json.simple.JSONObject;
  * @author Scott Fehrman, ForgeRock, Inc.
  */
 public class AMRestDataAccess extends RestDataAccess {
+
    private final String CLASS = this.getClass().getName();
 
    public AMRestDataAccess(Map<String, String> params) throws Exception {
@@ -34,15 +34,15 @@ public class AMRestDataAccess extends RestDataAccess {
 
       return;
    }
+
    /*
     * ================= PROTECTED METHODS =================
     */
-
    /**
-    * Validate the opertion, custom procesing for Access Manager
-    * 
+    * Validate the operation, custom processing for Access Manager
+    *
     * @param oper OperationIF operation
-    * @throws Exception
+    * @throws Exception could not validate the operation
     */
    @Override
    protected void validate(final OperationIF oper) throws Exception {

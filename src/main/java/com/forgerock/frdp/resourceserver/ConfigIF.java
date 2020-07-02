@@ -1,8 +1,7 @@
 /*
- * Copyright (c) 2019, ForgeRock, Inc., All rights reserved
+ * Copyright (c) 2019-2020, ForgeRock, Inc., All rights reserved
  * Use subject to license terms.
  */
-
 package com.forgerock.frdp.resourceserver;
 
 /**
@@ -10,6 +9,7 @@ package com.forgerock.frdp.resourceserver;
  * @author Scott Fehrman, ForgeRock Inc., scott.fehrman@forgerock.com
  */
 public interface ConfigIF {
+
    public static final String AS_CONNECT = "as.connect";
    public static final String AS_CONNECT_HOST = "as.connect.host";
    public static final String AS_COOKIE = "as.cookie";
@@ -44,12 +44,6 @@ public interface ConfigIF {
 
    public static final String CS_CONNECT = "cs.connect";
 
-   public static final String RS_CONNECT = "rs.connect";
-   public static final String RS_CONNECT_PROTOCOL = "rs.connect.protocol";
-   public static final String RS_CONNECT_HOST = "rs.connect.host";
-   public static final String RS_CONNECT_PORT = "rs.connect.port";
-   public static final String RS_CONNECT_DEPLOY = "rs.connect.deploy";
-   public static final String RS_CONNECT_ENDPOINT = "rs.connect.endpoint";
    public static final String RS_HEADERS_SSOTOKEN = "rs.headers.ssotoken";
    public static final String RS_HEADERS_RPT = "rs.headers.rpt";
    public static final String RS_ID = "rs.id";
