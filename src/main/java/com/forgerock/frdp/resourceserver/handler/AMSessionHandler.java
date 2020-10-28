@@ -317,6 +317,7 @@ public class AMSessionHandler extends JaxrsHandler {
           */
          operASOutput = _AuthzServerDAO.execute(operASInput);
 
+         operOutput.setError(operASInput.isError());
          operOutput.setState(operASOutput.getState());
          operOutput.setStatus(operASOutput.getStatus());
          operOutput.setJSON(operASOutput.getJSON());

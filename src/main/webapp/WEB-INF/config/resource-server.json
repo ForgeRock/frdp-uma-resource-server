@@ -66,7 +66,7 @@
          "protocol": "https",
          "host": "as.example.com",
          "port": "443",
-         "path": "openam"
+         "path": "am"
       },
       "admin": {
          "user": "amadmin",
