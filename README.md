@@ -331,6 +331,27 @@ JSON Object ... `as.admin`
 
 - Set **password**: Password for the Access Manager administrator account: `password`
 
+### Authorization Server (AS) authentication query parameters:
+
+If the Access Manager installation requires the setting of `authIndexType` and `authIndexValue` query parameters ... add the following section to the JSON Object ... `as.authenticate`
+
+```json
+{
+   ...
+   "as": {
+      ...
+      "authenticate": {
+         ...
+         "params": {
+            "authIndexType": "service",
+            "authIndexValue": "ldapService"
+         },
+         ...
+      }
+   }
+}
+```
+
 ## Configure `content-services.json`
 
 The deployed Resource Server application needs to be configured.  The Resource Server uses a separate file for the configuration of *content services*.  These instruction will cover the configuration of the `default` Content Service.  Edit the `content-services.json` file and change / check the values.
