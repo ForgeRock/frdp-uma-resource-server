@@ -17,6 +17,7 @@ import com.forgerock.frdp.utils.STR;
 
 import java.util.Map;
 import java.util.logging.Level;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 /**
@@ -267,6 +268,7 @@ public class AMSessionHandler extends JaxrsHandler {
       JSONObject jsonInput = null;
       JSONObject jsonData = null;
       JSONObject jsonHeaders = null;
+      JSONObject jsonQueryParams = null;
       JSONObject jsonCreate = null;
       OperationIF operOutput = null;
       OperationIF operASInput = null;
@@ -286,16 +288,22 @@ public class AMSessionHandler extends JaxrsHandler {
       operOutput = new Operation(operInput.getType());
 
       jsonHeaders = new JSONObject();
-
+      
       jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(configType, ConfigIF.AS_AUTHENTICATE_ACCEPT));
       jsonHeaders.put(this.getConfigValue(configType, ConfigIF.AS_AUTHENTICATE_HEADERS_USER), user);
       jsonHeaders.put(this.getConfigValue(configType, ConfigIF.AS_AUTHENTICATE_HEADERS_PASSWORD), password);
 
+      jsonQueryParams = this.getConfigObject(configType, ConfigIF.AS_AUTHENTICATE_PARAMS);
+      
       jsonCreate = new JSONObject();
 
       jsonCreate.put(ConstantsIF.PATH, this.getConfigValue(configType, ConfigIF.AS_AUTHENTICATE_PATH));
       jsonCreate.put(ConstantsIF.HEADERS, jsonHeaders);
-
+      
+      if (jsonQueryParams != null && !jsonQueryParams.isEmpty()) {
+         jsonCreate.put(ConstantsIF.QUERY_PARAMS, jsonQueryParams);
+      }
+      
       /*
        * The REST DAO for POST methods require either a "data" or "form" object Add a
        * "data" object with some object to pass validation, if none
@@ -317,10 +325,10 @@ public class AMSessionHandler extends JaxrsHandler {
           */
          operASOutput = _AuthzServerDAO.execute(operASInput);
 
-         operOutput.setError(operASInput.isError());
          operOutput.setState(operASOutput.getState());
          operOutput.setStatus(operASOutput.getStatus());
          operOutput.setJSON(operASOutput.getJSON());
+         operOutput.setError(operASOutput.isError());
       } else {
          throw new Exception("Authorization Server DAO is not ready, " + (_AuthzServerDAO == null ? NULL
             : "state='" + _AuthzServerDAO.getState().toString() + "', status='" + _AuthzServerDAO.getStatus()

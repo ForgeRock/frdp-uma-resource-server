@@ -293,7 +293,7 @@ public abstract class RSResource extends Resource {
 
    /**
     * Get Single Sign On Token for the admin user, it is used to perform
-    * privilaged operations.
+    * privileged operations.
     *
     * <pre>
     * Get a sso session token with "admin" credentials
