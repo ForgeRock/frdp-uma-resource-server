@@ -333,20 +333,20 @@ JSON Object ... `as.admin`
 
 ### Authorization Server (AS) authentication query parameters:
 
-If the Access Manager installation requires the setting of `authIndexType` and `authIndexValue` query parameters ... add the following section to the JSON Object ... `as.authenticate`
+If the Access Manager installation requires the setting of `authIndexType` and `authIndexValue` query parameters ... add a `params` object to the `as.authenticate` object :
 
 ```json
 {
-   ...
+   "rs": {},
    "as": {
-      ...
+      "admin": {},
       "authenticate": {
-         ...
+         "headers": {},
          "params": {
             "authIndexType": "service",
             "authIndexValue": "ldapService"
          },
-         ...
+         "path": "..."
       }
    }
 }

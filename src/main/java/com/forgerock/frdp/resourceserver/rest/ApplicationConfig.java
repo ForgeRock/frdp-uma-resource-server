@@ -54,7 +54,6 @@ public class ApplicationConfig extends Application {
       resources.add(com.forgerock.frdp.resourceserver.rest.manage.SubjectsResource.class);
       resources.add(com.forgerock.frdp.resourceserver.rest.share.DiscoverResource.class);
       resources.add(com.forgerock.frdp.resourceserver.rest.share.PolicyResource.class);
-      resources.add(com.forgerock.frdp.resourceserver.rest.share.ResourcesResource.class);
       resources.add(com.forgerock.frdp.resourceserver.rest.share.ShareResource.class);
       resources.add(com.forgerock.frdp.resourceserver.rest.share.WithMeResource.class);
    }
