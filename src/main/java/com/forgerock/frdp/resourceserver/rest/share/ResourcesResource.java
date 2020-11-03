@@ -533,7 +533,8 @@ public class ResourcesResource extends RSResource {
          pat = this.getAccessToken(owner);
 
          jsonHeaders = new JSONObject();
-         jsonHeaders.put(ConstantsIF.AUTHORIZATION, "Bearer " + pat);
+         jsonHeaders.put(ConstantsIF.HDR_AUTHORIZATION, "Bearer " + pat);
+         jsonHeaders.put(ConstantsIF.HDR_ACCEPT, ConstantsIF.TYPE_JSON);
 
          jsonQueryParams = new JSONObject();
          jsonQueryParams.put(ConstantsIF.TOKEN, rpt);
@@ -738,7 +739,7 @@ public class ResourcesResource extends RSResource {
       }
 
       jsonHeaders = new JSONObject();
-      jsonHeaders.put(ConstantsIF.AUTHORIZATION, "Bearer " + pat);
+      jsonHeaders.put(ConstantsIF.HDR_AUTHORIZATION, "Bearer " + pat);
 
       jsonData = new JSONObject();
       jsonData.put(ConstantsIF.RESOURCE_ID, registerId);

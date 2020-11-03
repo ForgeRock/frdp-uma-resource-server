@@ -16,7 +16,6 @@ import com.forgerock.frdp.resourceserver.dao.AMRestDataAccess;
 import com.forgerock.frdp.resourceserver.handler.JaxrsHandler;
 import com.forgerock.frdp.utils.JSON;
 import com.forgerock.frdp.utils.STR;
-
 import java.util.Map;
 import java.util.logging.Level;
 import org.json.simple.JSONArray;
@@ -41,7 +40,8 @@ public class DiscoverHandler extends JaxrsHandler {
     * @param configMgr ConfigurationManagerIF management of configurations
     * @param handlerMgr HandlerManagerIF provides management of Handlers
     */
-   public DiscoverHandler(final ConfigurationManagerIF configMgr, final HandlerManagerIF handlerMgr) {
+   public DiscoverHandler(final ConfigurationManagerIF configMgr, 
+      final HandlerManagerIF handlerMgr) {
       super(configMgr, handlerMgr);
 
       String METHOD = "DiscoverHandler(configMgr, handlerMgr)";
@@ -72,19 +72,20 @@ public class DiscoverHandler extends JaxrsHandler {
       _logger.entering(CLASS, METHOD);
 
       if (oper == null) {
-         throw new Exception("Operation object is null");
+         throw new Exception(METHOD + ": Operation object is null");
       }
 
       jsonInput = oper.getJSON();
       if (jsonInput == null || jsonInput.isEmpty()) {
-         throw new Exception("JSON Input is null or empty");
+         throw new Exception(METHOD + ": JSON Input is null or empty");
       }
 
       switch (oper.getType()) {
          case SEARCH: // GET
             break;
          default:
-            throw new Exception("Unsupported operation type: '" + oper.getType().toString() + "'");
+            throw new Exception(METHOD + ": Unsupported operation type: '" 
+               + oper.getType().toString() + "'");
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -133,8 +134,10 @@ public class DiscoverHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-            new Object[]{operInput != null ? operInput.toString() : NULL,
-               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
+            new Object[]{
+               operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL
+            });
       }
 
       try {
@@ -151,9 +154,6 @@ public class DiscoverHandler extends JaxrsHandler {
       return operOutput;
    }
 
-   /*
-    * =============== PRIVATE METHODS ===============
-    */
    /**
     * Initialize object instance
     */
@@ -196,7 +196,9 @@ public class DiscoverHandler extends JaxrsHandler {
 
       if (!this.isError() && _AuthzServerDAO == null) {
          try {
-            _AuthzServerDAO = new AMRestDataAccess(JSON.convertToParams(JSON.getObject(json, ConfigIF.AS_CONNECT)));
+            _AuthzServerDAO = new AMRestDataAccess(
+               JSON.convertToParams(
+                  JSON.getObject(json, ConfigIF.AS_CONNECT)));
          } catch (Exception ex) {
             msg = CLASS + ": " + METHOD + ": REST DAO: " + ex.getMessage();
             this.setError(true);
@@ -205,7 +207,8 @@ public class DiscoverHandler extends JaxrsHandler {
 
       if (!this.isError()) {
          try {
-            _uma_resourceset_path = this.getConfigValue(configType, ConfigIF.AS_UMA_RESOURCE_SET_PATH);
+            _uma_resourceset_path = this.getConfigValue(configType, 
+               ConfigIF.AS_UMA_RESOURCE_SET_PATH);
          } catch (Exception ex) {
             msg = CLASS + ": " + METHOD + ": _path : " + ex.getMessage();
             this.setError(true);
@@ -307,7 +310,10 @@ public class DiscoverHandler extends JaxrsHandler {
             operOutput.setState(STATE.ERROR);
             operOutput.setStatus(METHOD + ": " + ex.getMessage());
 
-            _logger.log(Level.SEVERE, "{0}: {1}", new Object[]{METHOD, ex.getMessage()});
+            _logger.log(Level.SEVERE, "{0}: {1}", 
+               new Object[]{
+                  METHOD, ex.getMessage()
+               });
          }
 
          if (!this.isError()) {
@@ -331,7 +337,8 @@ public class DiscoverHandler extends JaxrsHandler {
 
          jsonOutput = new JSONObject();
          jsonOutput.put(ConstantsIF.DATA,
-            this.filter(this.getDiscoverable(jsonData, access_token), JSON.getObject(jsonInput, ConstantsIF.QUERY)));
+            this.filter(this.getDiscoverable(jsonData, access_token), 
+               JSON.getObject(jsonInput, ConstantsIF.QUERY)));
 
          operOutput.setJSON(jsonOutput);
       } else {
@@ -394,7 +401,8 @@ public class DiscoverHandler extends JaxrsHandler {
     * @param access_token String single sign on access token
     * @return JSONObject output
     */
-   private JSONObject getDiscoverable(final JSONObject jsonInput, final String access_token) {
+   private JSONObject getDiscoverable(final JSONObject jsonInput, 
+      final String access_token) {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String registerId = null;
       JSONObject jsonOutput = null;
@@ -418,32 +426,53 @@ public class DiscoverHandler extends JaxrsHandler {
                   jsonResultInput = (JSONObject) obj;
 
                   if (JSON.getBoolean(jsonResultInput,
-                     ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.DISCOVERABLE)) {
-                     registerId = JSON.getString(jsonResultInput, ConstantsIF.DATA + "." + ConstantsIF.REGISTER);
+                     ConstantsIF.DATA + "." + ConstantsIF.META + "." 
+                        + ConstantsIF.DISCOVERABLE)) {
+                     registerId = JSON.getString(jsonResultInput, 
+                        ConstantsIF.DATA + "." + ConstantsIF.REGISTER);
 
                      if (!STR.isEmpty(registerId)) {
                         jsonResultOutput = new JSONObject();
 
-                        jsonResultOutput.put(ConstantsIF.ID, JSON.getString(jsonResultInput, ConstantsIF.UID));
+                        jsonResultOutput.put(ConstantsIF.ID, 
+                           JSON.getString(jsonResultInput, ConstantsIF.UID));
+                        
                         jsonResultOutput.put(ConstantsIF.OWNER,
-                           JSON.getString(jsonResultInput, ConstantsIF.DATA + "." + ConstantsIF.OWNER));
-                        jsonResultOutput.put(ConstantsIF.NAME, JSON.getString(jsonResultInput,
-                           ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.NAME));
-                        jsonResultOutput.put(ConstantsIF.DESCRIPTION, JSON.getString(jsonResultInput,
-                           ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.DESCRIPTION));
-                        jsonResultOutput.put(ConstantsIF.LABEL, JSON.getString(jsonResultInput,
-                           ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.LABEL));
-                        jsonResultOutput.put(ConstantsIF.TYPE, JSON.getString(jsonResultInput,
-                           ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.TYPE));
+                           JSON.getString(jsonResultInput, ConstantsIF.DATA 
+                              + "." + ConstantsIF.OWNER));
+                        
+                        jsonResultOutput.put(ConstantsIF.NAME, 
+                           JSON.getString(jsonResultInput,
+                           ConstantsIF.DATA + "." + ConstantsIF.META 
+                              + "." + ConstantsIF.NAME));
+                        
+                        jsonResultOutput.put(ConstantsIF.DESCRIPTION, 
+                           JSON.getString(jsonResultInput,
+                           ConstantsIF.DATA + "." + ConstantsIF.META 
+                              + "." + ConstantsIF.DESCRIPTION));
+                        
+                        jsonResultOutput.put(ConstantsIF.LABEL, 
+                           JSON.getString(jsonResultInput,
+                           ConstantsIF.DATA + "." + ConstantsIF.META 
+                              + "." + ConstantsIF.LABEL));
+                        
+                        jsonResultOutput.put(ConstantsIF.TYPE, 
+                           JSON.getString(jsonResultInput,
+                           ConstantsIF.DATA + "." + ConstantsIF.META 
+                              + "." + ConstantsIF.TYPE));
                         /*
                          * Get the UMA registration data
                          */
-                        jsonRegistration = this.getRegistration(registerId, access_token);
+                        jsonRegistration = this.getRegistration(registerId, 
+                           access_token);
 
                         jsonResultOutput.put(ConstantsIF.SCOPES,
-                           JSON.getArray(jsonRegistration, ConstantsIF.RESOURCE_SCOPES));
+                           JSON.getArray(jsonRegistration, 
+                              ConstantsIF.RESOURCE_SCOPES));
+                        
                         jsonResultOutput.put(ConstantsIF.ICON_URI,
-                           JSON.getString(jsonRegistration, ConstantsIF.ICON_URI));
+                           JSON.getString(jsonRegistration, 
+                              ConstantsIF.ICON_URI));
 
                         arrayResultsOutput.add(jsonResultOutput);
                      }
@@ -500,7 +529,8 @@ public class DiscoverHandler extends JaxrsHandler {
     * @param access_token String single sign on token
     * @return JOSNObject resource attributes
     */
-   private JSONObject getRegistration(final String registerId, final String access_token) {
+   private JSONObject getRegistration(final String registerId, 
+      final String access_token) {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       JSONObject jsonOutput = null;
       JSONObject jsonHeaders = null;
@@ -514,7 +544,7 @@ public class DiscoverHandler extends JaxrsHandler {
 
       if (!STR.isEmpty(registerId) && !STR.isEmpty(access_token)) {
          jsonHeaders = new JSONObject();
-         jsonHeaders.put(ConstantsIF.AUTHORIZATION, "Bearer " + access_token);
+         jsonHeaders.put(ConstantsIF.HDR_AUTHORIZATION, "Bearer " + access_token);
 
          jsonData = new JSONObject();
          jsonData.put(ConstantsIF.HEADERS, jsonHeaders);
@@ -573,7 +603,8 @@ public class DiscoverHandler extends JaxrsHandler {
     * attribute value
     * @return JSONObject modified results data
     */
-   private JSONObject filter(final JSONObject jsonInput, final JSONObject jsonFilter) {
+   private JSONObject filter(final JSONObject jsonInput, 
+      final JSONObject jsonFilter) {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String filterAttr = null;
       String filterVal = null;

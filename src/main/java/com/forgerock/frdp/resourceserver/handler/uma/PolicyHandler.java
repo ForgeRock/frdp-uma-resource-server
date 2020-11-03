@@ -35,7 +35,8 @@ public class PolicyHandler extends JaxrsHandler {
     * @param configMgr ConfigurationManagerIF management of configurations
     * @param handlerMgr HandlerManagerIF provides management of Handlers
     */
-   public PolicyHandler(final ConfigurationManagerIF configMgr, final HandlerManagerIF handlerMgr) {
+   public PolicyHandler(final ConfigurationManagerIF configMgr, 
+      final HandlerManagerIF handlerMgr) {
       super(configMgr, handlerMgr);
 
       String METHOD = "PolicyHandler(configMgr, handlerMgr)";
@@ -49,9 +50,6 @@ public class PolicyHandler extends JaxrsHandler {
       return;
    }
 
-   /*
-    * ================= PROTECTED METHODS =================
-    */
    /**
     * Override the "validate" interface, used to check the operation input
     *
@@ -66,12 +64,12 @@ public class PolicyHandler extends JaxrsHandler {
       _logger.entering(CLASS, METHOD);
 
       if (oper == null) {
-         throw new Exception("Operation object is null");
+         throw new Exception(METHOD + ": Operation object is null");
       }
 
       jsonInput = oper.getJSON();
       if (jsonInput == null || jsonInput.isEmpty()) {
-         throw new Exception("JSON Input is null or empty");
+         throw new Exception(METHOD + ": JSON Input is null or empty");
       }
 
       switch (oper.getType()) {
@@ -127,8 +125,10 @@ public class PolicyHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-            new Object[]{operInput != null ? operInput.toString() : NULL,
-               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
+            new Object[]{
+               operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL
+            });
       }
 
       operOutput = new Operation(operInput.getType());
@@ -188,8 +188,10 @@ public class PolicyHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-            new Object[]{operInput != null ? operInput.toString() : NULL,
-               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
+            new Object[]{
+               operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL
+            });
       }
 
       operOutput = new Operation(operInput.getType());
@@ -263,8 +265,10 @@ public class PolicyHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-            new Object[]{operInput != null ? operInput.toString() : NULL,
-               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
+            new Object[]{
+               operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL
+            });
       }
 
       operOutput = new Operation(operInput.getType());
@@ -316,8 +320,10 @@ public class PolicyHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-            new Object[]{operInput != null ? operInput.toString() : NULL,
-               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
+            new Object[]{
+               operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL
+            });
       }
 
       operOutput = new Operation(operInput.getType());
@@ -346,9 +352,6 @@ public class PolicyHandler extends JaxrsHandler {
       return operOutput;
    }
 
-   /*
-    * =============== PRIVATE METHODS ===============
-    */
    /**
     * Initialize object instance
     */
@@ -463,15 +466,24 @@ public class PolicyHandler extends JaxrsHandler {
 
             if (!STR.isEmpty(registerId)) {
                jsonHeaders = new JSONObject();
-               jsonHeaders.put(this.getConfigValue(configType, ConfigIF.AS_COOKIE), sso_token);
+               
+               jsonHeaders.put(
+                  this.getConfigValue(configType, ConfigIF.AS_COOKIE), 
+                  sso_token);
 
                jsonData = new JSONObject();
+               
                jsonData.put(ConstantsIF.HEADERS, jsonHeaders);
+               
                jsonData.put(ConstantsIF.UID, registerId);
+               
                jsonData.put(ConstantsIF.PATH,
-                  this.getConfigValue(configType, ConfigIF.AS_UMA_POLICIES_PATH).replaceAll(PROP_VAR_OWNER, owner));
+                  this.getConfigValue(configType, 
+                     ConfigIF.AS_UMA_POLICIES_PATH).replaceAll(PROP_VAR_OWNER, 
+                        owner));
 
                operInput = new Operation(OperationIF.TYPE.READ); // GET
+               
                operInput.setJSON(jsonData);
 
                operOutput = _AuthzServerDAO.execute(operInput);
@@ -480,21 +492,26 @@ public class PolicyHandler extends JaxrsHandler {
                   jsonOutput = operOutput.getJSON();
 
                   if (jsonOutput == null || jsonOutput.isEmpty()) {
-                     throw new Exception(METHOD + ": JSON output is empty: " + operOutput.getStatus());
+                     throw new Exception(METHOD 
+                        + ": JSON output is empty: " + operOutput.getStatus());
                   }
                } else if (operOutput.getState() == STATE.NOTEXIST) {
                   jsonOutput = null; // TODO
                } else {
-                  throw new Exception(METHOD + ": Could not read resource policy: " + operOutput.getStatus());
+                  throw new Exception(METHOD 
+                     + ": Could not read resource policy: " + operOutput.getStatus());
                }
             } else {
-               throw new Exception(METHOD + ": registered resource id is empty");
+               throw new Exception(METHOD 
+                  + ": registered resource id is empty");
             }
          } else {
-            throw new Exception(METHOD + ": access_token is empty");
+            throw new Exception(METHOD 
+               + ": access_token is empty");
          }
       } else {
-         throw new Exception(METHOD + ": owner is empty");
+         throw new Exception(METHOD 
+            + ": owner is empty");
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -570,22 +587,37 @@ public class PolicyHandler extends JaxrsHandler {
 
             if (!STR.isEmpty(registerId)) {
                jsonHeaders = new JSONObject();
-               jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(configType, ConfigIF.AS_UMA_POLICIES_ACCEPT));
-               jsonHeaders.put(ConstantsIF.CONTENT_TYPE, ConstantsIF.APPLICATION_JSON);
-               jsonHeaders.put(this.getConfigValue(configType, ConfigIF.AS_COOKIE), sso_token);
+               
+               jsonHeaders.put(ConstantsIF.HDR_ACCEPT_API_VERSION, 
+                  this.getConfigValue(configType, 
+                     ConfigIF.AS_UMA_POLICIES_ACCEPT));
+               
+               jsonHeaders.put(ConstantsIF.HDR_CONTENT_TYPE, 
+                  ConstantsIF.TYPE_JSON);
+               
+               jsonHeaders.put(this.getConfigValue(configType, 
+                  ConfigIF.AS_COOKIE), sso_token);
+               
                jsonHeaders.put("If-None-Match", "*"); // CREATE
 
                jsonData = JSON.getObject(jsonInput, ConstantsIF.DATA);
+               
                jsonData.put(ConstantsIF.POLICYID, registerId);
 
                jsonCreateInput = new JSONObject();
+               
                jsonCreateInput.put(ConstantsIF.DATA, jsonData);
+               
                jsonCreateInput.put(ConstantsIF.HEADERS, jsonHeaders);
+               
                jsonCreateInput.put(ConstantsIF.UID, registerId);
+               
                jsonCreateInput.put(ConstantsIF.PATH,
-                  this.getConfigValue(configType, ConfigIF.AS_UMA_POLICIES_PATH).replaceAll(PROP_VAR_OWNER, owner));
+                  this.getConfigValue(configType, ConfigIF.AS_UMA_POLICIES_PATH)
+                     .replaceAll(PROP_VAR_OWNER, owner));
 
                operInput = new Operation(OperationIF.TYPE.REPLACE); // PUT
+               
                operInput.setJSON(jsonCreateInput);
 
                operOutput = _AuthzServerDAO.execute(operInput);
@@ -673,22 +705,37 @@ public class PolicyHandler extends JaxrsHandler {
 
             if (!STR.isEmpty(registerId)) {
                jsonHeaders = new JSONObject();
-               jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(configType, ConfigIF.AS_UMA_POLICIES_ACCEPT));
-               jsonHeaders.put(ConstantsIF.CONTENT_TYPE, ConstantsIF.APPLICATION_JSON);
-               jsonHeaders.put(this.getConfigValue(configType, ConfigIF.AS_COOKIE), sso_token);
+               
+               jsonHeaders.put(ConstantsIF.HDR_ACCEPT_API_VERSION, 
+                  this.getConfigValue(configType, 
+                     ConfigIF.AS_UMA_POLICIES_ACCEPT));
+               
+               jsonHeaders.put(ConstantsIF.HDR_CONTENT_TYPE, 
+                  ConstantsIF.TYPE_JSON);
+               
+               jsonHeaders.put(this.getConfigValue(configType, 
+                  ConfigIF.AS_COOKIE), sso_token);
+               
                jsonHeaders.put("If-Match", "*"); // UPDATE
 
                jsonData = JSON.getObject(jsonInput, ConstantsIF.DATA);
+               
                jsonData.put(ConstantsIF.POLICYID, registerId);
 
                jsonCreateInput = new JSONObject();
+               
                jsonCreateInput.put(ConstantsIF.DATA, jsonData);
+               
                jsonCreateInput.put(ConstantsIF.HEADERS, jsonHeaders);
+               
                jsonCreateInput.put(ConstantsIF.UID, registerId);
+               
                jsonCreateInput.put(ConstantsIF.PATH,
-                  this.getConfigValue(configType, ConfigIF.AS_UMA_POLICIES_PATH).replaceAll(PROP_VAR_OWNER, owner));
+                  this.getConfigValue(configType, ConfigIF.AS_UMA_POLICIES_PATH)
+                     .replaceAll(PROP_VAR_OWNER, owner));
 
                operInput = new Operation(OperationIF.TYPE.REPLACE); // PUT
+               
                operInput.setJSON(jsonCreateInput);
 
                operOutput = _AuthzServerDAO.execute(operInput);
@@ -752,31 +799,47 @@ public class PolicyHandler extends JaxrsHandler {
 
             if (!STR.isEmpty(registerId)) {
                jsonHeaders = new JSONObject();
-               jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(configType, ConfigIF.AS_UMA_POLICIES_ACCEPT));
-               jsonHeaders.put(this.getConfigValue(configType, ConfigIF.AS_COOKIE), sso_token);
+               
+               jsonHeaders.put(ConstantsIF.HDR_ACCEPT_API_VERSION, 
+                  this.getConfigValue(configType, 
+                     ConfigIF.AS_UMA_POLICIES_ACCEPT));
+               
+               jsonHeaders.put(this.getConfigValue(configType, 
+                  ConfigIF.AS_COOKIE), sso_token);
 
                jsonData = new JSONObject();
+               
                jsonData.put(ConstantsIF.HEADERS, jsonHeaders);
+               
                jsonData.put(ConstantsIF.UID, registerId);
+               
                jsonData.put(ConstantsIF.PATH,
-                  this.getConfigValue(configType, ConfigIF.AS_UMA_POLICIES_PATH).replaceAll(PROP_VAR_OWNER, owner));
+                  this.getConfigValue(configType, ConfigIF.AS_UMA_POLICIES_PATH)
+                     .replaceAll(PROP_VAR_OWNER, owner));
 
                operInput = new Operation(OperationIF.TYPE.DELETE); // DELETE
+               
                operInput.setJSON(jsonData);
 
                operOutput = _AuthzServerDAO.execute(operInput);
 
-               if (operOutput.getState() != STATE.SUCCESS && operOutput.getState() != STATE.NOTEXIST) {
-                  throw new Exception(METHOD + ": Could not delete resource policy: " + operOutput.getStatus());
+               if (operOutput.getState() != STATE.SUCCESS 
+                  && operOutput.getState() != STATE.NOTEXIST) {
+                  throw new Exception(METHOD 
+                     + ": Could not delete resource policy: " 
+                     + operOutput.getStatus());
                }
             } else {
-               throw new Exception(METHOD + ": registered resource id is empty");
+               throw new Exception(METHOD 
+                  + ": registered resource id is empty");
             }
          } else {
-            throw new Exception(METHOD + ": access_token is empty");
+            throw new Exception(METHOD 
+               + ": access_token is empty");
          }
       } else {
-         throw new Exception(METHOD + ": owner is empty");
+         throw new Exception(METHOD 
+            + ": owner is empty");
       }
 
       _logger.exiting(CLASS, METHOD);
