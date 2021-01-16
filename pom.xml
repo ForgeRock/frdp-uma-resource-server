@@ -7,7 +7,7 @@
     <packaging>war</packaging>
     <version>1.2.0</version>
 
-    <name>FRDP-Resource-Server</name>
+    <name>FRDP UMA Resource Server</name>
     <url>http://maven.apache.org</url>
 
     <dependencies>

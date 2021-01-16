@@ -184,7 +184,7 @@ Create an OAuth 2.0 client for the Requesting Party (RqP) application, which wil
 | --------- | ----- |
 | `Client ID` | **UMA-RqP-Client** |
 | `Client Secret` | **password** |
-| `Redirection URIs` | *(leave blank)* |
+| `Redirection URIs` | https://uma.example.com/resource-server |
 | `Scopes` | '**read**' and '**openid**' |
 | `Display Name` | **UMA RqP** |
 | `Display Description` | **User Managed Access (UMA) Requesting Party Client** |
@@ -198,7 +198,7 @@ Create an OAuth 2.0 client for the Resource Server (RS) application.  The follow
 | --------- | ----- |
 | `Client ID` | **UMA-Resource-Server** |
 | `Client Secret` | **password** |
-| `Redirection URIs` | *(leave blank)* |
+| `Redirection URIs` | https://uma.example.com/resource-server |
 | `Scopes` | **uma_protection** |
 | `Display Name` | **UMA RS** |
 | `Display Description` | **User Managed Access (UMA) Resource Server** |
