@@ -45,7 +45,8 @@ public class SharedWithMeHandler extends JaxrsHandler {
     * @param configMgr ConfigurationManagerIF management of configurations
     * @param handlerMgr HandlerManagerIF provides management of Handlers
     */
-   public SharedWithMeHandler(final ConfigurationManagerIF configMgr, final HandlerManagerIF handlerMgr) {
+   public SharedWithMeHandler(final ConfigurationManagerIF configMgr, 
+      final HandlerManagerIF handlerMgr) {
       super(configMgr, handlerMgr);
 
       String METHOD = "SharedWithMeHandler(configMgr, handlerMgr)";
@@ -59,9 +60,6 @@ public class SharedWithMeHandler extends JaxrsHandler {
       return;
    }
 
-   /*
-    * ================= PROTECTED METHODS =================
-    */
    /**
     * Override the "validate" interface, used to check the operation input
     *
@@ -90,7 +88,8 @@ public class SharedWithMeHandler extends JaxrsHandler {
             break;
          }
          default: {
-            throw new Exception("Unsupported operation type: '" + oper.getType().toString() + "'");
+            throw new Exception(METHOD 
+               + "Unsupported operation type: '" + oper.getType().toString() + "'");
          }
       }
 
@@ -164,9 +163,6 @@ public class SharedWithMeHandler extends JaxrsHandler {
       return operOutput;
    }
 
-   /*
-    * =============== PRIVATE METHODS ===============
-    */
    /**
     * Initialize object instance
     */
@@ -378,24 +374,38 @@ public class SharedWithMeHandler extends JaxrsHandler {
          jsonQuery.put(ConstantsIF.OPERATOR, ConstantsIF.NONE);
 
          jsonHeaders = new JSONObject();
-         jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(configType, ConfigIF.AS_UMA_SHAREDWITHME_ACCEPT));
-         jsonHeaders.put(this.getConfigValue(configType, ConfigIF.AS_COOKIE), sso_token);
+         
+         jsonHeaders.put(ConstantsIF.HDR_ACCEPT_API_VERSION, 
+            this.getConfigValue(configType, ConfigIF.AS_UMA_SHAREDWITHME_ACCEPT));
+         
+         jsonHeaders.put(this.getConfigValue(configType, 
+            ConfigIF.AS_COOKIE), sso_token);
 
          jsonParams = new JSONObject();
-         jsonParams.put(PROP_SORTKEYS, this.getConfigValue(configType, ConfigIF.AS_UMA_SHAREDWITHME_SORTKEYS));
+         
+         jsonParams.put(PROP_SORTKEYS, 
+            this.getConfigValue(configType, 
+               ConfigIF.AS_UMA_SHAREDWITHME_SORTKEYS));
+         
          jsonParams.put(PROP_QUERYFILTER,
-            this.getConfigValue(configType, ConfigIF.AS_UMA_SHAREDWITHME_QUERYFILTER)
-               .replaceAll(PROP_VAR_OWNER, subject));
+            this.getConfigValue(configType, 
+               ConfigIF.AS_UMA_SHAREDWITHME_QUERYFILTER)
+                  .replaceAll(PROP_VAR_OWNER, subject));
 
          jsonSearch = new JSONObject();
+         
          jsonSearch.put(ConstantsIF.QUERY, jsonQuery);
+         
          jsonSearch.put(ConstantsIF.HEADERS, jsonHeaders);
+         
          jsonSearch.put(ConstantsIF.QUERY_PARAMS, jsonParams);
+         
          jsonSearch.put(ConstantsIF.PATH,
             this.getConfigValue(configType, ConfigIF.AS_UMA_SHAREDWITHME_PATH)
                .replaceAll(PROP_VAR_OWNER, subject));
 
          operASInput = new Operation(OperationIF.TYPE.SEARCH); // GET
+         
          operASInput.setJSON(jsonSearch);
 
          operASOutput = _AuthzServerDAO.execute(operASInput);
@@ -410,7 +420,9 @@ public class SharedWithMeHandler extends JaxrsHandler {
             jsonData.put(ConstantsIF.RESULTS, new JSONArray());
          }
 
-         jsonData = this.filter(jsonData, JSON.getObject(jsonInput, ConstantsIF.QUERY));
+         jsonData = this.filter(jsonData, JSON.getObject(jsonInput, 
+            ConstantsIF.QUERY));
+         
          jsonData.put(ConstantsIF.SUBJECT, subject);
 
          jsonData = this.updateResourceData(jsonData);
@@ -556,7 +568,8 @@ public class SharedWithMeHandler extends JaxrsHandler {
       operProxyInput = new Operation(OperationIF.TYPE.READ);
       operProxyOutput = proxyAdmHandler.process(operProxyInput);
 
-      sso_token = JSON.getString(operProxyOutput.getJSON(), ConstantsIF.DATA + "." + ConstantsIF.TOKENID);
+      sso_token = JSON.getString(operProxyOutput.getJSON(), 
+         ConstantsIF.DATA + "." + ConstantsIF.TOKENID);
 
       if (STR.isEmpty(sso_token)) {
          this.abort(METHOD, "Proxy Admin sso token is empty");
@@ -575,8 +588,11 @@ public class SharedWithMeHandler extends JaxrsHandler {
             operInput = new Operation(OperationIF.TYPE.SEARCH);
 
             jsonQuery = new JSONObject();
+            
             jsonQuery.put(ConstantsIF.OPERATOR, ConstantsIF.EQUAL);
-            jsonQuery.put(ConstantsIF.ATTRIBUTE, ConstantsIF.DATA + "." + ConstantsIF.REGISTER);
+            
+            jsonQuery.put(ConstantsIF.ATTRIBUTE, ConstantsIF.DATA + "." 
+               + ConstantsIF.REGISTER);
             // Need to set the value for each entry
 
             jsonSearch = new JSONObject();
@@ -588,12 +604,14 @@ public class SharedWithMeHandler extends JaxrsHandler {
                   registerId = JSON.getString(jsonRegister, ConstantsIF._ID);
 
                   if (!STR.isEmpty(registerId)) {
-                     resourceServer = JSON.getString(jsonRegister, JaxrsHandler.AM_ATTR_RESOURCE_SERVER);
+                     resourceServer = JSON.getString(jsonRegister, 
+                        JaxrsHandler.AM_ATTR_RESOURCE_SERVER);
 
                      /*
-                      * The "subject" could have "shared with me" resources that come from different
-                      * Resource Servers We only want the ones related to "this" RS The
-                      * "Resource Server" value MUST match the Resource Server Id (rsId)
+                      * The "subject" could have "shared with me" resources 
+                      * that come from different Resource Servers We only want 
+                      * the ones related to "this" RS The "Resource Server" 
+                      * value MUST match the Resource Server Id (rsId)
                       */
                      if (!STR.isEmpty(resourceServer) && resourceServer.equalsIgnoreCase(rsId)) {
 
@@ -603,7 +621,8 @@ public class SharedWithMeHandler extends JaxrsHandler {
 
                         operOutput = resourceHandler.process(operInput);
 
-                        if (operOutput != null && operOutput.getState() == STATE.SUCCESS) {
+                        if (operOutput != null 
+                           && operOutput.getState() == STATE.SUCCESS) {
                            jsonResource = JSON.getObject(operOutput.getJSON(),
                               ConstantsIF.DATA + "." + ConstantsIF.RESULTS + "[0]");
 
@@ -612,29 +631,49 @@ public class SharedWithMeHandler extends JaxrsHandler {
                                * Get the the subject's current scopes, from policy
                                */
                               jsonPolicy = new JSONObject();
+                              
                               jsonPolicy.put(ConstantsIF.SSO_TOKEN, sso_token);
-                              jsonPolicy.put(ConstantsIF.SUBJECT, JSON.getString(jsonInput, ConstantsIF.SUBJECT));
+                              
+                              jsonPolicy.put(ConstantsIF.SUBJECT, 
+                                 JSON.getString(jsonInput, ConstantsIF.SUBJECT));
+                              
                               jsonPolicy.put(ConstantsIF.REGISTERED, registerId);
+                              
                               jsonPolicy.put(ConstantsIF.OWNER,
-                                 JSON.getString(jsonRegister, JaxrsHandler.AM_ATTR_RESOURCE_OWNER_ID));
+                                 JSON.getString(jsonRegister, 
+                                    JaxrsHandler.AM_ATTR_RESOURCE_OWNER_ID));
 
                               arrayPolicyScopes = this.getScopes(jsonPolicy);
+                              
                               if (arrayPolicyScopes != null) {
-                                 jsonRegister.put(ConstantsIF.POLICY, arrayPolicyScopes);
+                                 jsonRegister.put(ConstantsIF.POLICY, 
+                                    arrayPolicyScopes);
                               }
 
-                              jsonRegister.put(ConstantsIF.ID, JSON.getString(jsonResource, ConstantsIF.UID));
-                              jsonRegister.put(ConstantsIF.LABEL, JSON.getString(jsonResource,
-                                 ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.LABEL));
-                              jsonRegister.put(ConstantsIF.DESCRIPTION, JSON.getString(jsonResource,
-                                 ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.DESCRIPTION));
+                              jsonRegister.put(ConstantsIF.ID, 
+                                 JSON.getString(jsonResource, ConstantsIF.UID));
+                              
+                              jsonRegister.put(ConstantsIF.LABEL, 
+                                 JSON.getString(jsonResource,
+                                    ConstantsIF.DATA + "." + ConstantsIF.META 
+                                       + "." + ConstantsIF.LABEL));
+                              
+                              jsonRegister.put(ConstantsIF.DESCRIPTION, 
+                                 JSON.getString(jsonResource,
+                                    ConstantsIF.DATA + "." + ConstantsIF.META 
+                                       + "." + ConstantsIF.DESCRIPTION));
+                              
                               jsonRegister.put(ConstantsIF.OWNER,
                                  jsonRegister.get(JaxrsHandler.AM_ATTR_RESOURCE_OWNER_ID));
 
                               jsonRegister.remove(ConstantsIF._ID);
+                              
                               jsonRegister.remove(ConstantsIF._REV);
+                              
                               jsonRegister.remove(JaxrsHandler.AM_ATTR_RESOURCE_SERVER);
+                              
                               jsonRegister.remove(ConstantsIF.LABELS);
+                              
                               jsonRegister.remove(JaxrsHandler.AM_ATTR_RESOURCE_OWNER_ID);
 
                               discoverable = JSON.getBoolean(jsonResource,
@@ -702,7 +741,8 @@ public class SharedWithMeHandler extends JaxrsHandler {
     * @param jsonFilter JSONObject filter
     * @return JSONObject output
     */
-   private JSONObject filter(final JSONObject jsonInput, final JSONObject jsonFilter) {
+   private JSONObject filter(final JSONObject jsonInput, 
+      final JSONObject jsonFilter) {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String filterAttr = null;
       String filterVal = null;

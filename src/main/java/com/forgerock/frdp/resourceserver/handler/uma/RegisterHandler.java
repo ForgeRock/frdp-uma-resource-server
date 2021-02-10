@@ -45,7 +45,8 @@ public class RegisterHandler extends JaxrsHandler {
     * @param configMgr ConfigurationManagerIF management of configurations
     * @param handlerMgr HandlerManagerIF provides management of Handlers
     */
-   public RegisterHandler(final ConfigurationManagerIF configMgr, final HandlerManagerIF handlerMgr) {
+   public RegisterHandler(final ConfigurationManagerIF configMgr, 
+      final HandlerManagerIF handlerMgr) {
       super(configMgr, handlerMgr);
 
       String METHOD = "ContentHandler(configMgr, handlerMgr)";
@@ -59,9 +60,6 @@ public class RegisterHandler extends JaxrsHandler {
       return;
    }
 
-   /*
-    * ================= PROTECTED METHODS =================
-    */
    /**
     * Override the "validate" interface, used to check the operation input
     *
@@ -135,8 +133,10 @@ public class RegisterHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-            new Object[]{operInput != null ? operInput.toString() : NULL,
-               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
+            new Object[]{
+               operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL
+            });
       }
 
       operOutput = new Operation(operInput.getType());
@@ -189,8 +189,10 @@ public class RegisterHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-            new Object[]{operInput != null ? operInput.toString() : NULL,
-               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
+            new Object[]{
+               operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL
+            });
       }
 
       try {
@@ -237,8 +239,10 @@ public class RegisterHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-            new Object[]{operInput != null ? operInput.toString() : NULL,
-               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
+            new Object[]{
+               operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL
+            });
       }
 
       operOutput = new Operation(OperationIF.TYPE.READ);
@@ -306,8 +310,10 @@ public class RegisterHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-            new Object[]{operInput != null ? operInput.toString() : NULL,
-               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
+            new Object[]{
+               operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL
+            });
       }
 
       operOutput = new Operation(OperationIF.TYPE.REPLACE);
@@ -362,8 +368,10 @@ public class RegisterHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-            new Object[]{operInput != null ? operInput.toString() : NULL,
-               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
+            new Object[]{
+               operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL
+            });
       }
 
       operOutput = new Operation(OperationIF.TYPE.DELETE);
@@ -392,9 +400,6 @@ public class RegisterHandler extends JaxrsHandler {
       return operOutput;
    }
 
-   /*
-    * =============== PRIVATE METHODS ===============
-    */
    /**
     * Initialize object instance
     */
@@ -437,7 +442,8 @@ public class RegisterHandler extends JaxrsHandler {
 
       if (!this.isError()) {
          try {
-            _path = this.getConfigValue(configType, ConfigIF.AS_UMA_RESOURCE_SET_PATH);
+            _path = this.getConfigValue(configType, 
+               ConfigIF.AS_UMA_RESOURCE_SET_PATH);
          } catch (Exception ex) {
             msg = CLASS + ": " + METHOD + ": _path : " + ex.getMessage();
             this.setError(true);
@@ -521,8 +527,12 @@ public class RegisterHandler extends JaxrsHandler {
       }
 
       jsonRegisterHeaders = new JSONObject();
-      jsonRegisterHeaders.put(ConstantsIF.CONTENT_TYPE, ConstantsIF.APPLICATION_JSON);
-      jsonRegisterHeaders.put(ConstantsIF.AUTHORIZATION, "Bearer " + access_token);
+      
+      jsonRegisterHeaders.put(ConstantsIF.HDR_CONTENT_TYPE, 
+         ConstantsIF.TYPE_JSON);
+      
+      jsonRegisterHeaders.put(ConstantsIF.HDR_AUTHORIZATION, 
+         "Bearer " + access_token);
 
       jsonRegisterInput = new JSONObject();
       jsonRegisterInput.put(ConstantsIF.HEADERS, jsonRegisterHeaders);
@@ -594,11 +604,12 @@ public class RegisterHandler extends JaxrsHandler {
 
       operOutput = new Operation(operInput.getType());
 
-      access_token = JSON.getString(operInput.getJSON(), ConstantsIF.QUERY + "." + ConstantsIF.VALUE);
+      access_token = JSON.getString(operInput.getJSON(), 
+         ConstantsIF.QUERY + "." + ConstantsIF.VALUE);
 
       if (!STR.isEmpty(access_token)) {
          jsonHeaders = new JSONObject();
-         jsonHeaders.put(ConstantsIF.AUTHORIZATION, "Bearer " + access_token);
+         jsonHeaders.put(ConstantsIF.HDR_AUTHORIZATION, "Bearer " + access_token);
 
          jsonSearch = new JSONObject();
          jsonSearch.put(ConstantsIF.HEADERS, jsonHeaders);
@@ -686,7 +697,8 @@ public class RegisterHandler extends JaxrsHandler {
 
          if (!STR.isEmpty(registerId)) {
             jsonHeaders = new JSONObject();
-            jsonHeaders.put(ConstantsIF.AUTHORIZATION, "Bearer " + access_token);
+            jsonHeaders.put(ConstantsIF.HDR_AUTHORIZATION, 
+               "Bearer " + access_token);
 
             jsonData = new JSONObject();
             jsonData.put(ConstantsIF.HEADERS, jsonHeaders);
@@ -702,18 +714,23 @@ public class RegisterHandler extends JaxrsHandler {
                jsonOutput = operOutput.getJSON();
 
                if (jsonOutput == null || jsonOutput.isEmpty()) {
-                  throw new Exception(METHOD + ": JSON output is empty: " + operOutput.getStatus());
+                  throw new Exception(METHOD 
+                     + ": JSON output is empty: " + operOutput.getStatus());
                }
             } else if (operOutput.getState() == STATE.NOTEXIST) {
                jsonOutput = null;
             } else {
-               throw new Exception(METHOD + ": Could not read registered resource: " + operOutput.getStatus());
+               throw new Exception(METHOD 
+                  + ": Could not read registered resource: " 
+                  + operOutput.getStatus());
             }
          } else {
-            throw new Exception(METHOD + ": registered resource id is empty");
+            throw new Exception(METHOD 
+               + ": registered resource id is empty");
          }
       } else {
-         throw new Exception(METHOD + ": access_token is empty");
+         throw new Exception(METHOD 
+            + ": access_token is empty");
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -798,8 +815,12 @@ public class RegisterHandler extends JaxrsHandler {
       }
 
       jsonRegisterHeaders = new JSONObject();
-      jsonRegisterHeaders.put(ConstantsIF.CONTENT_TYPE, ConstantsIF.APPLICATION_JSON);
-      jsonRegisterHeaders.put(ConstantsIF.AUTHORIZATION, "Bearer " + access_token);
+      
+      jsonRegisterHeaders.put(ConstantsIF.HDR_CONTENT_TYPE, 
+         ConstantsIF.TYPE_JSON);
+      
+      jsonRegisterHeaders.put(ConstantsIF.HDR_AUTHORIZATION, 
+         "Bearer " + access_token);
 
       jsonReplaceInput = new JSONObject();
       jsonReplaceInput.put(ConstantsIF.HEADERS, jsonRegisterHeaders);
@@ -813,8 +834,9 @@ public class RegisterHandler extends JaxrsHandler {
       operReplaceOutput = _AuthzServerDAO.execute(operReplaceInput);
 
       if (operReplaceOutput.isError()) {
-         throw new Exception(
-            METHOD + ": " + operReplaceOutput.getState().toString() + ": " + operReplaceOutput.getStatus());
+         throw new Exception(METHOD 
+            + ": " + operReplaceOutput.getState().toString() + ": " 
+            + operReplaceOutput.getStatus());
       }
 
       _logger.exiting(CLASS, METHOD);
@@ -857,7 +879,9 @@ public class RegisterHandler extends JaxrsHandler {
 
          if (!STR.isEmpty(registerId)) {
             jsonHeaders = new JSONObject();
-            jsonHeaders.put(ConstantsIF.AUTHORIZATION, "Bearer " + access_token);
+            
+            jsonHeaders.put(ConstantsIF.HDR_AUTHORIZATION, 
+               "Bearer " + access_token);
 
             jsonData = new JSONObject();
             jsonData.put(ConstantsIF.HEADERS, jsonHeaders);
@@ -869,10 +893,13 @@ public class RegisterHandler extends JaxrsHandler {
 
             operDeleteOutput = _AuthzServerDAO.execute(operDeleteInput);
 
-            if (operDeleteOutput.getState() != STATE.SUCCESS && operDeleteOutput.getState() != STATE.NOTEXIST) {
-               throw new Exception(
-                  METHOD + ": Delete failed: STATE: " + operDeleteOutput.getState().toString() + ", STATUS: "
-                  + operDeleteOutput.getStatus() + ", JSON: " + operDeleteOutput.getJSON().toString());
+            if (operDeleteOutput.getState() != STATE.SUCCESS 
+               && operDeleteOutput.getState() != STATE.NOTEXIST) {
+               throw new Exception(METHOD 
+                  + ": Delete failed: STATE: " 
+                  + operDeleteOutput.getState().toString() + ", STATUS: "
+                  + operDeleteOutput.getStatus() + ", JSON: " 
+                  + operDeleteOutput.getJSON().toString());
             }
          } else {
             throw new Exception(METHOD + ": registered resource id is empty");
