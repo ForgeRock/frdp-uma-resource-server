@@ -192,7 +192,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\t\"meta\": {\n\t\t\"discoverable\": false,\n    \t\"name\": \"16687\",\n\t\t\"type\": \"fhir-patient\",\n\t\t\"label\": \"Patient\",\n\t\t\"description\": \"FHIR request for patient\"\n\t},\n\t\"content\": {\n\t\t\"id\": \"fhir\",\n\t\t\"uri\": \"https://thinkon.smilecdr.com/fhir-request/Patient/16687\"\n\t},\n\t\"register\": {\n\t\t\"resource_scopes\": [ \"content\", \"meta\", \"print\", \"download\"],\n\t\t\"icon_uri\": \"https://img.icons8.com/doodle/48/000000/money.png\",\n\t\t\"policy\": {\n\t\t\t\"permissions\": [\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"aadams\",\n\t\t\t\t\t\"scopes\": [\"content\", \"meta\"]\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"myoshida\",\n\t\t\t\t\t\"scopes\": [\"content\"]\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"bjensen\",\n\t\t\t\t\t\"scopes\": [\"content\", \"meta\", \"print\"]\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t}\n}"
+							"raw": "{\n\t\"meta\": {\n\t\t\"discoverable\": false,\n    \t\"name\": \"15818\",\n\t\t\"type\": \"fhir-patient\",\n\t\t\"label\": \"Patient\",\n\t\t\"description\": \"FHIR request for patient\"\n\t},\n\t\"content\": {\n\t\t\"id\": \"fhir\",\n\t\t\"uri\": \"https://forgerock.demo.smilecdr.com/fhir-request/Patient/15818\"\n\t},\n\t\"register\": {\n\t\t\"resource_scopes\": [ \"content\", \"meta\", \"print\", \"download\"],\n\t\t\"icon_uri\": \"https://img.icons8.com/doodle/48/000000/money.png\",\n\t\t\"policy\": {\n\t\t\t\"permissions\": [\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"aadams\",\n\t\t\t\t\t\"scopes\": [\"content\", \"meta\"]\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"myoshida\",\n\t\t\t\t\t\"scopes\": [\"content\"]\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"subject\": \"bjensen\",\n\t\t\t\t\t\"scopes\": [\"content\", \"meta\", \"print\"]\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t}\n}"
 						},
 						"url": {
 							"raw": "{{FQDN-rs}}/rest/manage/resources",
@@ -485,7 +485,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\t\"id\": \"fhir\",\n    \"uri\": \"https://thinkon.smilecdr.com/fhir-request/Claim/10883\"\n}"
+							"raw": "{\n\t\"id\": \"fhir\",\n    \"uri\": \"https://forgerock.demo.smilecdr.com/fhir-request/Claim/15928\"\n}"
 						},
 						"url": {
 							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",
@@ -617,7 +617,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"uri\": \"https://thinkon.smilecdr.com/fhir-request/Observation?patient=11022\"\n}"
+							"raw": "{\n    \"uri\": \"https://forgerock.demo.smilecdr.com/fhir-request/Observation?patient=15818\"\n}"
 						},
 						"url": {
 							"raw": "{{FQDN-rs}}/rest/manage/resources/{{resourceId}}/content",

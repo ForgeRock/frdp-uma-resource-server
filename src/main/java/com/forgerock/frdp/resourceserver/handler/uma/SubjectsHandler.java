@@ -18,6 +18,7 @@ import com.forgerock.frdp.utils.JSON;
 import com.forgerock.frdp.utils.STR;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -44,7 +45,8 @@ public class SubjectsHandler extends JaxrsHandler {
     * @param configMgr ConfigurationManagerIF management of configurations
     * @param handlerMgr HandlerManagerIF provides management of Handlers
     */
-   public SubjectsHandler(final ConfigurationManagerIF configMgr, final HandlerManagerIF handlerMgr) {
+   public SubjectsHandler(final ConfigurationManagerIF configMgr, 
+      final HandlerManagerIF handlerMgr) {
       super(configMgr, handlerMgr);
 
       String METHOD = "SubjectsHandler(configMgr, handlerMgr)";
@@ -58,9 +60,6 @@ public class SubjectsHandler extends JaxrsHandler {
       return;
    }
 
-   /*
-    * ================= PROTECTED METHODS =================
-    */
    /**
     * Override the "validate" interface, used to check the operation input
     *
@@ -75,12 +74,12 @@ public class SubjectsHandler extends JaxrsHandler {
       _logger.entering(CLASS, METHOD);
 
       if (oper == null) {
-         throw new Exception("Operation object is null");
+         throw new Exception(METHOD + ": Operation object is null");
       }
 
       jsonInput = oper.getJSON();
       if (jsonInput == null || jsonInput.isEmpty()) {
-         throw new Exception("JSON Input is null or empty");
+         throw new Exception(METHOD + ": JSON Input is null or empty");
       }
 
       switch (oper.getType()) {
@@ -89,7 +88,9 @@ public class SubjectsHandler extends JaxrsHandler {
             break;
          }
          default: {
-            throw new Exception("Unsupported operation type: '" + oper.getType().toString() + "'");
+            throw new Exception(METHOD 
+               + ": Unsupported operation type: '" 
+               + oper.getType().toString() + "'");
          }
       }
 
@@ -136,8 +137,10 @@ public class SubjectsHandler extends JaxrsHandler {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "input=''{0}'', json=''{1}''",
-            new Object[]{operInput != null ? operInput.toString() : NULL,
-               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL});
+            new Object[]{
+               operInput != null ? operInput.toString() : NULL,
+               operInput.getJSON() != null ? operInput.getJSON().toString() : NULL
+            });
       }
 
       try {
@@ -154,12 +157,6 @@ public class SubjectsHandler extends JaxrsHandler {
       return operOutput;
    }
 
-   /*
-    * =============== PRIVATE METHODS ===============
-    */
-   /**
-    * Initialize object instance
-    */
    private void init() {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String msg = null;
@@ -301,8 +298,10 @@ public class SubjectsHandler extends JaxrsHandler {
          jsonQuery.put(ConstantsIF.OPERATOR, ConstantsIF.NONE);
 
          jsonHeaders = new JSONObject();
-         jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(configType, ConfigIF.AS_UMA_POLICIES_ACCEPT));
-         jsonHeaders.put(this.getConfigValue(configType, ConfigIF.AS_COOKIE), sso_token);
+         jsonHeaders.put(ConstantsIF.HDR_ACCEPT_API_VERSION, 
+            this.getConfigValue(configType, ConfigIF.AS_UMA_POLICIES_ACCEPT));
+         jsonHeaders.put(this.getConfigValue(configType, 
+            ConfigIF.AS_COOKIE), sso_token);
 
          jsonParams = new JSONObject();
          jsonParams.put("_pageSize", "10");
@@ -418,7 +417,8 @@ public class SubjectsHandler extends JaxrsHandler {
       mapResources = new HashMap<>();
 
       if (jsonPolicies != null && !jsonPolicies.isEmpty()) {
-         arrayPolicies = JSON.getArray(jsonPolicies, ConstantsIF.DATA + "." + ConstantsIF.RESULT);
+         arrayPolicies = JSON.getArray(jsonPolicies, 
+            ConstantsIF.DATA + "." + ConstantsIF.RESULT);
 
          if (arrayPolicies != null && !arrayPolicies.isEmpty()) {
 
@@ -427,16 +427,21 @@ public class SubjectsHandler extends JaxrsHandler {
                   jsonPolicy = (JSONObject) policy;
                   registerId = JSON.getString(jsonPolicy, ConstantsIF.POLICYID);
                   name = JSON.getString(jsonPolicy, ConstantsIF.NAME);
-                  arrayPermissons = JSON.getArray(jsonPolicy, ConstantsIF.PERMISSIONS);
+                  arrayPermissons = JSON.getArray(jsonPolicy, 
+                     ConstantsIF.PERMISSIONS);
 
                   resourceId = this.getResourceIdFromRegisterId(registerId);
 
                   if (!STR.isEmpty(resourceId)) {
                      for (Object permission : arrayPermissons) {
-                        if (permission != null && permission instanceof JSONObject) {
+                        if (permission != null 
+                           && permission instanceof JSONObject) {
+                           
                            jsonPermission = (JSONObject) permission;
-                           subject = JSON.getString(jsonPermission, ConstantsIF.SUBJECT);
-                           arrayScopes = JSON.getArray(jsonPermission, ConstantsIF.SCOPES);
+                           subject = JSON.getString(jsonPermission, 
+                              ConstantsIF.SUBJECT);
+                           arrayScopes = JSON.getArray(jsonPermission, 
+                              ConstantsIF.SCOPES);
 
                            if (mapResources.containsKey(subject)) {
                               arrayResources = mapResources.get(subject);
@@ -507,7 +512,7 @@ public class SubjectsHandler extends JaxrsHandler {
     * }
     * </pre>
     *
-    * @param registerId String registeration identifier
+    * @param registerId String registration identifier
     * @return String resource identifier
     */
    private String getResourceIdFromRegisterId(final String registerId) {
@@ -543,14 +548,18 @@ public class SubjectsHandler extends JaxrsHandler {
             operOutput.setState(STATE.ERROR);
             operOutput.setStatus(METHOD + ": " + ex.getMessage());
 
-            _logger.severe(METHOD + ": " + ex.getMessage());
+            _logger.log(Level.SEVERE, "{0}: {1}", 
+               new Object[]{
+                  METHOD, ex.getMessage()
+               });
          }
 
          if (!this.isError()) {
             operOutput = _MongoDAO.execute(operInput);
 
             if (operOutput.getState() == STATE.SUCCESS) {
-               resourceId = JSON.getString(operOutput.getJSON(), ConstantsIF.RESULTS + "[0]." + ConstantsIF.UID);
+               resourceId = JSON.getString(operOutput.getJSON(), 
+                  ConstantsIF.RESULTS + "[0]." + ConstantsIF.UID);
             }
          }
       }

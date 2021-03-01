@@ -18,17 +18,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 - Specification: [User-Managed Access (UMA) 2.0 Grant for OAuth 2.0 Authorization](https://docs.kantarainitiative.org/uma/wg/rec-oauth-uma-grant-2.0.html)
 - Specification: [Federated Authorization for User-Managed Access (UMA) 2.0](https://docs.kantarainitiative.org/uma/wg/rec-oauth-uma-federated-authz-2.0.html)
-- Documentation: [ForgeRock Access Manager, User Managed Access (UMA) 2.0 Guide](https://backstage.forgerock.com/docs/am/6.5/uma-guide/)
+- Documentation: [ForgeRock Access Manager 7, User Managed Access (UMA) 2.0 Guide](https://backstage.forgerock.com/docs/am/7/uma-guide/)
 
 # Requirements
 
 The following items must be installed:
 
 1. [Apache Maven](https://maven.apache.org/) *(tested with 3.5.x, 3.6.x)*
-1. [Java Development Kit 8](https://openjdk.java.net/)
+1. [Java Development Kit 11](https://openjdk.java.net/projects/jdk/11/)
 1. [MongoDB](https://www.mongodb.com) *(tested with 3.2)*
-1. [Apache Tomcat](https://tomcat.apache.org/index.html) *(tested with Tomcat 8.5.x)*
-1. [ForgeRock Access Manager](https://www.forgerock.com/platform/access-management) *(tested with 6.0, 6.5)*
+1. [Apache Tomcat](https://tomcat.apache.org/index.html) *(tested with Tomcat 9.0.x)*
+1. [ForgeRock Access Manager](https://www.forgerock.com/platform/access-management) *(tested with 7.0)*
 
 # Build
 
@@ -53,13 +53,13 @@ The *package* process creates a deployable war file, in the current directory: `
 
 ```
 ls -la ./target
-total 12232
-drwxrwxr-x. 5 forgerock forgerock       89 Mar 26 17:29 .
-drwxrwxr-x. 7 forgerock forgerock     4096 Mar 26 17:29 ..
-drwxrwxr-x. 3 forgerock forgerock       16 Mar 26 17:29 classes
-drwxrwxr-x. 2 forgerock forgerock       27 Mar 26 17:29 maven-archiver
-drwxrwxr-x. 4 forgerock forgerock       95 Mar 26 17:29 resource-server
--rw-rw-r--. 1 forgerock forgerock 12519090 Mar 26 17:29 resource-server.war
+total 12488
+drwxrwxr-x 5 forgerock forgerock       89 Oct 21 20:57 .
+drwxrwxr-x 7 forgerock forgerock      155 Oct 21 20:57 ..
+drwxrwxr-x 3 forgerock forgerock       16 Oct 21 20:57 classes
+drwxrwxr-x 2 forgerock forgerock       27 Oct 21 20:57 maven-archiver
+drwxrwxr-x 4 forgerock forgerock       95 Oct 21 20:57 resource-server
+-rw-rw-r-- 1 forgerock forgerock 12787600 Oct 21 20:57 resource-server.war
 ```
 
 # Settings
@@ -142,7 +142,7 @@ Read the documents from both collections. Quit MongoDB. \
 
 # Configure Access Manager
 
-The ForgeRock Access Manager (6.0.x, 6.5.x) needs to be configured to support the UMA 2.0 Authorization Server (AS) functionality. The ForgeRock Access Manager Policy APIs and OAuth 2.0 functionality will also configured. See the Access Manager 6.5 [User Managed Access (UMA) 2.0 Guide](https://backstage.forgerock.com/docs/am/6.5/uma-guide/) for installation details.
+The ForgeRock Access Manager (7.0) needs to be configured to support the UMA 2.0 Authorization Server (AS) functionality. The ForgeRock Access Manager Policy APIs and OAuth 2.0 functionality will also configured. See the Access Manager 7.0 [User Managed Access (UMA) 2.0 Guide](https://backstage.forgerock.com/docs/am/7/uma-guide/) for installation details.
 
 These procedures will create and configure:
 - **OAuth2 Provider** 
@@ -152,96 +152,85 @@ These procedures will create and configure:
 - **Resource Owner (RO)**, the user, `dcrane`, that owns the resources
 - **Requesting Party (RqP)**, the user, `bjensen`, that requests and gets access to the resources
 
-See the Access Manager 6.5 [UMA Setup Procedures](https://backstage.forgerock.com/docs/am/6.5/uma-guide/#uma-set-up-procedures) documentation for details
+See the Access Manager 7.0 [UMA Setup Procedures](https://backstage.forgerock.com/docs/am/7/uma-guide/uma-set-up-procedures.html) documentation for details
 
 Log into the Access Manager admin console as ``amadmin``
 
-## Create Services
-
-This procedure will create two **Services**:
-- OAuth2 Provider
-- UMA Provider
+## Create / Update OAuth2 Provider
 
 **NOTICE:** *If you are using an existing Access Manager installation and these Providers exist, they will be replaced.*
 
-1. From **Top Menu Bar**, select `Realms` > `Top Level Realm` 
-1. From panel, select `Configure OAuth Provider` 
-1. From panel, select `Configure User Managed Access` 
-1. Check (enable) `Issue Refresh Tokens` 
-1. Check (enable) `ISsue Refresh Tokens on Refreshing Access Tokens` 
-1. Click `Create` 
-1. From the dialog window, click `OK`
+Create / update the Access Manager **OAuth2 Provider** ... the following configuration is required:
+
+| Attribute | Value |
+| --------- | ----- |
+| `Issue Refresh Tokens` | **enabled** |
+| `Issue Refresh Tokens on Refreshing Access Tokens` | **enabled** |
+| `supportedGrantTypes` | at least contains '**UMA**' and '**Resource Owner Password Credentials**' |
+
+## Create UMA Provider
+
+**NOTICE:** *If you are using an existing Access Manager installation and these Providers exist, they will be replaced.*
+
+Create / update the Access Manager Provider: **UMA Provider** ... the following configuration is required:
+
+- Use default settings
 
 ## Create OAuth 2.0 *UMA Requesting Party (RqP)* Client
 
-This procedure creates an OAuth 2.0 client for the Requesting Party (RqP) application which will access resources.
+Create an OAuth 2.0 client for the Requesting Party (RqP) application, which will access resources. The following configuration is required:
 
-1. From **Top Menu Bar**, select `Realms` > `Top Level Realm` 
-1. From the Left Menu, select **Applications** > **OAuth 2.0** 
-1. Select **Clients** Tab 
-1. Click **+ Add Client** 
-1. Set **Client ID** to `UMA-RqP-Client` 
-1. Set **Client Secret** `password` 
-1. Set **Redirection URIs** `_PROTOCOL_://_HOSTNAME_:_PORT_/resource-server`
-1. Set **Scopes** `read` and `openid` *(press Enter after each item)*
-1. Click **Create** 
-1. Select **Advanced** Tab 
-1. Set **Display Name** to `UMA RqP` 
-1. Set **Display Description** to `User Managed Access (UMA) Requesting Party Client` 
-1. Set **Grant Type** to include: `Authorization Code` and `UMA` *(press Enter after each item)*
-1. Click **Save Changes**
+| Attribute | Value |
+| --------- | ----- |
+| `Client ID` | **UMA-RqP-Client** |
+| `Client Secret` | **password** |
+| `Redirection URIs` | https://uma.example.com/resource-server |
+| `Scopes` | '**read**' and '**openid**' |
+| `Display Name` | **UMA RqP** |
+| `Display Description` | **User Managed Access (UMA) Requesting Party Client** |
+| `Grant Types` | include: '**Authorization Code**', '**UMA**', and '**Resource Owner Password Credentials**' |
 
 ## Create OAuth 2.0 *UMA Resource Server (RS)* Client
 
-This procedure creates an OAuth 2.0 client for the Resource Server (RS) application.
+Create an OAuth 2.0 client for the Resource Server (RS) application.  The following configuration is required:
 
-1. From **Top Menu Bar**, select `Realms` > `Top Level Realm` 
-1. From the Left Menu, select **Applications**, Select **OAuth 2.0** 
-1. Select **Clients** Tab 
-1. Click **+ Add Client** 
-1. Set **Client ID** to `UMA-Resource-Server` 
-1. Set **Client Secret** `password`
-1. Set **Redirection URIs** `_PROTOCOL_://_HOSTNAME_:_PORT_/resource-server`
-1. Set **Scopes** `uma_protection` *(press Enter after each item)*
-1. Click **Create** 
-1. Select **Core** Tab 
-1. Set **Refresh Token Lifetime (seconds)** to `-1` 
-1. Click **Save Changes** 
-1. Select **Advanced** Tab 
-1. Set **Display Name** to `UMA RS` 
-1. Set **Display Description** to `User Managed Access (UMA) Resource Server` 
-1. Set **Grant Type** to include: `Authorization Code` and `Refresh Token` 
-1. Click **Save Changes**
+| Attribute | Value |
+| --------- | ----- |
+| `Client ID` | **UMA-Resource-Server** |
+| `Client Secret` | **password** |
+| `Redirection URIs` | https://uma.example.com/resource-server |
+| `Scopes` | **uma_protection** |
+| `Display Name` | **UMA RS** |
+| `Display Description` | **User Managed Access (UMA) Resource Server** |
+| `Grant Types` | include: '**Authorization Code**', '**Refresh Token**', and '**Resource Owner Password Credentials**' |
 
 ## Create *Resource Owner (RO)* User
 
-1. From **Top Menu Bar**, select `Realms` > `Top Level Realm` 
-1. From the Left Menu, select **Identities**
-1. Select **Identities** Tab
-1. Click **+ Add Identity**
-1. Set **User ID** to `dcrane`
-1. Set **Password** to `password`
-1. Click **Create**
-1. Set **First Name** to `Danny`
-1. Set **Last Name** to `Crane`
-1. Set **Full Name** to `Danny Crane - Resource Owner`
-1. Set **User Status** to `Active`
-1. Click **Save Changes**
+Create a user to represent the **Resource Owner**.  Use the following attributes:
+
+| Attribute | Value |
+| --------- | ----- |
+| `User Id` | **dcrane** |
+| `Password` | **password** |
+| `First Name` | **Danny** |
+| `Last Name` | **Crane** |
+| `Full Name` | **Danny Crane - Resource Owner** |
+| `Email` | **dcrane@example.com** |
+| `Status` | **Active** |
 
 ## Create *Requesting Party (RqP)* User
 
-1. From **Top Menu Bar**, select `Realms` > `Top Level Realm` 
-1. From the Left Menu, select **Identities**
-1. Select **Identities** Tab
-1. Click **+ Add Identity**
-1. Set **User ID** to `bjensen`
-1. Set **Password** to `password`
-1. Click **Create**
-1. Set **First Name** to `Barb`
-1. Set **Last Name** to `Jensen`
-1. Set **Full Name** to `Barb Jensen - Requesting Party`
-1. Set **User Status** to `Active`
-1. Click **Save Changes**
+Create a user to represent the **Requesting Party**.  Use the following attributes:
+
+| Attribute | Value |
+| --------- | ----- |
+| `User Id` | **bjensen** |
+| `Password` | **password** |
+| `First Name` | **Barb** |
+| `Last Name` | **Jensen** |
+| `Full Name` | **Barb Jensen - Requesting Party** |
+| `Email` | **bjensen@example.com** |
+| `Status` | **Active** |
 
 # Install Resource Server
 
@@ -318,7 +307,7 @@ JSON Object ... `as.connect`
       "protocol": "https",
       "host": "as.example.com",
       "port": "443",
-      "path": "openam"
+      "path": "am"
    }
 }
 ```
@@ -326,6 +315,7 @@ JSON Object ... `as.connect`
 - Set **protocol**: `http` or `https`
 - Set **host**: Fully Qualified Domain Name (FQDN) of installation
 - Set **port**: Port that has the Access Manager installed: `443`
+- Set **path**: Path name for Access Manager: `am`
 
 ### Authorization Server (AS) admin credentials: 
 JSON Object ... `as.admin`
@@ -340,6 +330,27 @@ JSON Object ... `as.admin`
 ```
 
 - Set **password**: Password for the Access Manager administrator account: `password`
+
+### Authorization Server (AS) authentication query parameters:
+
+If the Access Manager installation requires the setting of `authIndexType` and `authIndexValue` query parameters ... add a `params` object to the `as.authenticate` object :
+
+```json
+{
+   "rs": {},
+   "as": {
+      "admin": {},
+      "authenticate": {
+         "headers": {},
+         "params": {
+            "authIndexType": "service",
+            "authIndexValue": "ldapService"
+         },
+         "path": "..."
+      }
+   }
+}
+```
 
 ## Configure `content-services.json`
 
@@ -389,4 +400,4 @@ Use the provided Postman [collections](/testing) to test the Use Cases:
 
 ## Ready-2-Run environment
 
-If you want to get started *quickly* with UMA ... take a look this [Containers for UMA](https://github.com/ForgeRock/frdp-containers-uma) GitHub project.  It uses Docker and Docker-Compose to assemble *this* project in about 5 minutes.  There's a [YouTube video](https://www.youtube.com/watch?v=9kPqt5gfI4g) of the project which covers the setup procedure, building of containers, and running of the use cases.
+If you want to get started *quickly* with UMA ... take a look this [Containers for UMA](https://github.com/ForgeRock/frdp-containers-uma) GitHub project.  It uses Docker and Docker-Compose to assemble *this* project in about 5 minutes.  There's a [YouTube video](https://youtu.be/df9hSWMiYvg) of the project which covers the setup procedure, building of containers, and running of the use cases.

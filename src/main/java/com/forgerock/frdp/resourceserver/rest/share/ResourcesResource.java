@@ -2,7 +2,6 @@
  * Copyright (c) 2018-2020, ForgeRock, Inc., All rights reserved
  * Use subject to license terms.
  */
-
 package com.forgerock.frdp.resourceserver.rest.share;
 
 import com.forgerock.frdp.common.BasicData;
@@ -30,22 +29,26 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 /**
- * Resource subject, Requesting Parrt (Rqp), management: GET
- * .../rest/share/resources/{id} DELETE .../rest/share/resources/{id}/policy
- *
+ * Resource subject, Requesting Party (RqP), management:
+ * <pre>
+ * GET .../rest/share/resources/{id}
+ * DELETE .../rest/share/resources/{id}/policy
+ * </pre>
  * @author Scott Fehrman, ForgeRock, Inc.
  */
 public class ResourcesResource extends RSResource {
+
    private final String CLASS = this.getClass().getName();
 
    /**
     * Constructor
     *
-    * @param uriInfo    UriInfo uri information
+    * @param uriInfo UriInfo uri information
     * @param servletCtx ServletContext context from the servlet
-    * @param httpHdrs   HttpHeaders header information
+    * @param httpHdrs HttpHeaders header information
     */
-   public ResourcesResource(final UriInfo uriInfo, final ServletContext servletCtx, final HttpHeaders httpHdrs) {
+   public ResourcesResource(final UriInfo uriInfo,
+      final ServletContext servletCtx, final HttpHeaders httpHdrs) {
       super();
 
       String METHOD = "ResourcesResource()";
@@ -79,16 +82,16 @@ public class ResourcesResource extends RSResource {
     *   }
     * }
     * </pre>
-    * 
+    *
     * @param resourceUid String resource identifier
-    * @param scopes      String space separated list of scopes
+    * @param scopes String space separated list of scopes
     * @return Response HTTP response object
     */
    @GET
    @Path("/{" + ConstantsIF.ID + "}")
    @Produces(MediaType.APPLICATION_JSON)
    public Response getResources(@PathParam(ConstantsIF.ID) String resourceUid,
-         @QueryParam(ConstantsIF.SCOPES) String scopes) {
+      @QueryParam(ConstantsIF.SCOPES) String scopes) {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       Response response = null;
       OperationIF operOutput = null;
@@ -99,7 +102,10 @@ public class ResourcesResource extends RSResource {
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
          _logger.log(DEBUG_LEVEL, "resourceUid=''{0}'', scopes=''{1}''",
-               new Object[] { resourceUid == null ? NULL : resourceUid, scopes == null ? NULL : scopes });
+            new Object[]{
+               resourceUid == null ? NULL : resourceUid,
+               scopes == null ? NULL : scopes
+            });
       }
 
       operOutput = this.readImpl(resourceUid, scopes);
@@ -113,7 +119,7 @@ public class ResourcesResource extends RSResource {
 
    /**
     * Route sub-path "{id}/policy" to process resource policy requests
-    * 
+    *
     * @param resourceUid String resource identifier
     * @return PolicyResource
     */
@@ -125,7 +131,8 @@ public class ResourcesResource extends RSResource {
       _logger.entering(CLASS, METHOD);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "resourceUid=''{0}''", new Object[] { resourceUid == null ? NULL : resourceUid });
+         _logger.log(DEBUG_LEVEL, "resourceUid=''{0}''",
+            new Object[]{resourceUid == null ? NULL : resourceUid});
       }
 
       policyResource = new PolicyResource(_uriInfo, _servletCtx, _httpHdrs, resourceUid);
@@ -134,21 +141,18 @@ public class ResourcesResource extends RSResource {
 
       return policyResource;
    }
-   /*
-    * =============== PRIVATE METHODS ===============
-    */
 
    /**
-    * Get the resource related to the resource identifier and scopes Check if the
-    * Resource Uid is valid Make sure the resource is registered Get the current
-    * "policy" scopes for the resource + subject Scopes can not be "mixed", all
-    * scopes must either be in the current "policy" or NOT in the current "policy"
-    * Get Requesting Party Token (RPT) from header and validate If valid ... return
-    * JSON output Else ... return a Permission Ticket create a permission ticket
-    * based on the scopes
+    * Get the resource related to the resource identifier and scopes Check if
+    * the Resource Uid is valid Make sure the resource is registered Get the
+    * current "policy" scopes for the resource + subject Scopes can not be
+    * "mixed", all scopes must either be in the current "policy" or NOT in the
+    * current "policy" Get Requesting Party Token (RPT) from header and validate
+    * If valid ... return JSON output Else ... return a Permission Ticket create
+    * a permission ticket based on the scopes
     *
     * @param resourceUid String resource identifier
-    * @param scopes      String space separated list of scopes
+    * @param scopes String space separated list of scopes
     * @return OperationIF output
     */
    private OperationIF readImpl(final String resourceUid, final String scopes) {
@@ -226,7 +230,7 @@ public class ResourcesResource extends RSResource {
          owner = JSON.getString(jsonResource, ConstantsIF.DATA + "." + ConstantsIF.OWNER);
 
          bDiscoverable = JSON.getBoolean(jsonResource,
-               ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.DISCOVERABLE);
+            ConstantsIF.DATA + "." + ConstantsIF.META + "." + ConstantsIF.DISCOVERABLE);
 
          operRegisterOutput = this.getRegistration(resourceUid, owner);
 
@@ -242,108 +246,117 @@ public class ResourcesResource extends RSResource {
 
             dataRPT = this.validateRPT(scopes, operResourceOutput);
 
-            jsonScopesToken = JSON.getArray(dataRPT.getJSON(), ConstantsIF.TOKEN);
+            if (dataRPT.getState() != STATE.ERROR) { // allow: FAILED, SUCCESS, NOTEXIST
 
-            if (jsonScopesToken == null) {
-               jsonScopesToken = new JSONArray();
-            }
+               jsonScopesToken = JSON.getArray(dataRPT.getJSON(), ConstantsIF.TOKEN);
 
-            jsonScopes = new JSONObject();
-            jsonScopes.put(ConstantsIF.REQUEST, jsonScopesRequest);
-            jsonScopes.put(ConstantsIF.TOKEN, jsonScopesToken);
-            jsonScopes.put(ConstantsIF.POLICY, jsonScopesPolicy);
+               if (jsonScopesToken == null) {
+                  jsonScopesToken = new JSONArray();
+               }
 
-            if (bDiscoverable) {
-               jsonScopes.put(ConstantsIF.RESOURCE, jsonScopesResource);
-            } else {
-               jsonScopes.put(ConstantsIF.RESOURCE, new JSONArray());
-            }
+               jsonScopes = new JSONObject();
+               jsonScopes.put(ConstantsIF.REQUEST, jsonScopesRequest);
+               jsonScopes.put(ConstantsIF.TOKEN, jsonScopesToken);
+               jsonScopes.put(ConstantsIF.POLICY, jsonScopesPolicy);
 
-            jsonData.put(ConstantsIF.SCOPES, jsonScopes);
-            jsonData.put(ConstantsIF.TOKEN, JSON.getString(dataRPT.getJSON(), REQUESTING_PARTY_TOKEN));
+               if (bDiscoverable) {
+                  jsonScopes.put(ConstantsIF.RESOURCE, jsonScopesResource);
+               } else {
+                  jsonScopes.put(ConstantsIF.RESOURCE, new JSONArray());
+               }
 
-            if (!jsonScopesRequest.isEmpty()) {
-               if (this.validateScopes(jsonScopesRequest, jsonScopesResource)) {
-                  if (this.isRequestMixed(jsonScopesRequest, jsonScopesPolicy)) {
-                     msg = "Requested scopes are mixed";
+               jsonData.put(ConstantsIF.SCOPES, jsonScopes);
+               jsonData.put(ConstantsIF.TOKEN, JSON.getString(dataRPT.getJSON(), REQUESTING_PARTY_TOKEN));
+
+               if (!jsonScopesRequest.isEmpty()) {
+                  if (this.validateScopes(jsonScopesRequest, jsonScopesResource)) {
+                     if (this.isRequestMixed(jsonScopesRequest, jsonScopesPolicy)) {
+                        msg = "Requested scopes are mixed";
+
+                        operOutput.setError(true);
+                        operOutput.setState(STATE.FAILED); // maps to 409: CONFLICT
+                     } else {
+                        jsonData.put(ConstantsIF.MESSAGE, dataRPT.getStatus());
+
+                        if (dataRPT.getState() == STATE.SUCCESS) {
+                           if (bMeta) { // get meta data
+                              operMetaOutput = this.getMeta(resourceUid);
+
+                              jsonMeta = JSON.getObject(operMetaOutput.getJSON(), ConstantsIF.DATA);
+
+                              if (jsonMeta != null) {
+                                 if (jsonMeta.containsKey(ConstantsIF.DISCOVERABLE)) {
+                                    jsonMeta.remove(ConstantsIF.DISCOVERABLE);
+                                 }
+                              } else {
+                                 jsonMeta = new JSONObject();
+                              }
+
+                              jsonMeta.put(ConstantsIF.OWNER, owner);
+                              jsonMeta.put(ConstantsIF.ICON_URI, icon_uri);
+
+                              jsonData.put(ConstantsIF.META, jsonMeta);
+                           }
+
+                           if (bContent) { // get content
+                              operContentOutput = this.contentRead(resourceUid, jsonOptions);
+
+                              jsonContent = operContentOutput.getJSON();
+
+                              if (jsonContent == null || jsonContent.isEmpty()) {
+                                 jsonContent = new JSONObject();
+                              }
+
+                              jsonData.put(ConstantsIF.CONTENT, jsonContent);
+                           }
+
+                           msg = "Success";
+
+                           operOutput.setState(STATE.SUCCESS); // maps to 200: OK
+                        } else { // STATE != SUCCESS
+                           /*
+                            * The Requesting Party Token (RPT) is NOT valid Get a "Permission Ticket",
+                            * return to the client The client will use the "Permission Ticket" to get an
+                            * RPT
+                            */
+
+                           operPermTicketOutput = this.getPermssionTicket(scopes, operResourceOutput);
+
+                           jsonPermTicketHdrs = JSON.getObject(operPermTicketOutput.getJSON(), ConstantsIF.HEADERS);
+                           if (jsonPermTicketHdrs != null) {
+                              jsonOutput.put(ConstantsIF.HEADERS, jsonPermTicketHdrs);
+                           }
+
+                           jsonPermTicketData = JSON.getObject(operPermTicketOutput.getJSON(), ConstantsIF.DATA);
+
+                           if (jsonPermTicketData != null) {
+                              jsonData.put(ConstantsIF.TICKET, JSON.getString(jsonPermTicketData, ConstantsIF.TICKET));
+                              jsonData.put(ConstantsIF.AS_URI, JSON.getString(jsonPermTicketData, ConstantsIF.AS_URI));
+                           }
+
+                           msg = "RPT is missing or invalid";
+
+                           operOutput.setState(operPermTicketOutput.getState());
+                        }
+                     }
+                  } else {
+                     msg = "Requested scope(s) not valid";
 
                      operOutput.setError(true);
-                     operOutput.setState(STATE.FAILED); // maps to 409: CONFLICT
-                  } else {
-                     jsonData.put(ConstantsIF.MESSAGE, dataRPT.getStatus());
-
-                     if (!dataRPT.isError()) {
-                        if (bMeta) {
-                           operMetaOutput = this.getMeta(resourceUid);
-
-                           jsonMeta = JSON.getObject(operMetaOutput.getJSON(), ConstantsIF.DATA);
-
-                           if (jsonMeta != null) {
-                              if (jsonMeta.containsKey(ConstantsIF.DISCOVERABLE)) {
-                                 jsonMeta.remove(ConstantsIF.DISCOVERABLE);
-                              }
-                           } else {
-                              jsonMeta = new JSONObject();
-                           }
-
-                           jsonMeta.put(ConstantsIF.OWNER, owner);
-                           jsonMeta.put(ConstantsIF.ICON_URI, icon_uri);
-
-                           jsonData.put(ConstantsIF.META, jsonMeta);
-                        }
-
-                        if (bContent) {
-                           operContentOutput = this.contentRead(resourceUid, jsonOptions);
-
-                           jsonContent = operContentOutput.getJSON();
-
-                           if (jsonContent == null || jsonContent.isEmpty()) {
-                              jsonContent = new JSONObject();
-                           }
-
-                           jsonData.put(ConstantsIF.CONTENT, jsonContent);
-                        }
-
-                        msg = "Success";
-
-                        operOutput.setState(STATE.SUCCESS); // maps to 200: OK
-                     } else {
-                        /*
-                         * The Requesting Party Token (RPT) is NOT valid Get a "Permission Ticket",
-                         * return to the client The client will use the "Permission Ticket" to get an
-                         * RPT
-                         */
-
-                        operPermTicketOutput = this.getPermssionTicket(scopes, operResourceOutput);
-
-                        jsonPermTicketHdrs = JSON.getObject(operPermTicketOutput.getJSON(), ConstantsIF.HEADERS);
-                        if (jsonPermTicketHdrs != null) {
-                           jsonOutput.put(ConstantsIF.HEADERS, jsonPermTicketHdrs);
-                        }
-
-                        jsonPermTicketData = JSON.getObject(operPermTicketOutput.getJSON(), ConstantsIF.DATA);
-
-                        if (jsonPermTicketData != null) {
-                           jsonData.put(ConstantsIF.TICKET, JSON.getString(jsonPermTicketData, ConstantsIF.TICKET));
-                           jsonData.put(ConstantsIF.AS_URI, JSON.getString(jsonPermTicketData, ConstantsIF.AS_URI));
-                        }
-
-                        msg = "RPT is missing or invalid";
-
-                        operOutput.setState(operPermTicketOutput.getState());
-                     }
+                     operOutput.setState(STATE.ERROR); // maps to 400: BAD_REQUEST
                   }
                } else {
-                  msg = "Requested scope(s) not valid";
+                  msg = "Missing scopes";
 
                   operOutput.setError(true);
                   operOutput.setState(STATE.ERROR); // maps to 400: BAD_REQUEST
                }
-            } else {
-               msg = "Missing scopes";
+            } else { // state == ERROR
+               msg = dataRPT.getStatus();
 
                operOutput.setError(true);
-               operOutput.setState(STATE.ERROR); // maps to 400: BAD_REQUEST
+               operOutput.setState(dataRPT.getState());
+               operOutput.setStatus(msg);
             }
          } else {
             msg = "Resource is not registered";
@@ -372,8 +385,8 @@ public class ResourcesResource extends RSResource {
 
    /**
     * Validate the scopes
-    * 
-    * @param request  JSONArray request
+    *
+    * @param request JSONArray request
     * @param resource JSONArray resource
     * @return boolean true if request scopes are in the resource scopes
     */
@@ -417,11 +430,11 @@ public class ResourcesResource extends RSResource {
 
    /**
     * Validate the Requsting Party Token (RPT). Get the Requesting Party Token
-    * (RPT) from the header. Get the "owner" from the Resource, needed to get the
-    * PAT. Get the "register" (GUID) from the Resource (for comparison). Note: the
-    * RPT is just an "access token". Call the Authorization Server (AS) to validate
-    * the token. Check validate scope(s) and the Request Uid (mathes related
-    * Resource uid).
+    * (RPT) from the header. Get the "owner" from the Resource, needed to get
+    * the PAT. Get the "register" (GUID) from the Resource (for comparison).
+    * Note: the RPT is just an "access token". Call the Authorization Server
+    * (AS) to validate the token. Check validate scope(s) and the Request Uid
+    * (mathes related Resource uid).
     *
     * <pre>
     * JSON Data ...
@@ -459,8 +472,8 @@ public class ResourcesResource extends RSResource {
     *   }
     * }
     * </pre>
-    * 
-    * @param scopes       String list of scopes
+    *
+    * @param scopes String list of scopes
     * @param operResource OperationIF input
     * @return DataIF output
     */
@@ -495,14 +508,14 @@ public class ResourcesResource extends RSResource {
 
       if (oauth2Handler.getState() != STATE.READY) {
          this.abort(METHOD,
-               "OAuth2 Handler not ready: " + oauth2Handler.getState().toString() + ", " + oauth2Handler.getStatus(),
-               Response.Status.INTERNAL_SERVER_ERROR);
+            "OAuth2 Handler not ready: " + oauth2Handler.getState().toString() + ", " + oauth2Handler.getStatus(),
+            Response.Status.INTERNAL_SERVER_ERROR);
       }
 
       rpt = this.getAttributeFromHeader(ConfigIF.RS_HEADERS_RPT, false);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "rpt=''{0}''", new Object[] { rpt == null ? NULL : rpt });
+         _logger.log(DEBUG_LEVEL, "rpt=''{0}''", new Object[]{rpt == null ? NULL : rpt});
       }
 
       if (!STR.isEmpty(rpt)) {
@@ -520,7 +533,8 @@ public class ResourcesResource extends RSResource {
          pat = this.getAccessToken(owner);
 
          jsonHeaders = new JSONObject();
-         jsonHeaders.put(ConstantsIF.AUTHORIZATION, "Bearer " + pat);
+         jsonHeaders.put(ConstantsIF.HDR_AUTHORIZATION, "Bearer " + pat);
+         jsonHeaders.put(ConstantsIF.HDR_ACCEPT, ConstantsIF.TYPE_JSON);
 
          jsonQueryParams = new JSONObject();
          jsonQueryParams.put(ConstantsIF.TOKEN, rpt);
@@ -535,91 +549,98 @@ public class ResourcesResource extends RSResource {
 
          operOauthOutput = oauth2Handler.process(operOauthInput); // validate the RPT
 
-         jsonOutput = JSON.getObject(operOauthOutput.getJSON(), ConstantsIF.DATA);
+         if (operOauthOutput.getState() == STATE.SUCCESS) {
 
-         if (JSON.getBoolean(jsonOutput, ConstantsIF.ACTIVE)) {
-            /*
-             * Need to check: The response "resource_id" equals the resource.register The
-             * response "resource_scopes" contain provides scopes Loop through the
-             * "permissions" array ...
-             */
-            jsonPermissions = JSON.getArray(jsonOutput, ConstantsIF.PERMISSIONS);
-            inputScopesArray = scopes.split(" ");
-            inputVerifiedArray = new boolean[inputScopesArray.length];
+            jsonOutput = JSON.getObject(operOauthOutput.getJSON(), ConstantsIF.DATA);
 
-            if (jsonPermissions != null && !jsonPermissions.isEmpty()) {
-               if (_logger.isLoggable(DEBUG_LEVEL)) {
-                  _logger.log(DEBUG_LEVEL, "scopes=''{0}'', permissions=''{1}''",
-                        new Object[] { scopes == null ? NULL : scopes, jsonPermissions.toString() });
-               }
+            if (JSON.getBoolean(jsonOutput, ConstantsIF.ACTIVE)) {
+               /*
+                * Need to check: The response "resource_id" equals the resource.register The
+                * response "resource_scopes" contain provides scopes Loop through the
+                * "permissions" array ...
+                */
+               jsonPermissions = JSON.getArray(jsonOutput, ConstantsIF.PERMISSIONS);
+               inputScopesArray = scopes.split(" ");
+               inputVerifiedArray = new boolean[inputScopesArray.length];
 
-               for (boolean b : inputVerifiedArray) // initialize to false
-               {
-                  b = false;
-               }
+               if (jsonPermissions != null && !jsonPermissions.isEmpty()) {
+                  if (_logger.isLoggable(DEBUG_LEVEL)) {
+                     _logger.log(DEBUG_LEVEL, "scopes=''{0}'', permissions=''{1}''",
+                        new Object[]{scopes, jsonPermissions.toString()});
+                  }
 
-               for (int i = 0; i < jsonPermissions.size(); i++) // each permission
-               {
-                  permission = JSON.getObject(jsonOutput, ConstantsIF.PERMISSIONS + "[" + i + "]");
+                  for (boolean b : inputVerifiedArray) // initialize to false
+                  {
+                     b = false;
+                  }
 
-                  if (permission != null && !permission.isEmpty()) {
-                     if (JSON.getString(jsonResource, ConstantsIF.REGISTER)
+                  for (int i = 0; i < jsonPermissions.size(); i++) // each permission
+                  {
+                     permission = JSON.getObject(jsonOutput, ConstantsIF.PERMISSIONS + "[" + i + "]");
+
+                     if (permission != null && !permission.isEmpty()) {
+                        if (JSON.getString(jsonResource, ConstantsIF.REGISTER)
                            .equals(JSON.getString(permission, ConstantsIF.RESOURCE_ID))) {
-                        jsonResourceScopes = JSON.getArray(permission, ConstantsIF.RESOURCE_SCOPES);
+                           jsonResourceScopes = JSON.getArray(permission, ConstantsIF.RESOURCE_SCOPES);
 
-                        if (jsonResourceScopes != null && !jsonResourceScopes.isEmpty()) {
-                           for (int j = 0; j < jsonResourceScopes.size(); j++) // each resource scope
-                           {
-                              resourceScope = JSON.getString(permission, ConstantsIF.RESOURCE_SCOPES + "[" + j + "]");
+                           if (jsonResourceScopes != null && !jsonResourceScopes.isEmpty()) {
+                              for (int j = 0; j < jsonResourceScopes.size(); j++) // each resource scope
+                              {
+                                 resourceScope = JSON.getString(permission, ConstantsIF.RESOURCE_SCOPES + "[" + j + "]");
 
-                              if (!STR.isEmpty(resourceScope)) {
-                                 for (int k = 0; k < inputScopesArray.length; k++) // each input scope
-                                 {
-                                    inputScope = inputScopesArray[k];
+                                 if (!STR.isEmpty(resourceScope)) {
+                                    for (int k = 0; k < inputScopesArray.length; k++) // each input scope
+                                    {
+                                       inputScope = inputScopesArray[k];
 
-                                    if (!STR.isEmpty(inputScope)) {
-                                       if (resourceScope.equalsIgnoreCase(inputScope)) {
-                                          inputVerifiedArray[k] = true;
-                                          break;
+                                       if (!STR.isEmpty(inputScope)) {
+                                          if (resourceScope.equalsIgnoreCase(inputScope)) {
+                                             inputVerifiedArray[k] = true;
+                                             break;
+                                          }
                                        }
                                     }
                                  }
                               }
                            }
+                           break; // done processing the array of permissions
                         }
-                        break; // done processing the array of permissions
                      }
                   }
                }
-            }
-            /*
-             * check the verified array, all MUST be True ... to return True
-             */
+               /*
+                * check the verified array, all MUST be True ... to return True
+                */
 
-            for (boolean b : inputVerifiedArray) {
-               if (b == false) {
-                  data.setStatus("Requested scope(s) not found in Token scopes");
-                  data.setState(STATE.ERROR);
-                  data.setError(true);
+               for (boolean b : inputVerifiedArray) {
+                  if (b == false) {
+                     data.setError(true);
+                     data.setState(STATE.FAILED);
+                     data.setStatus("Requested scope(s) not found in Token scopes");
+                  }
                }
+            } else { // active == false
+               data.setError(true);
+               data.setState(STATE.FAILED);
+               data.setStatus("Requesting Party Token is NOT valid");
             }
-         } else {
-            data.setStatus("Requesting Party Token is NOT valid");
+         } else { // introspect error
+            data.setError(operOauthOutput.isError());
             data.setState(STATE.ERROR);
-            data.setError(true);
+            data.setStatus(operOauthOutput.getStatus());
          }
-      } else {
+      } else { // RPT is empty
          rpt = null;
-         data.setStatus("Requesting Party Token is empty");
-         data.setState(STATE.NOTEXIST);
          data.setError(true);
+         data.setState(STATE.NOTEXIST);
+         data.setStatus("Requesting Party Token is empty");
       }
 
       jsonData = new JSONObject();
 
       if (!data.isError()) {
-         data.setStatus("Requesting Party Token is valid");
          data.setState(STATE.SUCCESS);
+         data.setStatus("Requesting Party Token is valid");
       }
 
       if (jsonResourceScopes != null && !jsonResourceScopes.isEmpty()) {
@@ -672,8 +693,8 @@ public class ResourcesResource extends RSResource {
     * A valid tocket:
     * { "ticket": "..." }
     * </pre>
-    * 
-    * @param scopes       String list of scopes
+    *
+    * @param scopes String list of scopes
     * @param operResource OperationIF input
     * @return OperationIF output
     */
@@ -700,7 +721,7 @@ public class ResourcesResource extends RSResource {
 
       if (umaPermReqHandler.getState() != STATE.READY) {
          this.abort(METHOD, "UMA Handler not ready: " + umaPermReqHandler.getState().toString() + ", "
-               + umaPermReqHandler.getStatus(), Response.Status.INTERNAL_SERVER_ERROR);
+            + umaPermReqHandler.getStatus(), Response.Status.INTERNAL_SERVER_ERROR);
       }
 
       jsonResource = JSON.getObject(operResource.getJSON(), ConstantsIF.DATA);
@@ -718,7 +739,7 @@ public class ResourcesResource extends RSResource {
       }
 
       jsonHeaders = new JSONObject();
-      jsonHeaders.put(ConstantsIF.AUTHORIZATION, "Bearer " + pat);
+      jsonHeaders.put(ConstantsIF.HDR_AUTHORIZATION, "Bearer " + pat);
 
       jsonData = new JSONObject();
       jsonData.put(ConstantsIF.RESOURCE_ID, registerId);
@@ -730,7 +751,7 @@ public class ResourcesResource extends RSResource {
       jsonInput.put(ConstantsIF.DATA, jsonData);
 
       if (_logger.isLoggable(DEBUG_LEVEL)) {
-         _logger.log(DEBUG_LEVEL, "create input: ''{0}''", new Object[] { jsonInput.toString() });
+         _logger.log(DEBUG_LEVEL, "create input: ''{0}''", new Object[]{jsonInput.toString()});
       }
 
       operInput = new Operation(OperationIF.TYPE.CREATE);
@@ -746,7 +767,7 @@ public class ResourcesResource extends RSResource {
 
          if (_logger.isLoggable(DEBUG_LEVEL)) {
             _logger.log(DEBUG_LEVEL, "create output: ''{0}''",
-                  new Object[] { jsonOutput == null ? NULL : jsonOutput.toString() });
+               new Object[]{jsonOutput == null ? NULL : jsonOutput.toString()});
          }
 
          jsonData = JSON.getObject(jsonOutput, ConstantsIF.DATA);
@@ -771,9 +792,9 @@ public class ResourcesResource extends RSResource {
 
    /**
     * Get the Policies scopes
-    * 
+    *
     * <pre>
-    * Policy JSON output ... 
+    * Policy JSON output ...
     * {
     *   "permissions": [
     *     {
@@ -784,10 +805,10 @@ public class ResourcesResource extends RSResource {
     *   ]
     * }
     * </pre>
-    * 
+    *
     * @param resourceUid String resource identifier
-    * @param owner       String resource owner
-    * @param rqp         String requesting party
+    * @param owner String resource owner
+    * @param rqp String requesting party
     * @return JSONArray output
     */
    private JSONArray getPolicyScopes(final String resourceUid, final String owner, final String rqp) {
@@ -830,11 +851,11 @@ public class ResourcesResource extends RSResource {
 
    /**
     * Check for a "mixed" request. All Request scopes MUST be either part of the
-    * Policy scopes or not. Can not have some Request scopes in Policy and some not
-    * in the Policy
-    * 
+    * Policy scopes or not. Can not have some Request scopes in Policy and some
+    * not in the Policy
+    *
     * @param arrayRequest JSONArray requests
-    * @param arrayPolicy  JSONArray policies
+    * @param arrayPolicy JSONArray policies
     * @return boolean True if "mixed" scopes
     */
    private boolean isRequestMixed(final JSONArray arrayRequest, final JSONArray arrayPolicy) {

@@ -17,6 +17,7 @@ public interface ConfigIF {
    public static final String AS_ADMIN_PASSWORD = "as.admin.password";
    public static final String AS_AUTHENTICATE_HEADERS_USER = "as.authenticate.headers.user";
    public static final String AS_AUTHENTICATE_HEADERS_PASSWORD = "as.authenticate.headers.password";
+   public static final String AS_AUTHENTICATE_PARAMS = "as.authenticate.params";
    public static final String AS_AUTHENTICATE_PATH = "as.authenticate.path";
    public static final String AS_AUTHENTICATE_ACCEPT = "as.authenticate.accept-api-version";
    public static final String AS_OAUTH2_PATH = "as.oauth2.path";

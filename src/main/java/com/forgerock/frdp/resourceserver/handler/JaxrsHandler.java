@@ -15,6 +15,7 @@ import com.forgerock.frdp.handler.HandlerManagerIF;
 import com.forgerock.frdp.utils.JSON;
 import com.forgerock.frdp.utils.STR;
 import java.util.logging.Level;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 /**
@@ -239,31 +240,22 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
     * @param configType String what type of configuration (RESOURCE, CONTENT)
     * @param name String configuration attribute name
     * @return String configuration attribute value
-    * @throws Exception could not set configuration value
+    * @throws Exception could not get configuration value
     */
-   protected synchronized String getConfigValue(final String configType, final String name) throws Exception {
+   protected String getConfigValue(
+      final String configType, final String name) throws Exception {
+      
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String value = null;
-      ConfigurationIF configuration = null;
       JSONObject json = null;
 
       _logger.entering(CLASS, METHOD);
-
-      if (STR.isEmpty(configType)) {
-         throw new Exception("Attribute 'configType' is null");
-      }
-
+      
       if (STR.isEmpty(name)) {
          throw new Exception("Attribute 'name' is null");
       }
 
-      configuration = _configMgr.getConfiguration(configType);
-
-      if (configuration == null) {
-         throw new Exception("Configuration is null for type '" + configType + "'");
-      }
-
-      json = configuration.getJSON();
+      json = this.getConfiguration(configType);
 
       value = JSON.getString(json, name);
 
@@ -274,6 +266,70 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
       _logger.exiting(CLASS, METHOD);
 
       return value;
+   }
+   
+   /**
+    * Get an object (JSONObject) from the configuration data (JSON). Use the "configType" to
+    * get the Configuration object from the ConfigurationManager Get the JSON
+    * data from the Configuration object
+    *
+    * @param configType String what type of configuration (RESOURCE, CONTENT)
+    * @param name String configuration array name
+    * @return JSONObject configuration object value
+    * @throws Exception could not get configuration value
+    */
+   protected JSONObject getConfigObject(
+      final String configType, final String name) throws Exception {
+      
+      String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
+      JSONObject json = null;
+      JSONObject object = null;
+      
+      _logger.entering(CLASS, METHOD);
+      
+      if (STR.isEmpty(name)) {
+         throw new Exception("Attribute 'name' is null");
+      }
+
+      json = this.getConfiguration(configType);
+      
+      object = JSON.getObject(json, name);
+      
+      _logger.exiting(CLASS, METHOD);
+      
+      return object;
+   }
+
+   /**
+    * Get an array (JSONArray) from the configuration data (JSON). Use the "configType" to
+    * get the Configuration object from the ConfigurationManager Get the JSON
+    * data from the Configuration object
+    *
+    * @param configType String what type of configuration (RESOURCE, CONTENT)
+    * @param name String configuration array name
+    * @return JSONArray configuration array value
+    * @throws Exception could not get configuration value
+    */
+   protected JSONArray getConfigArray(
+      final String configType, final String name) throws Exception {
+      
+      String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
+      JSONObject json = null;
+      JSONArray array = null;
+      
+      _logger.entering(CLASS, METHOD);
+      
+      if (STR.isEmpty(name)) {
+         throw new Exception("Attribute 'name' is null");
+      }
+
+      json = this.getConfiguration(configType);
+      
+      array = JSON.getArray(json, name);
+      
+      _logger.exiting(CLASS, METHOD);
+      
+      return array;
    }
 
    /**
@@ -500,9 +556,33 @@ public abstract class JaxrsHandler extends Handler implements JaxrsHandlerIF {
       return uid;
    }
 
-   /*
-    * =============== PRIVATE METHODS ===============
-    */
+   
+   private synchronized JSONObject getConfiguration(
+      final String configType) throws Exception {
+
+      String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
+      ConfigurationIF configuration = null;
+      JSONObject json = null;
+      
+      _logger.entering(CLASS, METHOD);
+
+      if (STR.isEmpty(configType)) {
+         throw new Exception("Attribute 'configType' is null");
+      }
+
+      configuration = _configMgr.getConfiguration(configType);
+
+      if (configuration == null) {
+         throw new Exception("Configuration is null for type '" + configType + "'");
+      }
+      
+      json = configuration.getJSON();
+
+      _logger.exiting(CLASS, METHOD);
+      
+      return json;
+   }
+   
    /**
     * Create a new AM SSO Session (primarily for creating "admin" session)
     *

@@ -44,7 +44,8 @@ public class RequestsHandler extends JaxrsHandler {
     * @param configMgr ConfigurationManagerIF management of configurations
     * @param handlerMgr HandlerManagerIF provides management of Handlers
     */
-   public RequestsHandler(final ConfigurationManagerIF configMgr, final HandlerManagerIF handlerMgr) {
+   public RequestsHandler(final ConfigurationManagerIF configMgr, 
+      final HandlerManagerIF handlerMgr) {
       super(configMgr, handlerMgr);
 
       String METHOD = "RequestsHandler(configMgr, handlerMgr)";
@@ -58,9 +59,6 @@ public class RequestsHandler extends JaxrsHandler {
       return;
    }
 
-   /*
-    * ================= PROTECTED METHODS =================
-    */
    /**
     * Override the "validate" interface, used to check the operation input
     *
@@ -75,12 +73,12 @@ public class RequestsHandler extends JaxrsHandler {
       _logger.entering(CLASS, METHOD);
 
       if (oper == null) {
-         throw new Exception("Operation object is null");
+         throw new Exception(METHOD + ": Operation object is null");
       }
 
       jsonInput = oper.getJSON();
       if (jsonInput == null || jsonInput.isEmpty()) {
-         throw new Exception("JSON Input is null or empty");
+         throw new Exception(METHOD + ": JSON Input is null or empty");
       }
 
       switch (oper.getType()) {
@@ -91,7 +89,9 @@ public class RequestsHandler extends JaxrsHandler {
             break;
          }
          default: {
-            throw new Exception("Unsupported operation type: '" + oper.getType().toString() + "'");
+            throw new Exception(METHOD 
+               + ": Unsupported operation type: '" 
+               + oper.getType().toString() + "'");
          }
       }
 
@@ -265,9 +265,6 @@ public class RequestsHandler extends JaxrsHandler {
       return operOutput;
    }
 
-   /*
-    * =============== PRIVATE METHODS ===============
-    */
    /**
     * Initialize object instance
     */
@@ -389,12 +386,20 @@ public class RequestsHandler extends JaxrsHandler {
          jsonQuery.put(ConstantsIF.OPERATOR, ConstantsIF.NONE);
 
          jsonHeaders = new JSONObject();
-         jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION, this.getConfigValue(configType, ConfigIF.AS_UMA_PENDINGREQUESTS_ACCEPT));
-         jsonHeaders.put(this.getConfigValue(configType, ConfigIF.AS_COOKIE), sso_token);
+         
+         jsonHeaders.put(ConstantsIF.HDR_ACCEPT_API_VERSION, 
+            this.getConfigValue(configType, ConfigIF.AS_UMA_PENDINGREQUESTS_ACCEPT));
+         
+         jsonHeaders.put(this.getConfigValue(configType, 
+            ConfigIF.AS_COOKIE), sso_token);
 
          jsonParams = new JSONObject();
-         jsonParams.put(PROP_SORTKEYS, this.getConfigValue(configType, ConfigIF.AS_UMA_PENDINGREQUESTS_SORTKEYS));
-         jsonParams.put(PROP_QUERYFILTER, this.getConfigValue(configType, ConfigIF.AS_UMA_PENDINGREQUESTS_QUERYFILTER));
+         
+         jsonParams.put(PROP_SORTKEYS, this.getConfigValue(configType, 
+            ConfigIF.AS_UMA_PENDINGREQUESTS_SORTKEYS));
+         
+         jsonParams.put(PROP_QUERYFILTER, this.getConfigValue(configType, 
+            ConfigIF.AS_UMA_PENDINGREQUESTS_QUERYFILTER));
 
          jsonSearch = new JSONObject();
          jsonSearch.put(ConstantsIF.QUERY, jsonQuery);
@@ -491,9 +496,13 @@ public class RequestsHandler extends JaxrsHandler {
 
          if (!STR.isEmpty(requestId)) {
             jsonHeaders = new JSONObject();
-            jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION,
-               this.getConfigValue(configType, ConfigIF.AS_UMA_PENDINGREQUESTS_ACCEPT));
-            jsonHeaders.put(this.getConfigValue(configType, ConfigIF.AS_COOKIE), sso_token);
+            
+            jsonHeaders.put(ConstantsIF.HDR_ACCEPT_API_VERSION,
+               this.getConfigValue(configType, 
+                  ConfigIF.AS_UMA_PENDINGREQUESTS_ACCEPT));
+            
+            jsonHeaders.put(this.getConfigValue(configType, ConfigIF.AS_COOKIE), 
+               sso_token);
 
             jsonRead = new JSONObject();
             jsonRead.put(ConstantsIF.HEADERS, jsonHeaders);
@@ -591,7 +600,8 @@ public class RequestsHandler extends JaxrsHandler {
       operReadOutput = this.readImpl(operInput);
 
       if (operReadOutput.getState() == STATE.SUCCESS) {
-         jsonScopes = JSON.getArray(operReadOutput.getJSON(), ConstantsIF.DATA + "." + ConstantsIF.PERMISSIONS);
+         jsonScopes = JSON.getArray(operReadOutput.getJSON(), 
+            ConstantsIF.DATA + "." + ConstantsIF.PERMISSIONS);
       } else {
          throw new Exception(METHOD + ": Faild to read request");
       }
@@ -613,32 +623,40 @@ public class RequestsHandler extends JaxrsHandler {
                action = JSON.getString(jsonDataInput, ConstantsIF.ACTION);
 
                if (!STR.isEmpty(action)
-                  && (action.equalsIgnoreCase(ConstantsIF.DENY) || action.equalsIgnoreCase(ConstantsIF.APPROVE))) {
+                  && (action.equalsIgnoreCase(ConstantsIF.DENY) 
+                  || action.equalsIgnoreCase(ConstantsIF.APPROVE))) {
+                  
                   jsonPayload = new JSONObject();
+                  
                   jsonPayload.put(ConstantsIF.ACTION, action);
 
                   if (action.equalsIgnoreCase(ConstantsIF.APPROVE)) {
-                     jsonPermissions = JSON.getArray(jsonDataInput, ConstantsIF.PERMISSIONS);
+                     jsonPermissions = JSON.getArray(jsonDataInput, 
+                        ConstantsIF.PERMISSIONS);
 
                      if (jsonPermissions != null && !jsonPermissions.isEmpty()) {
                         jsonPayload.put(ConstantsIF.SCOPES, jsonPermissions);
                      } else {
                         if (_logger.isLoggable(Level.WARNING)) {
                            _logger.log(Level.WARNING,
-                              "Approved access request is missing permissions, will grant all scopes");
+                              "Approved access request is missing permissions, "
+                              + "will grant all scopes");
                         }
                         if (jsonScopes != null && !jsonScopes.isEmpty()) {
                            jsonPayload.put(ConstantsIF.SCOPES, jsonScopes);
                         } else {
-                           throw new Exception(METHOD + ": 'approve' action must have at least one scope");
+                           throw new Exception(METHOD 
+                              + ": 'approve' action must have at least one scope");
                         }
                      }
                   }
 
                   jsonHeaders = new JSONObject();
-                  jsonHeaders.put(ConstantsIF.ACCEPT_API_VERSION,
-                     this.getConfigValue(configType, ConfigIF.AS_UMA_PENDINGREQUESTS_ACCEPT));
-                  jsonHeaders.put(this.getConfigValue(configType, ConfigIF.AS_COOKIE), sso_token);
+                  jsonHeaders.put(ConstantsIF.HDR_ACCEPT_API_VERSION,
+                     this.getConfigValue(configType, 
+                        ConfigIF.AS_UMA_PENDINGREQUESTS_ACCEPT));
+                  jsonHeaders.put(this.getConfigValue(configType, 
+                     ConfigIF.AS_COOKIE), sso_token);
 
                   jsonQueryParams = new JSONObject();
                   jsonQueryParams.put("_action", action);
@@ -647,7 +665,8 @@ public class RequestsHandler extends JaxrsHandler {
                   jsonReplace.put(ConstantsIF.HEADERS, jsonHeaders);
                   jsonReplace.put(ConstantsIF.QUERY_PARAMS, jsonQueryParams);
                   jsonReplace.put(ConstantsIF.PATH,
-                     this.getConfigValue(configType, ConfigIF.AS_UMA_PENDINGREQUESTS_PATH)
+                     this.getConfigValue(configType,
+                        ConfigIF.AS_UMA_PENDINGREQUESTS_PATH)
                         .replaceAll(PROP_VAR_OWNER, owner));
                   jsonReplace.put(ConstantsIF.UID, requestId);
                   jsonReplace.put(ConstantsIF.DATA, jsonPayload);
@@ -664,16 +683,20 @@ public class RequestsHandler extends JaxrsHandler {
                   operOutput.setStatus(operASOutput.getStatus());
                   operOutput.setJSON(jsonOutput);
                } else {
-                  throw new Exception(METHOD + ": action must be 'approve' or 'deny'");
+                  throw new Exception(METHOD 
+                     + ": action must be 'approve' or 'deny'");
                }
             } else {
-               throw new Exception(METHOD + ": JSON data is empty");
+               throw new Exception(METHOD 
+                  + ": JSON data is empty");
             }
          } else {
-            throw new Exception(METHOD + ": requestId is empty");
+            throw new Exception(METHOD 
+               + ": requestId is empty");
          }
       } else {
-         throw new Exception(METHOD + ": sso_token or owner is empty");
+         throw new Exception(METHOD 
+            + ": sso_token or owner is empty");
       }
 
       _logger.exiting(CLASS, METHOD);
