@@ -51,7 +51,8 @@ RUN rm -rf /usr/local/tomcat/webapps/*
 
 COPY --from=build /frdp-uma-resource-server/target/resource-server /usr/local/tomcat/webapps/resource-server
 
-EXPOSE 8090:8080
+EXPOSE 8080
+# EXPOSE 8090:8080
 # EXPOSE 9000:8000
 
 # Environment variables for attaching Java debugger
