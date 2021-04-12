@@ -108,7 +108,7 @@ public class DiscoverHandler extends JaxrsHandler {
     * JSON output ...
     * {
     *   "data": {
-    *     "results”:[
+    *     "results":[
     *       {
     *         "id": "c1e0e9bd-371a-4021-aea6-52305a0e0f36",
     *         "owner": "bjensen",
@@ -248,7 +248,7 @@ public class DiscoverHandler extends JaxrsHandler {
     * JSON output ...
     * {
     *   "data": {
-    *     "results”:[
+    *     "results":[
     *       {
     *         "id": "c1e0e9bd-371a-4021-aea6-52305a0e0f36",
     *         "owner": "bjensen",
