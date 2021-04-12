@@ -113,20 +113,20 @@ public class RequestsHandler extends JaxrsHandler {
     * JSON output ...
     * {
     *   "data": {
-    *     "result”:[
+    *     "result":[
     *       {
-    *         "_id":"e0841875-512b-4955-bcf0-74adc1bea9df2”,
-    *         "user":"aadams”,
-    *         "resource":"Lab Report”,
+    *         "_id":"e0841875-512b-4955-bcf0-74adc1bea9df2",
+    *         "user":"aadams",
+    *         "resource":"Lab Report",
     *         "when":1544109770039,
-    *         "permissions":["meta”]
+    *         "permissions":["meta"]
     *       }
     *     ],
     *     "resultCount":1,
     *     "pagedResultsCookie":null,
-    *     "totalPagedResultsPolicy":"NONE”,
+    *     "totalPagedResultsPolicy":"NONE",
     *     "totalPagedResults":-1,
-    *     "remainingPagedResults”:0
+    *     "remainingPagedResults":0
     *   }
     * }
     * </pre>
@@ -175,12 +175,12 @@ public class RequestsHandler extends JaxrsHandler {
     * JSON output ...
     * {
     *   "data": {
-    *     "_id":"b68c5f1e-3f74-4def-b076-2a0f9b0422b33”, // Request GUID
-    *     "_rev":"941699340”,
-    *     "user":"aadams”, // the Requestng Party (RqP)
-    *     "resource":"Lab Report”, // the UMA Resource Name
+    *     "_id":"b68c5f1e-3f74-4def-b076-2a0f9b0422b33", // Request GUID
+    *     "_rev":"941699340",
+    *     "user":"aadams", // the Requestng Party (RqP)
+    *     "resource":"Lab Report", // the UMA Resource Name
     *     "when":1544128568976,
-    *     "permissions":["meta”]
+    *     "permissions":["meta"]
     *   }
     * }
     * </pre>
@@ -330,20 +330,20 @@ public class RequestsHandler extends JaxrsHandler {
     * JSON output ...
     * {
     *   "data": {
-    *     "result”:[
+    *     "result":[
     *       {
-    *         "_id":"e0841875-512b-4955-bcf0-74adc1bea9df2”,
-    *         "user":"aadams”,
-    *         "resource":"Lab Report”,
+    *         "_id":"e0841875-512b-4955-bcf0-74adc1bea9df2",
+    *         "user":"aadams",
+    *         "resource":"Lab Report",
     *         "when":1544109770039,
-    *         "permissions":["meta”]
+    *         "permissions":["meta"]
     *       }
     *     ],
     *     "resultCount":1,
     *     "pagedResultsCookie":null,
-    *     "totalPagedResultsPolicy":"NONE”,
+    *     "totalPagedResultsPolicy":"NONE",
     *     "totalPagedResults":-1,
-    *     "remainingPagedResults”:0
+    *     "remainingPagedResults":0
     *   }
     * }
     *
@@ -451,12 +451,12 @@ public class RequestsHandler extends JaxrsHandler {
     * JSON output ...
     * {
     *   "data": {
-    *     "_id":"b68c5f1e-3f74-4def-b076-2a0f9b0422b33”, // Request GUID
-    *     "_rev":"941699340”,
-    *     "user":"aadams”, // the Requestng Party (RqP)
-    *     "resource":"Lab Report”, // the UMA Resource Name
+    *     "_id":"b68c5f1e-3f74-4def-b076-2a0f9b0422b33", // Request GUID
+    *     "_rev":"941699340",
+    *     "user":"aadams", // the Requestng Party (RqP)
+    *     "resource":"Lab Report", // the UMA Resource Name
     *     "when":1544128568976,
-    *     "permissions":["meta”]
+    *     "permissions":["meta"]
     *   }
     * }
     *
