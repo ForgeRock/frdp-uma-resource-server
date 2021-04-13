@@ -5,7 +5,7 @@
     <groupId>com.forgerock.frdp</groupId>
     <artifactId>frdp-resource-server</artifactId>
     <packaging>war</packaging>
-    <version>1.1.1</version>
+    <version>1.1.2</version>
 
     <name>FRDP-Resource-Server</name>
     <url>http://maven.apache.org</url>
@@ -19,7 +19,7 @@
         <dependency>
             <groupId>com.forgerock.frdp</groupId>
             <artifactId>frdp-dao-mongo</artifactId>
-            <version>1.0.0</version>
+            <version>1.1.1</version>
         </dependency>
         <dependency>
             <groupId>com.forgerock.frdp</groupId>
