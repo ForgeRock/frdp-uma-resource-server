@@ -111,15 +111,15 @@ public class SubjectsHandler extends JaxrsHandler {
     * JSON output ...
     * {
     *   "data": {
-    *     "result”:[
+    *     "result":[
     *       {
     *       }
     *     ],
     *     "resultCount":1,
     *     "pagedResultsCookie":null,
-    *     "totalPagedResultsPolicy":"NONE”,
+    *     "totalPagedResultsPolicy":"NONE",
     *     "totalPagedResults":-1,
-    *     "remainingPagedResults”:0
+    *     "remainingPagedResults":0
     *   }
     * }
     * </pre>
@@ -238,7 +238,7 @@ public class SubjectsHandler extends JaxrsHandler {
     * JSON output ...
     * {
     *   "data": {
-    *     "result”:[
+    *     "result":[
     *       {
     *         "policyId": "057722e3-94dc-49bc-9a08-66c8e6ff1da60",
     *         "permissions": [
@@ -253,9 +253,9 @@ public class SubjectsHandler extends JaxrsHandler {
     *     ],
     *     "resultCount":1,
     *     "pagedResultsCookie":null,
-    *     "totalPagedResultsPolicy":"NONE”,
+    *     "totalPagedResultsPolicy":"NONE",
     *     "totalPagedResults":-1,
-    *     "remainingPagedResults”:0
+    *     "remainingPagedResults":0
     *   }
     * }
     * curl example:
@@ -353,7 +353,7 @@ public class SubjectsHandler extends JaxrsHandler {
     * JSON input ...
     * {
     *   "data": {
-    *     "result”:[
+    *     "result":[
     *       {
     *         "policyId": "057722e3-94dc-49bc-9a08-66c8e6ff1da60",
     *         "permissions": [
