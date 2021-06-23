@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, ForgeRock, Inc., All rights reserved
+ * Copyright (c) 2018-2021, ForgeRock, Inc., All rights reserved
  * Use subject to license terms.
  */
 package com.forgerock.frdp.resourceserver.rest.manage;
@@ -56,7 +56,8 @@ public class ResourcesResource extends RSResource {
     * @param servletCtx ServletContext context from the servlet
     * @param httpHdrs HttpHeaders header information
     */
-   public ResourcesResource(final UriInfo uriInfo, final ServletContext servletCtx, final HttpHeaders httpHdrs) {
+   public ResourcesResource(final UriInfo uriInfo,
+      final ServletContext servletCtx, final HttpHeaders httpHdrs) {
       super();
 
       String METHOD = "ResourcesResource()";
@@ -216,7 +217,8 @@ public class ResourcesResource extends RSResource {
 
       jsonQuery = new JSONObject();
       jsonQuery.put(ConstantsIF.OPERATOR, ConstantsIF.EQUAL);
-      jsonQuery.put(ConstantsIF.ATTRIBUTE, ConstantsIF.DATA + "." + ConstantsIF.OWNER);
+      jsonQuery.put(ConstantsIF.ATTRIBUTE, ConstantsIF.DATA + "."
+         + ConstantsIF.OWNER);
       jsonQuery.put(ConstantsIF.VALUE, userId);
 
       jsonInput = new JSONObject();
@@ -267,7 +269,7 @@ public class ResourcesResource extends RSResource {
       String csId = null; // Content Service identifier
       String csUri = null; // Content Service URI
       Response response = null;
-      JSONObject jsonOutput = null;
+      JSONObject jsonResource = null;
       JSONObject jsonData = null;
       JSONObject jsonMeta = null;
       JSONObject jsonContent = null;
@@ -296,10 +298,10 @@ public class ResourcesResource extends RSResource {
             new Object[]{resourceUid == null ? NULL : resourceUid,
                userId == null ? NULL : userId});
       }
-      
+
       if (!STR.isEmpty(content)) {
          jsonOptions = new JSONObject();
-         
+
          if (content.equalsIgnoreCase(ConstantsIF.REFERENCE)) {
             jsonOptions.put(ConstantsIF.CONTENT, ConstantsIF.REFERENCE);
          } else { // default: "data"
@@ -323,37 +325,35 @@ public class ResourcesResource extends RSResource {
        * }
        */
       if (operResourceOutput != null && !operResourceOutput.isError()) {
-         this.checkAuthenUserIsOwner(resourceUid);
 
          access = ConstantsIF.PRIVATE; // default access level
 
-         jsonOutput = operResourceOutput.getJSON();
+         jsonResource = operResourceOutput.getJSON();
 
-         if (jsonOutput != null && !jsonOutput.isEmpty()) {
-            jsonData = JSON.getObject(jsonOutput, ConstantsIF.DATA);
+         if (jsonResource != null && !jsonResource.isEmpty()) {
+
+            this.checkAuthenUserIsOwner(userId, jsonResource);
+
+            jsonData = JSON.getObject(jsonResource, ConstantsIF.DATA);
 
             if (jsonData != null && !jsonData.isEmpty()) {
 
                /*
-                * Get "meta"
-                */
-               operMetaOutput = this.getMeta(resourceUid);
-               jsonMeta = operMetaOutput.getJSON();
-               jsonData.put(ConstantsIF.META, JSON.getObject(jsonMeta, ConstantsIF.DATA));
-
-               /*
                 * Get "content"
                 */
-               csId = JSON.getString(jsonData, ConstantsIF.CONTENT + "." + ConstantsIF.ID);
-               csUri = JSON.getString(jsonData, ConstantsIF.CONTENT + "." + ConstantsIF.URI);
+               csId = JSON.getString(jsonData, ConstantsIF.CONTENT + "."
+                  + ConstantsIF.ID);
+               csUri = JSON.getString(jsonData, ConstantsIF.CONTENT + "."
+                  + ConstantsIF.URI);
 
                if (!STR.isEmpty(csId) && !STR.isEmpty(csUri)) {
-                  operContentOutput = this.contentRead(resourceUid, jsonOptions);
+                  operContentOutput = this.contentRead(jsonResource, jsonOptions);
 
                   /*
                    * JSON content output options:
                    * {                       | {
-                   *     ...                 |     "uri": "http://..."
+                   *     "id": "default",    |     "id": "default",
+                   *     "data": { ... }     |     "uri": "http://..."
                    * }                       | }
                    */
                   if (operContentOutput != null) {
@@ -367,14 +367,18 @@ public class ResourcesResource extends RSResource {
 
                /*
                 * Get "registration"
+                * {
+                *   "resource_scopes" [ ... ],
+                *   "icon_uri": "..."
+                * }
                 */
-               operRegisterOutput = this.getRegistration(resourceUid, null);
+               operRegisterOutput = this.getRegistration(jsonResource, null);
                jsonRegister = operRegisterOutput.getJSON();
 
                if (jsonRegister != null && !jsonRegister.isEmpty()) {
                   access = ConstantsIF.REGISTERED; // Found registration
 
-                  operPolicyOutput = this.getPolicy(resourceUid);
+                  operPolicyOutput = this.getPolicy(jsonResource);
                   jsonPolicy = operPolicyOutput.getJSON();
 
                   if (jsonPolicy != null && !jsonPolicy.isEmpty()) {
@@ -386,14 +390,16 @@ public class ResourcesResource extends RSResource {
                   jsonData.put(ConstantsIF.REGISTER, jsonRegister);
                }
             } else {
-               this.abort(METHOD, "The JSON 'data' object is null or empty, ResourceId: '"
+               this.abort(METHOD,
+                  "The JSON 'data' object is null or empty, ResourceId: '"
                   + resourceUid + "'",
                   Status.INTERNAL_SERVER_ERROR);
             }
 
             jsonData.put(ConstantsIF.ACCESS, access);
          } else {
-            this.abort(METHOD, "The Resource JSON object is null or empty, ResourceId: '"
+            this.abort(METHOD,
+               "The Resource JSON object is null or empty, ResourceId: '"
                + resourceUid + "'",
                Status.INTERNAL_SERVER_ERROR);
          }
@@ -454,7 +460,6 @@ public class ResourcesResource extends RSResource {
       operResourceOutput = this.getResource(resourceUid);
 
       if (operResourceOutput != null && !operResourceOutput.isError()) {
-         this.checkAuthenUserIsOwner(resourceUid);
 
          /*
           * Get the Handlers: "resources", "content", "register"
@@ -486,6 +491,8 @@ public class ResourcesResource extends RSResource {
          }
 
          jsonResourceOutput = operResourceOutput.getJSON();
+
+         this.checkAuthenUserIsOwner(userId, jsonResourceOutput);
 
          jsonResourceData = JSON.getObject(jsonResourceOutput, ConstantsIF.DATA);
 
@@ -572,7 +579,8 @@ public class ResourcesResource extends RSResource {
 
       _logger.entering(CLASS, METHOD);
 
-      metaResource = new MetaResource(resourceUid, _uriInfo, _servletCtx, _httpHdrs);
+      metaResource = new MetaResource(resourceUid, 
+         _uriInfo, _servletCtx, _httpHdrs);
 
       _logger.exiting(CLASS, METHOD);
 
@@ -592,7 +600,8 @@ public class ResourcesResource extends RSResource {
 
       _logger.entering(CLASS, METHOD);
 
-      contentResource = new ContentResource(resourceUid, _uriInfo, _servletCtx, _httpHdrs);
+      contentResource = new ContentResource(resourceUid, 
+         _uriInfo, _servletCtx, _httpHdrs);
 
       _logger.exiting(CLASS, METHOD);
 
@@ -612,7 +621,8 @@ public class ResourcesResource extends RSResource {
 
       _logger.entering(CLASS, METHOD);
 
-      registerResource = new RegisterResource(resourceUid, _uriInfo, _servletCtx, _httpHdrs);
+      registerResource = new RegisterResource(resourceUid, 
+         _uriInfo, _servletCtx, _httpHdrs);
 
       _logger.exiting(CLASS, METHOD);
 
@@ -633,7 +643,8 @@ public class ResourcesResource extends RSResource {
 
       _logger.entering(CLASS, METHOD);
 
-      policyResource = new PolicyResource(resourceUid, _uriInfo, _servletCtx, _httpHdrs);
+      policyResource = new PolicyResource(resourceUid, 
+         _uriInfo, _servletCtx, _httpHdrs);
 
       _logger.exiting(CLASS, METHOD);
 
@@ -700,7 +711,8 @@ public class ResourcesResource extends RSResource {
     * @param resourceUid String resource identifier
     * @param jsonInputData JSONObject input
     */
-   private void setRegistration(final String resourceUid, final JSONObject jsonInputData) {
+   private void setRegistration(final String resourceUid, 
+      final JSONObject jsonInputData) {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String access_token = null;
       String registerUid = null;
@@ -726,7 +738,8 @@ public class ResourcesResource extends RSResource {
       resourcesHandler = this.getHandler(JaxrsHandlerIF.HANDLER_RESOURCES);
       registerHandler = this.getHandler(JaxrsHandlerIF.HANDLER_UMA_REGISTER);
 
-      arrayResourceScopes = JSON.getArray(jsonInputData, ConstantsIF.RESOURCE_SCOPES);
+      arrayResourceScopes = JSON.getArray(jsonInputData, 
+         ConstantsIF.RESOURCE_SCOPES);
 
       if (arrayResourceScopes == null || arrayResourceScopes.isEmpty()) {
          this.abort(METHOD, "JSON Array 'resource_scopes' is null or empty",
@@ -766,10 +779,13 @@ public class ResourcesResource extends RSResource {
             + operResourceOutput.getStatus(), Status.INTERNAL_SERVER_ERROR);
       }
 
-      jsonResourceData = JSON.getObject(operResourceOutput.getJSON(), ConstantsIF.DATA);
+      jsonResourceData = JSON.getObject(operResourceOutput.getJSON(), 
+         ConstantsIF.DATA);
 
       if (jsonResourceData == null || jsonResourceData.isEmpty()) {
-         this.abort(METHOD, "Resource JSON data is null or empty", Status.BAD_REQUEST);
+         this.abort(METHOD, 
+            "Resource JSON data is null or empty", 
+            Status.BAD_REQUEST);
       }
 
       /*
@@ -788,16 +804,18 @@ public class ResourcesResource extends RSResource {
       access_token = this.getAccessToken();
 
       if (STR.isEmpty(access_token)) {
-         this.abort(CLASS + ": " + METHOD, "access_token is empty", Status.BAD_REQUEST);
+         this.abort(METHOD, "access_token is empty", Status.BAD_REQUEST);
       }
 
       jsonRegisterData = jsonInputData;
 
       jsonRegisterData.put(ConstantsIF.NAME,
-         JSON.getString(jsonResourceData, ConstantsIF.META + "." + ConstantsIF.NAME));
+         JSON.getString(jsonResourceData, 
+            ConstantsIF.META + "." + ConstantsIF.NAME));
 
       jsonRegisterData.put(ConstantsIF.TYPE,
-         JSON.getString(jsonResourceData, ConstantsIF.META + "." + ConstantsIF.TYPE));
+         JSON.getString(jsonResourceData, 
+            ConstantsIF.META + "." + ConstantsIF.TYPE));
 
       jsonRegisterInput = new JSONObject();
       jsonRegisterInput.put(ConstantsIF.DATA, jsonRegisterData);
@@ -896,7 +914,8 @@ public class ResourcesResource extends RSResource {
     * @param resourceUid String resource identifier
     * @param jsonPolicyData JSONObject input
     */
-   private void setPermissions(final String resourceUid, final JSONObject jsonPolicyData) {
+   private void setPermissions(final String resourceUid, 
+      final JSONObject jsonPolicyData) {
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String registerId = null;
       String sso_token = null;
@@ -954,7 +973,8 @@ public class ResourcesResource extends RSResource {
             + operResourceOutput.getStatus(), Status.INTERNAL_SERVER_ERROR);
       }
 
-      jsonResourceData = JSON.getObject(operResourceOutput.getJSON(), ConstantsIF.DATA);
+      jsonResourceData = JSON.getObject(operResourceOutput.getJSON(), 
+         ConstantsIF.DATA);
 
       registerId = JSON.getString(jsonResourceData, ConstantsIF.REGISTER);
 

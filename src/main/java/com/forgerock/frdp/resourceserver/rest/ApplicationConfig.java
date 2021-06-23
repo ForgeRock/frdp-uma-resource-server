@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, ForgeRock, Inc., All rights reserved
+ * Copyright (c) 2018-2021, ForgeRock, Inc., All rights reserved
  * Use subject to license terms.
  */
 
@@ -44,19 +44,9 @@ public class ApplicationConfig extends Application {
     */
    private void addRestResourceClasses(Set<Class<?>> resources) {
       resources.add(com.forgerock.frdp.resourceserver.rest.config.ConfigResource.class);
-      resources.add(com.forgerock.frdp.resourceserver.rest.manage.ContentResource.class);
       resources.add(com.forgerock.frdp.resourceserver.rest.manage.ManageResource.class);
-      resources.add(com.forgerock.frdp.resourceserver.rest.manage.MetaResource.class);
-      resources.add(com.forgerock.frdp.resourceserver.rest.manage.PolicyResource.class);
-      resources.add(com.forgerock.frdp.resourceserver.rest.manage.RegisterResource.class);
-      resources.add(com.forgerock.frdp.resourceserver.rest.manage.RequestsResource.class);
-      resources.add(com.forgerock.frdp.resourceserver.rest.manage.ResourcesResource.class);
-      resources.add(com.forgerock.frdp.resourceserver.rest.manage.SubjectsResource.class);
-      resources.add(com.forgerock.frdp.resourceserver.rest.share.DiscoverResource.class);
       resources.add(com.forgerock.frdp.resourceserver.rest.share.PolicyResource.class);
-      resources.add(com.forgerock.frdp.resourceserver.rest.share.ResourcesResource.class);
       resources.add(com.forgerock.frdp.resourceserver.rest.share.ShareResource.class);
-      resources.add(com.forgerock.frdp.resourceserver.rest.share.WithMeResource.class);
    }
 
 }

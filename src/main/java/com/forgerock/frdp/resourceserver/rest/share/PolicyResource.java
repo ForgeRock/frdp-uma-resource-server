@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020, ForgeRock, Inc., All rights reserved
+ * Copyright (c) 2019-2021, ForgeRock, Inc., All rights reserved
  * Use subject to license terms.
  */
 
@@ -40,8 +40,8 @@ public class PolicyResource extends RSResource {
     * @param httpHdrs   HttpHeaders header information
     * @param resourceId String resource identifier
     */
-   public PolicyResource(final UriInfo uriInfo, final ServletContext servletCtx, final HttpHeaders httpHdrs,
-         final String resourceId) {
+   public PolicyResource(final UriInfo uriInfo, final ServletContext servletCtx, 
+      final HttpHeaders httpHdrs, final String resourceId) {
       super();
 
       String METHOD = "PolicyResource()";
@@ -81,7 +81,7 @@ public class PolicyResource extends RSResource {
 
       subject = this.getUserIdFromSSOSession(); // require a SSO session
 
-      operOutput = this.updatePolicy(subject, null); // no scopes, remove permission
+      operOutput = this.updatePolicy(subject); // no scopes, remove permission
 
       response = this.getResponseFromJSON(_uriInfo, operOutput);
 
@@ -98,10 +98,10 @@ public class PolicyResource extends RSResource {
     * Update the policy, remove the subject
     * 
     * <pre>
-    * TODO: The current implementation of this method DOES NOT support
-    * TODO: the modifications of scopes within a permissions for a subject.
-    * TODO: It only support the removal of the complete permission
-    * TODO: within a policy.
+    * The current implementation of this method DOES NOT support
+    * the modifications of scopes within a permissions for a subject.
+    * It only support the removal of the complete permission
+    * within a policy.
     *
     * JSON data input ...
     * {
@@ -133,7 +133,7 @@ public class PolicyResource extends RSResource {
     * @param jsonInput JSONObject input
     * @return OperationIF output
     */
-   private OperationIF updatePolicy(final String subject, final JSONObject jsonInput) {
+   private OperationIF updatePolicy(final String subject) {
       boolean changed = false;
       String METHOD = Thread.currentThread().getStackTrace()[1].getMethodName();
       String registerId = null;
@@ -159,7 +159,9 @@ public class PolicyResource extends RSResource {
       operResource = this.getResource(_resourceId);
 
       if (operResource == null) {
-         this.abort(METHOD, "Resource operation is null", Status.INTERNAL_SERVER_ERROR);
+         this.abort(METHOD, 
+            "Resource operation is null", 
+            Status.INTERNAL_SERVER_ERROR);
       }
 
       // JSON output ...
@@ -172,25 +174,35 @@ public class PolicyResource extends RSResource {
       jsonResource = operResource.getJSON();
 
       if (jsonResource == null || jsonResource.isEmpty()) {
-         this.abort(METHOD, "Resource JSON object is null or empty", Status.INTERNAL_SERVER_ERROR);
+         this.abort(METHOD, 
+            "Resource JSON object is null or empty", 
+            Status.INTERNAL_SERVER_ERROR);
       }
 
-      owner = JSON.getString(jsonResource, ConstantsIF.DATA + "." + ConstantsIF.OWNER);
+      owner = JSON.getString(jsonResource, 
+         ConstantsIF.DATA + "." + ConstantsIF.OWNER);
 
       if (STR.isEmpty(owner)) {
-         this.abort(METHOD, "Owner is empty", Status.INTERNAL_SERVER_ERROR);
+         this.abort(METHOD, 
+            "Owner is empty", 
+            Status.INTERNAL_SERVER_ERROR);
       }
 
-      registerId = JSON.getString(jsonResource, ConstantsIF.DATA + "." + ConstantsIF.REGISTER);
+      registerId = JSON.getString(jsonResource, 
+         ConstantsIF.DATA + "." + ConstantsIF.REGISTER);
 
       if (STR.isEmpty(registerId)) {
-         this.abort(METHOD, "Register Id is empty", Status.INTERNAL_SERVER_ERROR);
+         this.abort(METHOD, 
+            "Register Id is empty", 
+            Status.INTERNAL_SERVER_ERROR);
       }
 
       sso_token = this.getSSOTokenForAdmin();
 
       if (STR.isEmpty(sso_token)) {
-         this.abort(METHOD, "Admin SSO Token is empty", Status.INTERNAL_SERVER_ERROR);
+         this.abort(METHOD, 
+            "Admin SSO Token is empty", 
+            Status.INTERNAL_SERVER_ERROR);
       }
 
       // GET the current policy state
@@ -202,23 +214,28 @@ public class PolicyResource extends RSResource {
       operPolicyOutput = this.getPolicy(_resourceId, sso_token, owner);
 
       if (operPolicyOutput == null) {
-         this.abort(METHOD, "Existing Policy output is null", Status.INTERNAL_SERVER_ERROR);
+         this.abort(METHOD, 
+            "Existing Policy output is null", 
+            Status.INTERNAL_SERVER_ERROR);
       }
 
       if (operPolicyOutput.getState() == STATE.NOTEXIST) {
          /*
-          * A policy does not exist for the given resource + subject Nothing to delete,
-          * return a "success"
+          * A policy does not exist for the given resource + subject 
+          * Nothing to delete, return a "success"
           */
 
          operOutput = new Operation(OperationIF.TYPE.DELETE);
          operOutput.setState(STATE.SUCCESS);
          operOutput.setStatus(operPolicyOutput.getStatus());
       } else {
-         jsonCurPerms = JSON.getArray(operPolicyOutput.getJSON(), ConstantsIF.DATA + "." + ConstantsIF.PERMISSIONS);
+         jsonCurPerms = JSON.getArray(operPolicyOutput.getJSON(), 
+            ConstantsIF.DATA + "." + ConstantsIF.PERMISSIONS);
 
          if (jsonCurPerms == null || jsonCurPerms.isEmpty()) {
-            this.abort(METHOD, "Existing Policy permissions are null or empty", Status.INTERNAL_SERVER_ERROR);
+            this.abort(METHOD, 
+               "Existing Policy permissions are null or empty", 
+               Status.INTERNAL_SERVER_ERROR);
          }
 
          // "permissions" : [ { "subject": "...", "scopes": ["view"] } ]
@@ -230,7 +247,7 @@ public class PolicyResource extends RSResource {
                jsonPerm = (JSONObject) obj;
                permSub = JSON.getString(jsonPerm, ConstantsIF.SUBJECT);
                if (!STR.isEmpty(permSub) && permSub.equalsIgnoreCase(subject)) {
-                  changed = true; // remove permission ... do not add to "new" array
+                  changed = true; // remove permission, do not add to "new" array
                } else {
                   jsonNewPerms.add(jsonPerm); // no change add to "new" array
                }
@@ -243,9 +260,10 @@ public class PolicyResource extends RSResource {
             jsonReplace.put(ConstantsIF.SSO_TOKEN, sso_token);
             jsonReplace.put(ConstantsIF.OWNER, owner);
             /*
-             * If the "new permission" array is empty ... removed the only permission then
-             * delete the entire police else replace the policy's permissions (with the new
-             * one)
+             * If the "new permission" array is empty ... 
+             * removed the only permission then
+             * delete the entire police else 
+             * replace the policy's permissions (with the new one)
              */
 
             if (jsonNewPerms.isEmpty()) {
