@@ -120,7 +120,7 @@ public abstract class RSResource extends Resource {
       _logger.entering(CLASS, METHOD);
 
       if (_handlerMgr == null) {
-         this.abort(METHOD, 
+         this.abort(METHOD,
             "Handler Manager is null", Status.INTERNAL_SERVER_ERROR);
       } else {
          if (_handlerMgr.contains(handlerId)) {
@@ -134,12 +134,12 @@ public abstract class RSResource extends Resource {
                      Status.INTERNAL_SERVER_ERROR);
                }
             } else {
-               this.abort(METHOD, 
+               this.abort(METHOD,
                   "Handler is null, handlerId='" + handlerId + "'",
                   Status.INTERNAL_SERVER_ERROR);
             }
          } else {
-            this.abort(METHOD, 
+            this.abort(METHOD,
                "Handler does not exist, handlerId='" + handlerId + "'",
                Status.INTERNAL_SERVER_ERROR);
          }
@@ -1885,6 +1885,12 @@ public abstract class RSResource extends Resource {
          access_token = this.getAccessToken(owner); // PAT for "owner"
       }
 
+      if (STR.isEmpty(access_token)) {
+         this.abort(CLASS + "::" + METHOD,
+            "Access Token is empty, owner: " + owner == null ? NULL : owner,
+            Status.INTERNAL_SERVER_ERROR);
+      }
+
       operOutput = new Operation(OperationIF.TYPE.READ);
 
       if (!STR.isEmpty(registerId)) {
@@ -1905,7 +1911,8 @@ public abstract class RSResource extends Resource {
             ConstantsIF.DATA);
 
          if (jsonRegisterOutput == null || jsonRegisterOutput.isEmpty()) {
-            this.abort(METHOD, "JSON data for registered resource is empty: "
+            this.abort(CLASS + "::" + METHOD,
+               "JSON data for registered resource is empty: "
                + operOutput.getState().toString() + ": "
                + operOutput.getStatus(), Status.INTERNAL_SERVER_ERROR);
          }
