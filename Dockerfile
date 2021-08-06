@@ -19,7 +19,7 @@ FROM maven:3-openjdk-11 AS build
 # Get the required projects from github
 
 RUN git clone --branch 1.2.0 --progress --verbose https://github.com/ForgeRock/frdp-framework 
-RUN git clone --branch 1.2.0 --progress --verbose https://github.com/ForgeRock/frdp-dao-mongo
+RUN git clone --branch 1.2.1 --progress --verbose https://github.com/ForgeRock/frdp-dao-mongo
 RUN git clone --branch 1.2.0 --progress --verbose https://github.com/ForgeRock/frdp-dao-rest 
 
 # run maven (mvn) to compile jar files and package the war file
@@ -51,14 +51,13 @@ RUN rm -rf /usr/local/tomcat/webapps/*
 
 COPY --from=build /frdp-uma-resource-server/target/resource-server /usr/local/tomcat/webapps/resource-server
 
-EXPOSE 8080
-# EXPOSE 8090:8080
-# EXPOSE 9000:8000
+EXPOSE 8090:8080
+EXPOSE 9000:8000
 
 # Environment variables for attaching Java debugger
 
-# ENV JPDA_ADDRESS="8000"
-# ENV JPDA_TRANSPORT="dt_socket"
+ENV JPDA_ADDRESS="*:8000"
+ENV JPDA_TRANSPORT="dt_socket"
 
 # Command to run ... "jpda" is for the java debugger
 
