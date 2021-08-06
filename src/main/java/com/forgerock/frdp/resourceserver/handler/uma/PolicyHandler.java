@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, ForgeRock, Inc., All rights reserved
+ * Copyright (c) 2018-2021, ForgeRock, Inc., All rights reserved
  * Use subject to license terms.
  */
 package com.forgerock.frdp.resourceserver.handler.uma;
@@ -496,7 +496,7 @@ public class PolicyHandler extends JaxrsHandler {
                         + ": JSON output is empty: " + operOutput.getStatus());
                   }
                } else if (operOutput.getState() == STATE.NOTEXIST) {
-                  jsonOutput = null; // TODO
+                  jsonOutput = null;
                } else {
                   throw new Exception(METHOD 
                      + ": Could not read resource policy: " + operOutput.getStatus());
