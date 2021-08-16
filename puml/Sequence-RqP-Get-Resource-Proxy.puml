@@ -1,0 +1,234 @@
+@startuml
+title RqP - Get Resource Proxy
+hide footbox
+
+actor "Resource Owner\n(RO)" as RO
+
+actor "Requesting Party\n(RqP)" as RQP
+
+box "Client Application (CA)\n<<Custom Application>>" #palegreen
+participant "User Interface" as CAUI
+end box
+
+box "UMA Client Proxy\n<<Custom Service>>" #antiquewhite
+participant "Proxy API" as CLIENTPROXY
+end box
+
+box "Resource Server (RS)\n<<Custom Application>>" #peachpuff
+participant "REST API" as RSREST
+database "Resource" as RSRESOURCE
+database "Credential" as RSCRED
+end box
+
+box "Authorization Server (AS)\nForgeRock Access Manager" #antiquewhite
+participant "AM API" as AMREST
+participant "UMA API" as UMAREST
+participant "OAuth API" as OAUTHREST
+end box
+
+box "Content Server (CS)\n<<Custom Application>>" #paleturquoise
+participant "REST API" as CSREST
+database "Data" as CSDATA
+end box
+
+RO->RQP: Resource Id
+
+RQP-->RO
+
+RQP->AMREST: Authenticate
+
+activate AMREST
+
+AMREST-->RQP: Authenticated (SSO Token)
+
+deactivate AMREST
+
+activate RQP
+
+RQP->CAUI: Resource Id
+
+deactivate RQP
+
+activate CAUI
+
+CAUI->CLIENTPROXY: GET /share/resources/{id}\n?scopes=meta+content\n(SSO Token)
+
+deactivate CAUI
+
+activate CLIENTPROXY
+
+CLIENTPROXY->RSREST: GET /share/resources/{id}\n?scopes=meta+content\nHeader: x-frdp-ssotoken
+
+deactivate CLIENTPROXY
+
+activate RSREST
+
+RSREST->RSRESOURCE: Get _id
+
+deactivate RSREST
+
+activate RSRESOURCE
+
+RSRESOURCE-->RSREST: meta data
+
+deactivate RSRESOURCE
+
+activate RSREST
+
+RSREST->RSCRED: Get PAT
+
+deactivate RSREST
+
+activate RSCRED
+
+RSCRED-->RSREST: PAT
+
+deactivate RSCRED
+
+activate RSREST
+
+RSREST->UMAREST: POST /am/uma/permission_request\nresource_id + scopes
+
+note left: Get permission ticket for the\nresource and scope
+
+deactivate RSREST
+
+activate UMAREST
+
+UMAREST-->RSREST: Permission Ticket
+
+deactivate UMAREST
+
+activate RSREST
+
+RSREST->CLIENTPROXY: 401: Permission Ticket + AS_URI
+
+deactivate RSREST
+
+activate CLIENTPROXY
+
+CLIENTPROXY->OAUTHREST: POST /am/oauth2/authorize?response_type=code&scope=openid\nHeader: ssotoken
+
+note left: Get authorization code\nusing SSO token
+
+deactivate CLIENTPROXY
+
+activate OAUTHREST
+
+OAUTHREST->OAUTHREST: Validate SSO session
+
+OAUTHREST->CLIENTPROXY: Authorization code
+
+deactivate OAUTHREST
+
+activate CLIENTPROXY
+
+CLIENTPROXY->OAUTHREST: POST /am/oauth2/access_token?grant_type=authorization_code&code={code}\nHeader: Authorization: Basic: client_id + client_secret
+
+note left: Get claim token for the\nRequesting Party (RqP)
+
+deactivate CLIENTPROXY
+
+activate OAUTHREST
+
+OAUTHREST->OAUTHREST: Validate Authz Code\nBasic Auth
+
+OAUTHREST-->CLIENTPROXY: claim token
+
+deactivate OAUTHREST
+
+activate CLIENTPROXY
+
+CLIENTPROXY->OAUTHREST: POST /am/oauth2/access_token\ngrant_type=urn:ietf:params:oauth:grant-type:uma-ticket\nscope=..., ticket=..., claim_token=..., claim_token_format=...
+
+note left: Get Requesting Party Token (RPT)\nusing the permission ticket\nand claim token
+
+deactivate CLIENTPROXY
+
+activate OAUTHREST
+
+OAUTHREST->OAUTHREST: Validate Permission Ticket\nClaim Token
+
+OAUTHREST-->CLIENTPROXY: Requesting Party Token (RPT)
+
+deactivate OAUTHREST
+
+activate CLIENTPROXY
+
+CLIENTPROXY->RSREST: GET /share/resources/{id}\nscopes=meta+content\nHeader: x-frdp-ssotoken and x-frdp-rpt
+
+note left: Re-Submit request for Resource\nUsing RPT
+
+deactivate CLIENTPROXY
+
+activate RSREST
+
+RSREST->OAUTHREST: GET /am/oauth2/tokeninfo\naccess_token=...
+
+note left: Validate the Requesting Party Token (RPT)
+
+deactivate RSREST
+
+activate OAUTHREST
+
+OAUTHREST-->RSREST: 200: Ok
+
+deactivate OAUTHREST
+
+activate RSREST
+
+RSREST->RSCRED: Get _id
+
+deactivate RSREST
+
+activate RSCRED
+
+RSCRED-->RSREST: meta data
+
+deactivate RSCRED
+
+activate RSREST
+
+RSREST->CSREST: GET: /content/{_id}
+
+note left: Get the data
+
+deactivate RSREST
+
+activate CSREST
+
+CSREST->CSDATA: Read _id
+
+deactivate CSREST
+
+activate CSDATA
+
+CSDATA-->CSREST: data
+
+deactivate CSDATA
+
+activate CSREST
+
+CSREST-->RSREST: data
+
+deactivate CSREST
+
+activate RSREST
+
+RSREST-->CLIENTPROXY: data
+
+deactivate RSREST
+
+activate CLIENTPROXY
+
+CLIENTPROXY->CAUI: data
+
+deactivate CLIENTPROXY
+
+activate CAUI
+
+CAUI->RQP: data
+
+deactivate CAUI
+
+@enduml

@@ -1,0 +1,240 @@
+@startuml
+title RO - All In One
+hide footbox
+
+actor "Resource\nOwner" as RO
+
+box "Resouce Owner Application (ROA)\n<<Custom Application>>" #palegoldenrod
+participant "User Interface" as ROAUI
+end box
+
+box "Resource Server (RS)\n<<Custom Application>>" #peachpuff
+participant "REST API" as RSREST
+database "Resource" as RSRESOURCE
+database "Credential" as RSCRED
+end box
+
+box "Authorization Server (AS)\nForgeRock Access Manager" #antiquewhite
+participant "AM API" as AMREST
+participant "UMA API" as UMAREST
+participant "OAuth API" as OAUTHREST
+end box
+
+box "Content Server (CS)\n<<Custom Application>>" #paleturquoise
+participant "REST API" as CSREST
+database "Data" as CSDATA
+end box
+
+RO->ROAUI: Access Interface 
+
+activate ROAUI
+
+ROAUI->AMREST: Authenticate
+
+deactivate ROAUI
+
+activate AMREST
+
+AMREST-->ROAUI: Authenticated (SSO Token)
+
+deactivate AMREST
+
+activate ROAUI
+
+ROAUI-->RO
+
+deactivate ROAUI
+
+activate RO
+
+RO->ROAUI: Action: Create/Register/Share
+
+deactivate RO
+
+activate ROAUI
+
+ROAUI->RSREST: POST /manage/resources\n(SSO Token)
+
+note left of ROAUI
+Application makes REST call
+Must include SSO Token
+end note
+
+deactivate ROAUI
+
+activate RSREST
+
+note left of RSREST
+Validate RO using SSO token
+end note
+
+RSREST->AMREST: Validate User
+
+deactivate RSREST
+
+activate AMREST
+
+AMREST-->RSREST
+
+deactivate AMREST
+
+== Create Resource and set meta data ==
+
+activate RSREST
+
+RSREST->RSRESOURCE: Create
+
+note left of RSRESOURCE
+Set state to "private"
+end note
+
+deactivate RSREST
+
+activate RSRESOURCE
+
+RSRESOURCE-->RSREST: Resource id
+
+deactivate RSRESOURCE
+
+activate RSREST
+
+RSREST->RSRESOURCE: Update: Set meta data 
+
+deactivate RSREST
+
+activate RSRESOURCE
+
+RSRESOURCE-->RSREST
+
+deactivate RSRESOURCE
+
+== Save the content  ==
+
+activate RSREST
+
+note left of RSREST
+Save Resource's content in the Content Server
+end note
+
+RSREST->CSREST: POST /contentserver/data
+
+deactivate RSREST
+
+activate CSREST
+
+CSREST->CSDATA: Create
+
+deactivate CSREST
+
+activate CSDATA
+
+CSDATA-->CSREST: _id
+
+deactivate CSDATA
+
+activate CSREST
+
+CSREST-->RSREST: Content id
+
+deactivate CSREST
+
+activate RSREST
+
+RSREST->RSRESOURCE: Update: Set Content id 
+
+deactivate RSREST
+
+activate RSRESOURCE
+
+RSRESOURCE-->RSREST
+
+deactivate RSRESOURCE
+
+activate RSREST
+
+== Register resource ==
+
+alt Create PAT if needed
+  note left of RSREST
+  A PAT is required to register resource
+  Either get existing or create one
+  end note
+
+RSREST->RSCRED: Get PAT
+
+RSCRED-->RSREST
+
+end
+
+RSREST->UMAREST: POST /uma/resource_set\nHeader: Authorization: Bearer PAT
+
+note left of UMAREST
+Register the resource with the AS
+set name, type, allowable scopes
+end note
+
+deactivate RSREST
+
+activate UMAREST
+
+UMAREST-->RSREST: Registration _id
+
+deactivate UMAREST
+
+activate RSREST
+
+RSREST->RSRESOURCE: Update: Set Registration id 
+
+deactivate RSREST
+
+activate RSRESOURCE
+
+RSRESOURCE-->RSREST
+
+deactivate RSRESOURCE
+
+
+activate RSREST
+
+== Apply policy (Share) ==
+
+RSREST->AMREST: PUT .../users/{id}/uma/policies/{id}\nHeader: iPlanetDirectoryPro: am_sso_token
+
+note left of AMREST
+Apply a policy to enable sharing
+Specify subjects with allowed scopes
+end note
+
+deactivate RSREST
+
+activate AMREST
+
+AMREST-->RSREST
+
+deactivate AMREST
+
+activate RSREST
+
+RSREST->RSRESOURCE: Update: Set state 
+
+deactivate RSREST
+
+activate RSRESOURCE
+
+RSRESOURCE-->RSREST
+
+deactivate RSRESOURCE
+
+activate RSREST
+
+RSREST-->ROAUI: Created
+
+deactivate RSREST
+
+activate ROAUI
+
+ROAUI-->RO
+
+deactivate ROAUI
+
+@enduml

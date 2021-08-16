@@ -1,0 +1,127 @@
+@startuml
+title RO - Apply Policy
+hide footbox
+
+actor "Resource\nOwner" as RO
+
+box "Resouce Owner Application (ROA)\n<<Custom Application>>" #palegoldenrod
+participant "User Interface" as ROAUI
+end box
+
+box "Resource Server (RS)\n<<Custom Application>>" #peachpuff
+participant "REST API" as RSREST
+database "Resource" as RSRESOURCE
+database "Credential" as RSCRED
+end box
+
+box "Authorization Server (AS)\nForgeRock Access Manager" #antiquewhite
+participant "AM API" as AMREST
+participant "UMA API" as UMAREST
+participant "OAuth API" as OAUTHREST
+end box
+
+box "Content Server (CS)\n<<Custom Application>>" #paleturquoise
+participant "REST API" as CSREST
+database "Data" as CSDATA
+end box
+
+RO->AMREST: Authenticate
+
+activate AMREST
+
+AMREST-->RO: Authenticated (SSO Token)
+
+deactivate AMREST
+
+RO->ROAUI: Apply Policy
+
+activate ROAUI
+
+note left of ROAUI
+Application makes REST call
+Must include iPlanetDirectoryPro cookie
+end note
+
+ROAUI->RSREST: PUT /manage/resources/{id}/policy\n(SSO Token)
+
+deactivate ROAUI
+
+activate RSREST
+
+note left of RSREST
+Validate RO using SSO token
+end note
+
+RSREST->AMREST: Validate user
+
+deactivate RSREST
+
+activate AMREST
+
+AMREST-->RSREST:
+
+deactivate AMREST
+
+activate RSREST
+
+RSREST->RSRESOURCE: Read id
+
+note left of RSREST
+Get resource meta data 
+end note
+
+deactivate RSREST
+
+activate RSRESOURCE
+
+RSRESOURCE-->RSREST:
+
+deactivate RSRESOURCE
+
+activate RSREST
+
+RSREST->AMREST: PUT .../users/{id}/uma/policies/{id}\n(SSO Token)
+
+note left of RSREST
+Apply a policy to enable sharing
+Specify subjects with allowed scopes
+end note
+
+deactivate RSREST
+
+activate AMREST
+
+AMREST-->RSREST: 204: No Content
+
+deactivate AMREST
+
+activate RSREST
+
+RSREST->RSRESOURCE: Update id
+
+note left of RSREST
+Update resource meta data
+Set state to "shared"
+end note
+
+deactivate RSREST
+
+activate RSRESOURCE
+
+RSRESOURCE-->RSREST
+
+deactivate RSRESOURCE
+
+activate RSREST
+
+RSREST-->ROAUI: 204: No Content
+
+deactivate RSREST
+
+activate ROAUI
+
+ROAUI-->RO
+
+deactivate ROAUI
+
+@enduml

@@ -1,0 +1,179 @@
+@startuml
+title RO - Access Request
+hide footbox
+
+
+actor "Resource\nOwner" as RO
+
+box "Resouce Owner Application (ROA)\n<<Custom Application>>" #palegoldenrod
+participant "User Interface" as ROAUI
+end box
+
+box "Resource Server (RS)\n<<Custom Application>>" #peachpuff
+participant "REST API" as RSREST
+database "Resource" as RSRESOURCE
+database "Credential" as RSCRED
+end box
+
+box "Authorization Server (AS)\nForgeRock Access Manager" #antiquewhite
+participant "AM API" as AMREST
+participant "UMA API" as UMAREST
+participant "OAuth API" as OAUTHREST
+end box
+
+box "Content Server (CS)\n<<Custom Application>>" #paleturquoise
+participant "REST API" as CSREST
+database "Data" as CSDATA
+end box
+
+RO->ROAUI: Access Interface 
+
+activate ROAUI
+
+ROAUI->AMREST: Authenticate
+
+deactivate ROAUI
+
+activate AMREST
+
+AMREST-->ROAUI: Authenticated (SSO Token)
+
+deactivate AMREST
+
+activate ROAUI
+
+ROAUI-->RO
+
+deactivate ROAUI
+
+activate RO
+
+RO->ROAUI: Get pending requests
+
+deactivate RO
+
+activate ROAUI
+
+note left of ROAUI
+Application makes REST call(s)
+Must include SSO Token
+end note
+
+ROAUI->RSREST: GET .../requests
+
+deactivate ROAUI
+
+activate RSREST
+
+note left of RSREST
+Validate RO using SSO token
+Set Headers
+end note
+
+RSREST->AMREST: Validate User
+
+deactivate RSREST
+
+activate AMREST
+
+AMREST-->RSREST
+
+deactivate AMREST
+
+activate RSREST
+
+RSREST->AMREST: GET .../users/{user}/uma/pendingrequests
+
+deactivate RSREST
+
+activate AMREST
+
+AMREST-->RSREST: Pending requests
+
+deactivate AMREST
+
+activate RSREST
+
+RSREST-->ROAUI: Pending requests
+
+deactivate RSREST
+
+activate ROAUI
+
+ROAUI-->RO
+
+deactivate ROAUI
+
+activate RO
+
+RO->ROAUI: Get request details
+
+deactivate RO
+
+activate ROAUI
+
+ROAUI->RSREST: GET .../requests/{id}
+
+deactivate ROAUI
+
+activate RSREST
+
+RSREST->AMREST: GET .../users/{user}/uma/pendingrequests/{pendingRequestId}
+
+deactivate RSREST
+
+activate AMREST
+
+AMREST-->RSREST: Request details
+
+deactivate AMREST
+
+activate RSREST
+
+RSREST-->ROAUI: Request details
+
+deactivate RSREST
+
+activate ROAUI
+
+ROAUI-->RO
+
+deactivate ROAUI
+
+activate RO
+
+RO->ROAUI: Approve | Deny request
+
+deactivate RO
+
+activate ROAUI
+
+ROAUI->RSREST: PUT .../requests/{id}?action=approve|deny
+
+deactivate ROAUI
+
+activate RSREST
+
+RSREST->AMREST: POST .../users/{user}/uma/pendingrequests/{pendingRequestId}\n action_approve
+
+deactivate RSREST
+
+activate AMREST
+
+AMREST-->RSREST: status
+
+deactivate AMREST
+
+activate RSREST
+
+RSREST-->ROAUI: status
+
+deactivate RSREST
+
+activate ROAUI
+
+ROAUI-->RO
+
+deactivate ROAUI
+
+@enduml

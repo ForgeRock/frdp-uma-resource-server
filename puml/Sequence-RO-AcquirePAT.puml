@@ -1,0 +1,118 @@
+@startuml
+title RO - Acquire PAT
+hide footbox
+
+actor "Resource\nOwner" as RO
+
+box "Resouce Owner Application (ROA)\n<<Custom Application>>" #palegoldenrod
+participant "User Interface" as ROAUI
+end box
+
+box "Resource Server (RS)\n<<Custom Application>>" #peachpuff
+participant "REST API" as RSREST
+database "Credential" as RSCRED
+end box
+
+box "Authorization Server (AS)\nForgeRock Access Manager" #antiquewhite
+participant "AM API" as AMREST
+participant "UMA API" as UMAREST
+participant "OAuth API" as OAUTHREST
+end box
+
+RO->ROAUI: Access Interface
+
+activate ROAUI
+
+ROAUI->AMREST: Authenticate
+
+deactivate ROAUI
+
+activate AMREST
+
+AMREST-->ROAUI: Authenticated (SSO Token)
+
+deactivate AMREST
+
+activate ROAUI
+
+ROAUI-->RO
+
+deactivate ROAUI
+
+RO->ROAUI: Action
+
+activate ROAUI
+
+ROAUI->RSREST: Action \n(SSO Token)
+
+deactivate ROAUI
+
+activate RSREST
+
+note left: Application makes REST call\nMust include SSO Token
+
+
+RSREST->AMREST: Validate user
+
+deactivate RSREST
+
+activate AMREST
+
+AMREST-->RSREST:
+
+deactivate AMREST
+
+activate RSREST
+
+RSREST->OAUTHREST: POST .../oauth2/authorize
+
+deactivate RSREST
+
+activate OAUTHREST
+
+note left: Get OAuth2 authorization code\ncsrf=am_sso_token\nscope=uma_protection
+
+OAUTHREST-->RSREST: authz_code
+
+deactivate OAUTHREST
+
+activate RSREST
+
+RSREST->OAUTHREST: POST .../oauth2/access_token
+
+deactivate RSREST
+
+activate OAUTHREST
+
+note left: Get access token (the PAT)\ngrant_type=authorization_code\ncode=authz_code\nclient_id=UMA-RI_RS\nclient_secret=
+
+OAUTHREST-->RSREST: access_token (PAT)
+
+deactivate OAUTHREST
+
+activate RSREST
+
+RSREST->RSCRED: Create / Update PAT for Owner
+
+deactivate RSREST
+
+activate RSCRED
+
+RSCRED-->RSREST
+
+deactivate RSCRED
+
+activate RSREST
+
+RSREST-->ROAUI
+
+deactivate RSREST
+
+
+activate ROAUI
+
+ROAUI-->RO
+
+deactivate ROAUI
+
+@enduml
