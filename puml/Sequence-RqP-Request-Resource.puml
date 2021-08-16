@@ -1,0 +1,142 @@
+@startuml
+title RqP - Request Resource
+hide footbox
+
+actor "Requesting Party\n(RqP)" as RQP
+
+box "Client Application (CA)\n<<Custom Application>>" #palegreen
+participant "User Interface" as CAUI
+end box
+
+box "Resource Server (RS)\n<<Custom Application>>" #peachpuff
+participant "REST API" as RSREST
+database "Resource" as RSRESOURCE
+database "Credential" as RSCRED
+end box
+
+box "Authorization Server (AS)\nForgeRock Access Manager" #antiquewhite
+participant "AM API" as AMREST
+participant "UMA API" as UMAREST
+participant "OAuth API" as OAUTHREST
+end box
+
+box "Content Server (CS)\n<<Custom Application>>" #paleturquoise
+participant "REST API" as CSREST
+database "Data" as CSDATA
+end box
+
+RQP->AMREST: Authenticate
+
+activate AMREST 
+
+AMREST-->RQP: Authenticated
+
+deactivate AMREST 
+
+RQP->CAUI: Access Interface
+
+activate CAUI
+
+CAUI->CAUI: Obtain Resource Id\n(maybe from Discover Resources)
+
+CAUI->RSREST: GET /share/resources/{resourceId}\nscopes (no valid RPT)
+
+deactivate CAUI
+
+activate RSREST
+
+RSREST->RSRESOURCE: Get _id
+
+deactivate RSREST
+
+activate RSRESOURCE
+
+RSRESOURCE-->RSREST: meta data
+
+deactivate RSRESOURCE
+
+activate RSREST
+
+RSREST->RSCRED: Get PAT
+
+deactivate RSREST
+
+activate RSCRED
+
+RSCRED-->RSREST: PAT
+
+deactivate RSCRED
+
+activate RSREST
+
+RSREST->UMAREST: POST /am/uma/permission_request\nresource_id + scopes
+
+note left: Get permission ticket for the\nresource and scope
+
+deactivate RSREST
+
+activate UMAREST
+
+UMAREST-->RSREST: permission ticket
+
+deactivate UMAREST
+
+activate RSREST
+
+RSREST-->CAUI: permission ticket + AS URI
+
+deactivate RSREST
+
+activate CAUI
+
+CAUI->CAUI: Get client auth basic
+
+CAUI->OAUTHREST: POST /am/oauth2/access_token\nscope=openid\nSSO session
+
+note left: Get claim token for the\nRequesting Party (RqP)
+
+deactivate CAUI
+
+activate OAUTHREST
+
+OAUTHREST->OAUTHREST: Validate SSO session
+
+OAUTHREST-->CAUI: claim token
+
+deactivate OAUTHREST
+
+activate CAUI
+
+CAUI->OAUTHREST: POST /am/oauth2/access_token\ngrant_type=urn:ietf:params:oauth:grant-type:uma-ticket\nscope=..., ticket=..., claim_token=..., claim_token_format=...
+
+note left: Get Requesting Party Token (RPT)\nusing the permission ticket\nand claim token
+
+deactivate CAUI
+
+activate OAUTHREST
+
+OAUTHREST->AMREST:Check Access
+
+deactivate OAUTHREST
+
+activate AMREST
+
+AMREST->AMREST: No Policy for RqP + Resource + scopes \nCreate Access Request for Resource Owner
+
+AMREST-->OAUTHREST: No Access, request Submitted
+
+deactivate AMREST
+
+activate OAUTHREST
+
+OAUTHREST-->CAUI: Error: Request Submitted
+
+deactivate OAUTHREST
+
+activate CAUI
+
+CAUI-->RQP:
+
+deactivate CAUI
+
+@enduml

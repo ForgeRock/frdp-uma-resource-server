@@ -1,0 +1,38 @@
+@startuml
+title Requesting Party - Discover Resources\n
+hide footbox
+
+actor "Requesting Party\n(RqP)" as RQP
+
+box "Client Application (CA)\n<<Custom Application>>" #palegreen
+participant "User Interface" as CAUI
+end box
+
+box "Resource Server (RS)\n<<Custom Application>>" #peachpuff
+participant "REST API" as RSREST
+database "Resource" as RSRESOURCE
+database "Credential" as RSCRED
+end box
+
+box "Authorization Server (AS)\nForgeRock Access Manager" #antiquewhite
+participant "AM API" as AMREST
+participant "UMA API" as UMAREST
+participant "OAuth API" as OAUTHREST
+end box
+
+box "Content Server (CS)\n<<Custom Application>>" #paleturquoise
+participant "REST API" as CSREST
+database "Data" as CSDATA
+end box
+
+RQP->CAUI: Access Interface
+
+CAUI->RSREST: GET /owners/{id}/resources
+
+RSREST->RSRESOURCE: Get "discoverable"\nfor owner
+
+RSRESOURCE-->RSREST: resource list
+
+RSREST-->CAUI: resource list
+
+@enduml

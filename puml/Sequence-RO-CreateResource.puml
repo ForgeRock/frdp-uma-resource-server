@@ -1,0 +1,111 @@
+@startuml
+title RO - Create Resource
+hide footbox
+
+
+actor "Resource\nOwner" as RO
+
+box "Resouce Owner Application (ROA)\n<<Custom Application>>" #palegoldenrod
+participant "User Interface" as ROAUI
+end box
+
+box "Resource Server (RS)\n<<Custom Application>>" #peachpuff
+participant "REST API" as RSREST
+database "Resource" as RSRESOURCE
+database "Credential" as RSCRED
+end box
+
+box "Authorization Server (AS)\nForgeRock Access Manager" #antiquewhite
+participant "AM API" as AMREST
+participant "UMA API" as UMAREST
+participant "OAuth API" as OAUTHREST
+end box
+
+
+box "Content Server (CS)\n<<Custom Application>>" #paleturquoise
+participant "REST API" as CSREST
+database "Data" as CSDATA
+end box
+
+RO->ROAUI: Access Interface 
+
+activate ROAUI
+
+ROAUI->AMREST: Authenticate
+
+deactivate ROAUI
+
+activate AMREST
+
+AMREST-->ROAUI: Authenticated (SSO Token)
+
+deactivate AMREST
+
+activate ROAUI
+
+ROAUI-->RO
+
+deactivate ROAUI
+
+activate RO
+
+RO->ROAUI: Create Resource
+
+deactivate RO
+
+activate ROAUI
+
+ROAUI->RSREST: POST /manage/resources\n(SSO Token)
+
+note left: Application makes REST call\nMust include SSO Token
+
+deactivate ROAUI
+
+activate RSREST
+
+note left of RSREST
+Validate RO using SSO token
+end note
+
+RSREST->AMREST: Validate User
+
+deactivate RSREST
+
+activate AMREST
+
+AMREST-->RSREST
+
+deactivate AMREST
+
+activate RSREST
+
+RSREST->RSRESOURCE: Create
+
+note left of RSRESOURCE
+Create resource meta data
+Set username
+Set state to "private"
+end note
+
+deactivate RSREST
+
+activate RSRESOURCE
+
+RSRESOURCE-->RSREST: id
+
+deactivate RSRESOURCE
+
+activate RSREST
+
+RSREST-->ROAUI: 201: Created
+
+deactivate RSREST
+
+
+activate ROAUI
+
+ROAUI-->RO
+
+deactivate ROAUI
+
+@enduml

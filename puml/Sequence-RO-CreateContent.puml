@@ -1,0 +1,120 @@
+@startuml
+title RO - Create Content
+hide footbox
+
+
+actor "Resource\nOwner" as RO
+
+box "Resouce Owner Application (ROA)\n<<Custom Application>>" #palegoldenrod
+participant "User Interface" as ROAUI
+end box
+
+box "Resource Server (RS)\n<<Custom Application>>" #peachpuff
+participant "REST API" as RSREST
+database "Resource" as RSRESOURCE
+database "Credential" as RSCRED
+end box
+
+box "Authorization Server (AS)\nForgeRock Access Manager" #antiquewhite
+participant "AM API" as AMREST
+participant "UMA API" as UMAREST
+participant "OAuth API" as OAUTHREST
+end box
+
+box "Content Server (CS)\n<<Custom Application>>" #paleturquoise
+participant "REST API" as CSREST
+database "Data" as CSDATA
+end box
+
+RO->AMREST: Authenticate
+
+activate AMREST
+
+AMREST-->RO: Authenticated (SSO Token)
+
+deactivate AMREST
+
+RO->ROAUI: Create Resource
+
+activate ROAUI
+
+ROAUI->RSREST: POST /manage/resources\n(SSO Token)
+
+deactivate ROAUI
+
+activate RSREST
+
+RSREST->AMREST:  Validate
+
+deactivate RSREST
+
+activate AMREST
+
+note left of AMREST
+Validate RO using SSO token
+end note
+
+AMREST-->RSREST
+
+deactivate AMREST
+
+activate RSREST
+
+note left of RSREST
+Save data record in the Content Server
+end note
+
+RSREST->CSREST: POST /contentserver/data
+
+deactivate RSREST
+
+
+activate CSREST
+
+CSREST->CSDATA: Create
+
+deactivate CSREST
+
+activate CSDATA
+
+CSDATA-->CSREST: _id
+
+deactivate CSDATA
+
+activate CSREST
+
+CSREST-->RSREST: 201: Created Location .../data/_id
+
+deactivate CSREST
+
+activate RSREST
+
+RSREST->RSRESOURCE: Create
+
+note left of RSREST
+Create meta data record that
+relates to the external resource
+Set state to "private"
+end note
+
+deactivate RSREST
+
+activate RSRESOURCE
+
+RSRESOURCE-->RSREST: _id
+
+deactivate RSRESOURCE
+
+activate RSREST
+
+RSREST-->ROAUI: 201: Created
+
+deactivate RSREST
+
+activate ROAUI
+
+ROAUI-->RO
+
+deactivate ROAUI
+
+@enduml
