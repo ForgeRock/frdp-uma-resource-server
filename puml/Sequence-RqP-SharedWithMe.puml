@@ -1,0 +1,79 @@
+@startuml
+title Requesting Party - Shared With Me
+hide footbox
+
+actor "Requesting Party\n(RqP)" as RQP
+
+box "Client Application (CA)\n<<Custom Application>>" #palegreen
+participant "User Interface" as CAUI
+end box
+
+box "Resource Server (RS)\n<<Custom Application>>" #peachpuff
+participant "REST API" as RSREST
+database "Resource" as RSRESOURCE
+database "Credential" as RSCRED
+end box
+
+box "Authorization Server (AS)\nForgeRock Access Manager" #antiquewhite
+participant "AM API" as AMREST
+participant "UMA API" as UMAREST
+participant "OAuth API" as OAUTHREST
+end box
+
+box "Content Server (CS)\n<<Custom Application>>" #paleturquoise
+participant "REST API" as CSREST
+database "Data" as CSDATA
+end box
+
+
+RQP->AMREST: Authenticate
+
+activate AMREST
+
+AMREST-->RQP: Authenticated (SSO Token)
+
+deactivate AMREST
+
+activate RQP
+
+RQP->CAUI: Access Interface
+
+deactivate RQP
+
+activate CAUI
+
+CAUI->RSREST: GET /share/withme
+
+deactivate CAUI
+
+activate RSREST
+
+RSREST-> OAUTHREST: GET .../oauth2/resources/sets
+
+deactivate RSREST
+
+activate OAUTHREST
+
+OAUTHREST-->RSREST: List of resources
+
+deactivate OAUTHREST
+
+activate RSREST
+
+RSREST->RSRESOURCE: Get resource info\n (for each)
+
+deactivate RSREST
+
+activate RSRESOURCE
+
+RSRESOURCE-->RSREST
+
+deactivate RSRESOURCE
+
+activate RSREST
+
+RSREST-->CAUI: Array of resources
+
+deactivate RSREST 
+
+@enduml
